@@ -15,7 +15,7 @@ type Props = {
   commentCount?: number;
 };
 
-export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
+export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0 }: Props) {
   const { t, tc, n, lang, dir } = useI18n();
   const kickoff = new Date(match.kickoff_at);
   const now = Date.now();
