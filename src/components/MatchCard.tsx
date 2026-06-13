@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, Lock, Check } from "lucide-react";
+import { Minus, Plus, Lock, Check, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
@@ -12,6 +12,7 @@ type Props = {
   playerId: string;
   prediction: Prediction | null;
   onSaved?: (p: Prediction) => void;
+  commentCount?: number;
 };
 
 export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
