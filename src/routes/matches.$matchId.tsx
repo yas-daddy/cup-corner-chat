@@ -142,7 +142,7 @@ function MatchDetailPage() {
   return (
     <div className="px-4 pt-6 pb-10">
       <header className="mb-4 flex items-center gap-3">
-        <Link to="/my-picks" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
+        <Link to="/" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">
