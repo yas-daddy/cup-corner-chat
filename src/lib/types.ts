@@ -23,11 +23,13 @@ export type Prediction = {
 export type LeaderRow = {
   player_id: string;
   display_name: string;
+  avatar: string | null;
   predictions_made: number;
   correct_results: number;
   exact_scores: number;
   total_points: number;
 };
+
 
 export type PredictionPointRow = {
   id: string;
