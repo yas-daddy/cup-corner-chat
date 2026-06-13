@@ -168,6 +168,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          match_id: string | null
+          points: number | null
+          read_at: string | null
+          recipient_id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          match_id?: string | null
+          points?: number | null
+          read_at?: string | null
+          recipient_id: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          match_id?: string | null
+          points?: number | null
+          read_at?: string | null
+          recipient_id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           avatar: string | null
