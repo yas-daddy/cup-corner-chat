@@ -28,6 +28,7 @@ function HomePage() {
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [predictionCounts, setPredictionCounts] = useState<Record<string, number>>({});
   const tapTimes = useRef<number[]>([]);
 
 
