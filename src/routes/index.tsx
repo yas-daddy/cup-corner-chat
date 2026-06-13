@@ -8,6 +8,7 @@ import { Avatar } from "@/components/AvatarPicker";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
+import { fetchMatchCommentCounts } from "@/lib/social";
 
 
 export const Route = createFileRoute("/")({
@@ -26,6 +27,7 @@ function HomePage() {
   const { player, loading, setPlayer } = useCurrentPlayer();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const tapTimes = useRef<number[]>([]);
 
 
@@ -51,7 +53,12 @@ function HomePage() {
       .from("matches")
       .select("*")
       .order("kickoff_at", { ascending: true });
-    setMatches((data as Match[] | null) ?? []);
+    const list = (data as Match[] | null) ?? [];
+    setMatches(list);
+    if (list.length) {
+      const counts = await fetchMatchCommentCounts(list.map((m) => m.id));
+      setCommentCounts(counts);
+    }
   }
 
   function handleTitleTap() {
