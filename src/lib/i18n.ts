@@ -83,6 +83,17 @@ const EN: Dict = {
   notif_result_exact: "You nailed the exact score! +8",
   notif_result_correct: "You got the result right. +3",
   notif_result_none: "Result is in — no points this time.",
+  champion_title: "Competition Champion Prediction",
+  champion_sub: "Pick the nation you think will lift the trophy.",
+  champion_no_pick: "No champion picked yet.",
+  pick_champion: "Pick champion",
+  change: "Change",
+  search_team: "Search team…",
+  no_results: "No results.",
+  champion_locks_in: "Locks in",
+  champion_locked: "Locked — kickoff has begun.",
+  d_short: "d",
+  h_short: "h",
 };
 
 const FA: Dict = {
