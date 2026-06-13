@@ -43,26 +43,23 @@ function LeaderboardPage() {
           {rows.map((r, i) => {
             const isMe = player?.id === r.player_id;
             const rank = i + 1;
-            const topTone =
-              rank === 1 ? "text-[color:var(--gold)]" : rank === 2 ? "text-ink-soft" : rank === 3 ? "text-accent" : "";
+            const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
             return (
               <li
                 key={r.player_id}
-                className={`flex items-center gap-3 rounded-2xl border bg-surface px-4 py-3 ${isMe ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+                className={`flex items-center gap-3 rounded-2xl border bg-surface px-3 py-3 ${isMe ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
               >
-                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white font-bold ${topTone}`}>
-                  {rank <= 3 ? (
-                    rank === 1 ? <Trophy className="h-5 w-5" /> : <Medal className="h-5 w-5" />
-                  ) : (
-                    <span className="tabular-nums">{n(rank)}</span>
-                  )}
+                <div className="grid w-6 shrink-0 place-items-center text-sm font-bold text-ink-soft tabular-nums">
+                  {medal ?? n(rank)}
                 </div>
+                <Avatar avatar={r.avatar} name={r.display_name} size={40} className="border border-border text-2xl" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{r.display_name}</p>
                   <p className="text-xs text-ink-soft">
                     {n(r.predictions_made)} {t("predictions")} · {n(r.correct_results)} {t("correct_results")} · {n(r.exact_scores)} {t("exact_scores")}
                   </p>
                 </div>
+
                 <div className="text-end">
                   <p className="text-xl font-extrabold text-[color:var(--gold)] tabular-nums">{n(r.total_points)}</p>
                   <p className="text-[10px] uppercase tracking-wider text-ink-soft">{t("pts")}</p>
