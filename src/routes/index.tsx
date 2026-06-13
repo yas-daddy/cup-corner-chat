@@ -57,8 +57,13 @@ function HomePage() {
     const list = (data as Match[] | null) ?? [];
     setMatches(list);
     if (list.length) {
-      const counts = await fetchMatchCommentCounts(list.map((m) => m.id));
+      const ids = list.map((m) => m.id);
+      const [counts, predCounts] = await Promise.all([
+        fetchMatchCommentCounts(ids),
+        fetchMatchPredictionCounts(ids),
+      ]);
       setCommentCounts(counts);
+      setPredictionCounts(predCounts);
     }
   }
 
