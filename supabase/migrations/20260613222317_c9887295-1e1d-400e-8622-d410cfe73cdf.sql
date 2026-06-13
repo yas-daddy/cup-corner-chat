@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS players_avatar_unique ON public.players (avatar) WHERE avatar IS NOT NULL;
