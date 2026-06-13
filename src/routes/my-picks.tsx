@@ -129,6 +129,7 @@ function MyPicksPage() {
                     )}
                   </span>
                 </div>
+              </Link>
               </li>
             );
           })}
