@@ -163,7 +163,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
     </div>
   );
 }
-// (closing braces below remain unchanged)
+
 
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { n } = useI18n();
