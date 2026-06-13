@@ -89,6 +89,12 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         </div>
         {finished ? (
           <ScoreBox value={`${n(match.home_score ?? 0)} - ${n(match.away_score ?? 0)}`} />
+        ) : match.status === "LIVE" ? (
+          match.home_score != null && match.away_score != null ? (
+            <ScoreBox value={`${n(match.home_score)} - ${n(match.away_score)}`} />
+          ) : (
+            <Badge tone="accent">{t("live")}</Badge>
+          )
         ) : locked ? (
           prediction ? (
             <ScoreBox value={`${n(prediction.pred_home)} - ${n(prediction.pred_away)}`} />
@@ -98,6 +104,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         ) : (
           <Stepper value={h} onChange={(v) => { setH(v); scheduleSave(v, a); }} />
         )}
+
       </div>
 
       <div className="mt-2 flex items-center gap-2" dir={dir}>
