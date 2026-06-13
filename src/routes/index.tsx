@@ -20,10 +20,12 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const { player, loading, setPlayer } = useCurrentPlayer();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
-  const [syncing, setSyncing] = useState(false);
+  const tapTimes = useRef<number[]>([]);
+
 
   useEffect(() => {
     void loadMatches();
