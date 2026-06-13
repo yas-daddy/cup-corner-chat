@@ -153,6 +153,11 @@ function MatchDetailPage() {
 
   return (
     <div className="px-4 pt-6 pb-10">
+      {live && (
+        <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-accent">
+          {t("live")}
+        </h2>
+      )}
       <header className="mb-4 flex items-center gap-3">
         <Link to="/" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
           <ChevronLeft className="h-5 w-5" />
