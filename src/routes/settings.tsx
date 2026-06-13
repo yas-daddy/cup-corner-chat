@@ -4,6 +4,8 @@ import { ChevronLeft, RefreshCw, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
+import { AvatarPicker } from "@/components/AvatarPicker";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "WC26 Predictor — Settings" }] }),
