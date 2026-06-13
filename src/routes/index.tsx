@@ -82,9 +82,7 @@ function HomePage() {
   const grouped = useMemo(() => {
     const now = Date.now();
     const horizon = now + 1000 * 60 * 60 * 48;
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const pastWindow = startOfToday.getTime();
+    const pastWindow = now - 1000 * 60 * 60 * 24;
     const live: Match[] = [];
     const results: Match[] = [];
     const upcoming: Map<string, Match[]> = new Map();
