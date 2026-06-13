@@ -139,7 +139,7 @@ function HomePage() {
       {grouped.results.length > 0 && (
         <Section title={t("results") ?? "Results"}>
           {grouped.results.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} />
           ))}
         </Section>
       )}
@@ -147,7 +147,7 @@ function HomePage() {
       {grouped.live.length > 0 && (
         <Section title={t("live")} accent>
           {grouped.live.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
           ))}
         </Section>
       )}
@@ -156,7 +156,7 @@ function HomePage() {
       {Array.from(grouped.upcoming.entries()).map(([day, list]) => (
         <Section key={day} title={day}>
           {list.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
           ))}
         </Section>
       ))}
