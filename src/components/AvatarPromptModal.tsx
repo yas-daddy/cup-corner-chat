@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AVATAR_EMOJIS, Avatar } from "@/components/AvatarPicker";
+import { AVATAR_EMOJIS, Avatar, useTakenAvatars } from "@/components/AvatarPicker";
 import { supabase } from "@/integrations/supabase/client";
 import type { Player } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
@@ -14,6 +14,7 @@ export function AvatarPromptModal({
   const { t } = useI18n();
   const [picked, setPicked] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const taken = useTakenAvatars(player.id);
 
   async function save(emoji: string) {
     if (saving) return;
@@ -26,8 +27,14 @@ export function AvatarPromptModal({
       .select()
       .single();
     setSaving(false);
-    if (!error && data) onSaved(data as Player);
+    if (error) {
+      setPicked(null);
+      alert("That emoji was just taken — please pick another.");
+      return;
+    }
+    if (data) onSaved(data as Player);
   }
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
@@ -40,19 +47,28 @@ export function AvatarPromptModal({
           </div>
         </div>
         <div className="grid grid-cols-8 gap-2 rounded-2xl border border-border bg-surface p-3">
-          {AVATAR_EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              disabled={saving}
-              onClick={() => save(e)}
-              className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
-                picked === e ? "bg-primary/15 ring-2 ring-primary" : "hover:bg-white active:bg-white"
-              }`}
-            >
-              {e}
-            </button>
-          ))}
+          {AVATAR_EMOJIS.map((e) => {
+            const isTaken = taken.has(e);
+            return (
+              <button
+                key={e}
+                type="button"
+                disabled={saving || isTaken}
+                title={isTaken ? "Already taken" : undefined}
+                onClick={() => save(e)}
+                className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
+                  picked === e
+                    ? "bg-primary/15 ring-2 ring-primary"
+                    : isTaken
+                      ? "opacity-25 grayscale cursor-not-allowed"
+                      : "hover:bg-white active:bg-white"
+                }`}
+              >
+                {e}
+              </button>
+            );
+          })}
+
         </div>
       </div>
     </div>

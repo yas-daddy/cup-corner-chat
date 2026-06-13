@@ -69,16 +69,22 @@ function SettingsPage() {
         <Section label={t("avatar")}>
           <AvatarPicker
             value={player.avatar}
+            playerId={player.id}
             onChange={async (next) => {
-              const { data } = await supabase
+              const { data, error } = await supabase
                 .from("players")
                 .update({ avatar: next })
                 .eq("id", player.id)
                 .select()
                 .single();
+              if (error) {
+                alert("That emoji is already taken by another player.");
+                return;
+              }
               if (data) setPlayer(data as typeof player);
             }}
           />
+
         </Section>
       )}
 

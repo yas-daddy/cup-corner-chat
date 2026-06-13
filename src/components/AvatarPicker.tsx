@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
 
 export const AVATAR_EMOJIS = [
   "⚽️", "🏆", "🥇", "🔥", "⭐️", "💪", "🚀", "🎯",
@@ -32,14 +34,40 @@ export function Avatar({
   );
 }
 
+export function useTakenAvatars(excludePlayerId?: string | null) {
+  const [taken, setTaken] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let active = true;
+    void supabase
+      .from("players")
+      .select("id,avatar")
+      .not("avatar", "is", null)
+      .then(({ data }) => {
+        if (!active) return;
+        const set = new Set<string>();
+        (data ?? []).forEach((p: { id: string; avatar: string | null }) => {
+          if (p.avatar && p.id !== excludePlayerId) set.add(p.avatar);
+        });
+        setTaken(set);
+      });
+    return () => {
+      active = false;
+    };
+  }, [excludePlayerId]);
+  return taken;
+}
+
 export function AvatarPicker({
   value,
   onChange,
+  playerId,
 }: {
   value: string | null | undefined;
   onChange: (next: string | null) => void;
+  playerId?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const taken = useTakenAvatars(playerId);
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
@@ -63,23 +91,33 @@ export function AvatarPicker({
       </div>
       {open && (
         <div className="grid grid-cols-8 gap-2 rounded-2xl border border-border bg-surface p-3">
-          {AVATAR_EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => {
-                onChange(e);
-                setOpen(false);
-              }}
-              className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
-                value === e ? "bg-primary/15 ring-2 ring-primary" : "hover:bg-white"
-              }`}
-            >
-              {e}
-            </button>
-          ))}
+          {AVATAR_EMOJIS.map((e) => {
+            const isTaken = taken.has(e) && value !== e;
+            return (
+              <button
+                key={e}
+                type="button"
+                disabled={isTaken}
+                title={isTaken ? "Already taken" : undefined}
+                onClick={() => {
+                  onChange(e);
+                  setOpen(false);
+                }}
+                className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
+                  value === e
+                    ? "bg-primary/15 ring-2 ring-primary"
+                    : isTaken
+                      ? "opacity-25 grayscale cursor-not-allowed"
+                      : "hover:bg-white"
+                }`}
+              >
+                {e}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+
