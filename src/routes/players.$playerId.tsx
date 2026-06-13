@@ -39,7 +39,16 @@ function PlayerProfilePage() {
         return;
       }
       setPlayer(p as Player);
+      void supabase
+        .from("champion_predictions")
+        .select("team,team_code")
+        .eq("player_id", playerId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (active && data) setChampion(data as ChampionPick);
+        });
       const { data } = await supabase.from("prediction_points").select("*").eq("player_id", playerId);
+
       const list = (data as PredictionPointRow[] | null) ?? [];
       if (!active) return;
       setRows(list);
