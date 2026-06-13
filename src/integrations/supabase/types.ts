@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      champion_predictions: {
+        Row: {
+          created_at: string
+          player_id: string
+          team: string
+          team_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          player_id: string
+          team: string
+          team_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          player_id?: string
+          team?: string
+          team_code?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           body: string
