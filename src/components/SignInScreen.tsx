@@ -1,140 +1,161 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { storePlayerId, type Player } from "@/lib/identity";
+import { Avatar } from "@/components/AvatarPicker";
 
 export function SignInScreen({ onSignedIn }: { onSignedIn: (p: Player) => void }) {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [matches, setMatches] = useState<Player[] | null>(null);
-  const [browseAll, setBrowseAll] = useState(false);
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [filter, setFilter] = useState("");
   const [busy, setBusy] = useState(false);
+  const [suggest, setSuggest] = useState<Player[] | null>(null);
+  const [renaming, setRenaming] = useState<Player | null>(null);
+  const [renameTo, setRenameTo] = useState("");
 
   useEffect(() => {
-    if (!browseAll) return;
     supabase
       .from("players")
       .select("*")
       .order("display_name", { ascending: true })
-      .then(({ data }) => setAllPlayers((data as Player[]) ?? []));
-  }, [browseAll]);
+      .then(({ data }) => setPlayers((data as Player[]) ?? []));
+  }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setBusy(true);
-    const { data: existing } = await supabase
-      .from("players")
-      .select("*")
-      .ilike("display_name", trimmed);
-    if (existing && existing.length > 0) {
-      setMatches(existing as Player[]);
-      setBusy(false);
-      return;
-    }
-    const { data: created, error } = await supabase
-      .from("players")
-      .insert({ display_name: trimmed })
-      .select()
-      .single();
-    setBusy(false);
-    if (!error && created) {
-      const p = created as Player;
-      storePlayerId(p.id);
-      onSignedIn(p);
-      navigate({ to: "/" });
-    }
-  }
+  const trimmed = filter.trim();
+  const filtered = useMemo(() => {
+    if (!trimmed) return players;
+    const q = trimmed.toLowerCase();
+    return players.filter((p) => p.display_name.toLowerCase().includes(q));
+  }, [players, trimmed]);
 
-  async function pick(p: Player) {
+  function pick(p: Player) {
     storePlayerId(p.id);
     onSignedIn(p);
     navigate({ to: "/" });
   }
 
-  async function createNew(displayName: string) {
+  async function continueAs(p: Player, newName: string) {
+    const name = newName.trim();
+    setBusy(true);
+    if (name && name.toLowerCase() !== p.display_name.toLowerCase()) {
+      const { data } = await supabase
+        .from("players")
+        .update({ display_name: name })
+        .eq("id", p.id)
+        .select()
+        .single();
+      setBusy(false);
+      if (data) pick(data as Player);
+      return;
+    }
+    setBusy(false);
+    pick(p);
+  }
+
+  function tryCreate() {
+    const name = trimmed;
+    if (!name) return;
+    const lower = name.toLowerCase();
+    const exact = players.find((p) => p.display_name.toLowerCase() === lower);
+    if (exact) {
+      setSuggest([exact]);
+      return;
+    }
+    const partial = players.filter(
+      (p) =>
+        p.display_name.toLowerCase().includes(lower) ||
+        lower.includes(p.display_name.toLowerCase()),
+    );
+    if (partial.length > 0) {
+      setSuggest(partial);
+      return;
+    }
+    void doCreate(name);
+  }
+
+  async function doCreate(name: string) {
     setBusy(true);
     const { data, error } = await supabase
       .from("players")
-      .insert({ display_name: displayName })
+      .insert({ display_name: name })
       .select()
       .single();
     setBusy(false);
     if (!error && data) pick(data as Player);
   }
 
-  if (browseAll) {
-    const filtered = allPlayers.filter((p) =>
-      p.display_name.toLowerCase().includes(filter.toLowerCase()),
-    );
+  if (renaming) {
     return (
-      <div className="px-5 py-8">
-        <h1 className="text-2xl font-bold">{t("pick_your_name")}</h1>
-        <input
-          autoFocus
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder={t("search_players")}
-          className="mt-4 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-primary"
-        />
-        <ul className="mt-3 space-y-2">
-          {filtered.map((p) => (
-            <li key={p.id}>
-              <button
-                onClick={() => pick(p)}
-                className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-start"
-              >
-                <span className="font-semibold">{p.display_name}</span>
-                <span className="text-xs text-ink-soft">
-                  {t("joined")} {new Date(p.created_at).toLocaleDateString()}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="px-5 py-10">
+        <h1 className="text-2xl font-bold">{t("continue_as")}</h1>
+        <p className="mt-1 text-sm text-ink-soft">Update the display name if you'd like.</p>
+        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
+          <Avatar avatar={renaming.avatar} name={renaming.display_name} size={48} className="border border-border text-2xl" />
+          <input
+            autoFocus
+            value={renameTo}
+            onChange={(e) => setRenameTo(e.target.value)}
+            className="flex-1 rounded-xl border border-border bg-white px-3 py-2 text-base outline-none focus:border-primary"
+          />
+        </div>
         <button
-          onClick={() => setBrowseAll(false)}
-          className="mt-6 w-full rounded-2xl border border-border py-3 text-sm font-medium text-ink-soft"
+          disabled={busy || !renameTo.trim()}
+          onClick={() => continueAs(renaming, renameTo)}
+          className="mt-4 w-full rounded-2xl bg-primary py-3 font-semibold text-white disabled:opacity-50"
         >
-          ← {t("signin_title")}
+          {t("lets_go")}
+        </button>
+        <button
+          onClick={() => setRenaming(null)}
+          className="mt-2 w-full rounded-2xl border border-border py-3 text-sm font-medium text-ink-soft"
+        >
+          ←
         </button>
       </div>
     );
   }
 
-  if (matches) {
+  if (suggest) {
     return (
-      <div className="px-5 py-8">
-        <h1 className="text-2xl font-bold">{t("continue_as")}…</h1>
+      <div className="px-5 py-10">
+        <h1 className="text-2xl font-bold">Did you mean…?</h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          {suggest.length === 1
+            ? "A player with a similar name already exists."
+            : "Some existing players look similar."}
+        </p>
         <ul className="mt-4 space-y-2">
-          {matches.map((p) => (
+          {suggest.map((p) => (
             <li key={p.id}>
               <button
-                onClick={() => pick(p)}
-                className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-start"
+                onClick={() => {
+                  setRenameTo(trimmed || p.display_name);
+                  setRenaming(p);
+                  setSuggest(null);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-start"
               >
-                <span className="font-semibold">{p.display_name}</span>
-                <span className="text-xs text-ink-soft">
-                  {t("joined")} {new Date(p.created_at).toLocaleDateString()}
-                </span>
+                <Avatar avatar={p.avatar} name={p.display_name} size={36} className="border border-border text-xl" />
+                <span className="flex-1 font-semibold">{p.display_name}</span>
+                <span className="text-xs font-semibold text-primary">{t("continue_as")} →</span>
               </button>
             </li>
           ))}
         </ul>
         <button
           disabled={busy}
-          onClick={() => createNew(name.trim())}
+          onClick={() => {
+            setSuggest(null);
+            void doCreate(trimmed);
+          }}
           className="mt-4 w-full rounded-2xl bg-primary py-3 font-semibold text-white"
         >
-          {t("create_new")}
+          No — create "{trimmed}" as new
         </button>
         <button
-          onClick={() => setMatches(null)}
+          onClick={() => setSuggest(null)}
           className="mt-2 w-full rounded-2xl border border-border py-3 text-sm font-medium text-ink-soft"
         >
           ←
@@ -144,34 +165,52 @@ export function SignInScreen({ onSignedIn }: { onSignedIn: (p: Player) => void }
   }
 
   return (
-    <div className="px-5 py-12">
+    <div className="px-5 py-8">
       <div className="text-5xl">⚽️</div>
-      <h1 className="mt-4 text-3xl font-bold">{t("signin_title")}</h1>
-      <p className="mt-2 text-ink-soft">{t("signin_subtitle")}</p>
+      <h1 className="mt-3 text-2xl font-bold">{t("signin_title")}</h1>
+      <p className="mt-1 text-ink-soft">{t("pick_your_name")}</p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-3">
-        <input
-          autoFocus
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("first_name")}
-          className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg outline-none focus:border-primary"
-        />
+      <input
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder={t("search_players")}
+        className="mt-5 w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base outline-none focus:border-primary"
+      />
+
+      <ul className="mt-3 space-y-2">
+        {filtered.map((p) => (
+          <li key={p.id}>
+            <button
+              onClick={() => pick(p)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 text-start active:opacity-80"
+            >
+              <Avatar avatar={p.avatar} name={p.display_name} size={40} className="border border-border text-2xl" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{p.display_name}</p>
+                <p className="text-[11px] text-ink-soft">
+                  {t("joined")} {new Date(p.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </button>
+          </li>
+        ))}
+        {filtered.length === 0 && trimmed && (
+          <li className="rounded-2xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-ink-soft">
+            No match for "{trimmed}".
+          </li>
+        )}
+      </ul>
+
+      <div className="mt-8 border-t border-border pt-5">
+        <p className="px-1 text-[11px] uppercase tracking-wider text-ink-soft">New here?</p>
         <button
-          type="submit"
-          disabled={!name.trim() || busy}
-          className="w-full rounded-2xl bg-primary py-3 text-lg font-semibold text-white disabled:opacity-50"
+          onClick={tryCreate}
+          disabled={!trimmed || busy}
+          className="mt-2 w-full rounded-2xl border border-border bg-white py-3 text-sm font-semibold text-secondary disabled:opacity-40"
         >
-          {t("lets_go")}
+          {trimmed ? `Create new player "${trimmed}"` : "Type a name above to create a new player"}
         </button>
-      </form>
-
-      <button
-        onClick={() => setBrowseAll(true)}
-        className="mt-6 w-full rounded-2xl border border-border py-3 text-sm font-medium text-secondary"
-      >
-        {t("already_playing")}
-      </button>
+      </div>
     </div>
   );
 }
