@@ -141,11 +141,27 @@ async function handler() {
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("matches").upsert(rows, { onConflict: "id" });
+
+    // Merge by (home_team, away_team, kickoff date) to avoid duplicating rows
+    // that were backfilled with non-upstream ids (e.g. "wc26:*").
+    const { data: existing } = await supabaseAdmin
+      .from("matches")
+      .select("id,home_team,away_team,kickoff_at");
+    const keyFor = (h: string, a: string, k: string) =>
+      `${h.toLowerCase()}|${a.toLowerCase()}|${new Date(k).toISOString().slice(0, 10)}`;
+    const idByKey = new Map<string, string>();
+    (existing ?? []).forEach((m) => idByKey.set(keyFor(m.home_team, m.away_team, m.kickoff_at), m.id));
+
+    const merged = rows.map((r) => {
+      const existingId = idByKey.get(keyFor(r.home_team, r.away_team, r.kickoff_at));
+      return existingId ? { ...r, id: existingId } : r;
+    });
+
+    const { error } = await supabaseAdmin.from("matches").upsert(merged, { onConflict: "id" });
     if (error) {
       return Response.json({ ok: false, error: error.message }, { status: 500 });
     }
-    return Response.json({ ok: true, synced: rows.length, source });
+    return Response.json({ ok: true, synced: merged.length, source });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return Response.json({ ok: false, error: message }, { status: 500 });
