@@ -93,9 +93,11 @@ function MyPicksPage() {
             const ac = m.away_code || codeForTeam(m.away_team);
             const finished = m.status === "FINISHED";
             return (
-              <li
-                key={r.id}
-                className={`rounded-2xl border bg-surface px-4 py-3 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
+              <li key={r.id}>
+              <Link
+                to="/matches/$matchId"
+                params={{ matchId: r.match_id }}
+                className={`block rounded-2xl border bg-surface px-4 py-3 transition active:scale-[0.99] ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
               >
                 <div className="flex items-center justify-between text-xs text-ink-soft" dir={dir}>
                   <span className="truncate">
@@ -127,6 +129,7 @@ function MyPicksPage() {
                     )}
                   </span>
                 </div>
+              </Link>
               </li>
             );
           })}
