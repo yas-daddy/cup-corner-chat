@@ -4,10 +4,12 @@ import { Settings as SettingsIcon, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
+import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
 import type { Match, PredictionPointRow } from "@/lib/types";
+
 
 export const Route = createFileRoute("/my-picks")({
   head: () => ({ meta: [{ title: "WC26 Predictor — My Picks" }] }),
