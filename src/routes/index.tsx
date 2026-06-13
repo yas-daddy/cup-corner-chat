@@ -117,6 +117,14 @@ function HomePage() {
         </div>
       )}
 
+      {grouped.results.length > 0 && (
+        <Section title={t("results") ?? "Results"}>
+          {grouped.results.map((m) => (
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} />
+          ))}
+        </Section>
+      )}
+
       {grouped.live.length > 0 && (
         <Section title={t("live")} accent>
           {grouped.live.map((m) => (
@@ -124,6 +132,7 @@ function HomePage() {
           ))}
         </Section>
       )}
+
 
       {Array.from(grouped.upcoming.entries()).map(([day, list]) => (
         <Section key={day} title={day}>
