@@ -160,6 +160,8 @@ const FA: Dict = {
   write_a_comment: "نظر بنویسید…",
   match_discussion: "گفتگوی بازی",
   on_pick_of: "روی پیش‌بینی",
+  ai_tag: "هوش مصنوعی",
+  karim_daily_title: "خلاصه روز",
   load_more: "بیشتر",
   more_comments: "بیشتر",
   final: "پایان",
