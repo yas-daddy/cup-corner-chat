@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import { Send, Trash2 } from "lucide-react";
+import { isKarim } from "@/lib/bot";
+import { AiTag } from "@/components/AiTag";
 import type { Player } from "@/lib/identity";
 
 type Props = {
