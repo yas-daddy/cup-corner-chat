@@ -64,14 +64,14 @@ function HomePage() {
 
   const grouped = useMemo(() => {
     const now = Date.now();
+    const horizon = now + 1000 * 60 * 60 * 48;
     const live: Match[] = [];
     const upcoming: Map<string, Match[]> = new Map();
-    const finished: Match[] = [];
     (matches ?? []).forEach((m) => {
       const k = new Date(m.kickoff_at).getTime();
       if (m.status === "LIVE") live.push(m);
-      else if (m.status === "FINISHED") finished.push(m);
-      else if (k > now - 1000 * 60 * 60 * 2) {
+      else if (m.status === "FINISHED") return;
+      else if (k > now - 1000 * 60 * 60 * 2 && k <= horizon) {
         const day = new Date(m.kickoff_at).toLocaleDateString(lang === "fa" ? "fa-IR" : undefined, {
           weekday: "long",
           day: "numeric",
@@ -79,12 +79,11 @@ function HomePage() {
         });
         if (!upcoming.has(day)) upcoming.set(day, []);
         upcoming.get(day)!.push(m);
-      } else {
-        finished.push(m);
       }
     });
-    return { live, upcoming, finished: finished.slice(-6).reverse() };
+    return { live, upcoming };
   }, [matches, lang]);
+
 
   if (loading) {
     return <div className="grid min-h-[60vh] place-items-center text-ink-soft">{t("loading")}</div>;
@@ -129,13 +128,8 @@ function HomePage() {
         </Section>
       ))}
 
-      {grouped.finished.length > 0 && (
-        <Section title={t("finished")}>
-          {grouped.finished.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} />
-          ))}
-        </Section>
-      )}
+
+
     </div>
   );
 }
