@@ -6,8 +6,10 @@ const KEY = "wc26.playerId";
 export type Player = {
   id: string;
   display_name: string;
+  avatar: string | null;
   created_at: string;
 };
+
 
 export function getStoredPlayerId(): string | null {
   if (typeof window === "undefined") return null;
