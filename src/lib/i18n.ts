@@ -72,6 +72,8 @@ const EN: Dict = {
   activity_exact_score: "nailed the exact score",
   activity_correct_result: "got the result right",
   activity_no_points: "scored zero on this one",
+  pick_avatar_title: "Pick your avatar",
+  pick_avatar_sub: "Choose an emoji so other players can spot you in the feed.",
 };
 
 const FA: Dict = {
