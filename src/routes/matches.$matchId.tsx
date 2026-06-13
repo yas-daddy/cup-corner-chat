@@ -218,9 +218,8 @@ function MatchDetailPage() {
           {t("match_discussion")}
         </h2>
         <div className="rounded-2xl border border-border bg-surface p-3">
-          <CommentThread
-            targetType="match"
-            targetId={matchId}
+          <MatchDiscussionThread
+            matchId={matchId}
             currentPlayerId={me?.id ?? null}
           />
         </div>
