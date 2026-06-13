@@ -40,6 +40,8 @@ const EN: Dict = {
   settings: "Settings",
   language: "Language",
   change_name: "Change name",
+  avatar: "Avatar",
+
   save: "Save",
   scoring_title: "How scoring works",
   scoring_body: "+3 for the correct result (win / draw / loss). +5 bonus for the exact score. Exact = 8 points.",
