@@ -157,6 +157,7 @@ const FA: Dict = {
   no_comments: "هنوز نظری نیست.",
   write_a_comment: "نظر بنویسید…",
   match_discussion: "گفتگوی بازی",
+  on_pick_of: "روی پیش‌بینی",
   load_more: "بیشتر",
   more_comments: "بیشتر",
   final: "پایان",
