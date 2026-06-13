@@ -85,18 +85,37 @@ function MatchDetailPage() {
         const pmap: Record<string, Player> = {};
         (players as Player[] | null)?.forEach((p) => (pmap[p.id] = p));
         if (!active) return;
-        setRows(
-          list
-            .filter((p) => pmap[p.player_id])
-            .map((p) => ({
-              player: pmap[p.player_id],
-              pred_home: p.pred_home,
-              pred_away: p.pred_away,
-              points: 0,
-              is_exact: false,
-              is_correct_result: false,
-            })),
-        );
+        const mapped = list
+          .filter((p) => pmap[p.player_id])
+          .map((p) => ({
+            player: pmap[p.player_id],
+            pred_home: p.pred_home,
+            pred_away: p.pred_away,
+            points: 0,
+            is_exact: false,
+            is_correct_result: false,
+          }));
+        const mm = m as Match;
+        const isLive = mm.status === "LIVE" && mm.home_score != null && mm.away_score != null;
+        if (isLive) {
+          const lh = mm.home_score!;
+          const la = mm.away_score!;
+          const sign = (x: number) => (x > 0 ? 1 : x < 0 ? -1 : 0);
+          const liveDir = sign(lh - la);
+          mapped.sort((a, b) => {
+            const aExact = a.pred_home === lh && a.pred_away === la ? 0 : 1;
+            const bExact = b.pred_home === lh && b.pred_away === la ? 0 : 1;
+            if (aExact !== bExact) return aExact - bExact;
+            const aDir = sign(a.pred_home - a.pred_away) === liveDir ? 0 : 1;
+            const bDir = sign(b.pred_home - b.pred_away) === liveDir ? 0 : 1;
+            if (aDir !== bDir) return aDir - bDir;
+            const aDist = Math.abs(a.pred_home - lh) + Math.abs(a.pred_away - la);
+            const bDist = Math.abs(b.pred_home - lh) + Math.abs(b.pred_away - la);
+            if (aDist !== bDist) return aDist - bDist;
+            return a.player.display_name.localeCompare(b.player.display_name);
+          });
+        }
+        setRows(mapped);
       } else {
         // Upcoming — show every player's pick
         const { data: preds } = await supabase
