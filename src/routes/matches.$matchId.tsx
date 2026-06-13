@@ -208,17 +208,33 @@ function MatchDetailPage() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {rows.map((r) => (
+          {(live && match.home_score != null && match.away_score != null
+            ? [...rows].sort((a, b) => {
+                const lh = match.home_score!, la = match.away_score!;
+                const pa = projectPoints(a.pred_home, a.pred_away, lh, la);
+                const pb = projectPoints(b.pred_home, b.pred_away, lh, la);
+                if (pa !== pb) return pb - pa;
+                const da = Math.abs(a.pred_home - lh) + Math.abs(a.pred_away - la);
+                const db = Math.abs(b.pred_home - lh) + Math.abs(b.pred_away - la);
+                if (da !== db) return da - db;
+                return a.player.display_name.localeCompare(b.player.display_name);
+              })
+            : rows
+          ).map((r) => (
             <PredictionRow
               key={r.player.id}
               row={r}
               matchId={matchId}
               finished={finished}
+              liveScore={live && match.home_score != null && match.away_score != null
+                ? { home: match.home_score, away: match.away_score }
+                : null}
               currentPlayerId={me?.id ?? null}
             />
           ))}
         </ul>
       )}
+
 
       <section className="mt-8">
         <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
