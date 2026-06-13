@@ -95,6 +95,8 @@ const EN: Dict = {
   no_results: "No results.",
   champion_locks_in: "Locks in",
   champion_locked: "Locked — kickoff has begun.",
+  champion_hidden_until_lock: "Hidden until June 20",
+
   d_short: "d",
   h_short: "h",
 };
@@ -190,6 +192,8 @@ const FA: Dict = {
   no_results: "نتیجه‌ای نیست.",
   champion_locks_in: "قفل می‌شود تا",
   champion_locked: "قفل شده — مسابقات شروع شده است.",
+  champion_hidden_until_lock: "تا ۲۰ ژوئن مخفی است",
+
   d_short: "روز",
   h_short: "ساعت",
 };

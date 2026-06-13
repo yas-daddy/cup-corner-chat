@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, Trophy, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
@@ -8,6 +8,10 @@ import { codeForTeam } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
+
+const CHAMPION_LOCK_AT = new Date("2026-06-20T00:00:00Z").getTime();
+type ChampionPick = { team: string; team_code: string | null };
+
 
 export const Route = createFileRoute("/players/$playerId")({
   head: () => ({ meta: [{ title: "WC26 Predictor — Player" }, { name: "robots", content: "noindex" }] }),
@@ -22,6 +26,8 @@ function PlayerProfilePage() {
   const [rows, setRows] = useState<PredictionPointRow[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
+  const [champion, setChampion] = useState<ChampionPick | null>(null);
+
 
   useEffect(() => {
     let active = true;
@@ -33,7 +39,16 @@ function PlayerProfilePage() {
         return;
       }
       setPlayer(p as Player);
+      void supabase
+        .from("champion_predictions")
+        .select("team,team_code")
+        .eq("player_id", playerId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (active && data) setChampion(data as ChampionPick);
+        });
       const { data } = await supabase.from("prediction_points").select("*").eq("player_id", playerId);
+
       const list = (data as PredictionPointRow[] | null) ?? [];
       if (!active) return;
       setRows(list);
@@ -95,6 +110,10 @@ function PlayerProfilePage() {
         <Stat label={t("correct_results")} value={n(summary.correct)} tone="success" />
         <Stat label={t("exact_scores")} value={n(summary.exact)} tone="primary" />
       </div>
+
+      <ChampionRow champion={champion} />
+
+
 
       {sorted.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
@@ -161,3 +180,32 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: "gol
     </div>
   );
 }
+
+function ChampionRow({ champion }: { champion: ChampionPick | null }) {
+  const { t, tc } = useI18n();
+  const revealed = Date.now() >= CHAMPION_LOCK_AT;
+  return (
+    <div className="mb-4 rounded-2xl border border-border bg-surface px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+          <Trophy className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("champion_title")}</p>
+          {!champion ? (
+            <p className="text-sm text-ink-soft">{t("champion_no_pick")}</p>
+          ) : revealed ? (
+            <p className="truncate text-base font-bold">
+              {flagFromCode(champion.team_code || codeForTeam(champion.team) || "")} {tc(champion.team)}
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 text-sm text-ink-soft">
+              <Lock className="h-3.5 w-3.5" /> {t("champion_hidden_until_lock")}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
