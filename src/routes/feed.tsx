@@ -114,7 +114,7 @@ function FeedPage() {
               key={a.id}
               activity={a}
               actor={players[a.actor_id] ?? null}
-              match={matches[a.match_id] ?? null}
+              match={a.match_id ? (matches[a.match_id] ?? null) : null}
               currentPlayerId={player.id}
             />
           ))}
