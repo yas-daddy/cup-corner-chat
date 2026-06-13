@@ -1,42 +1,80 @@
-# Unified comments & reactions per prediction
+# Karim — the AI roast bot
 
-Today there are three disconnected comment threads for any given pick:
-- Feed card → `target_type = 'activity'`, keyed by the random `feed_activities.id`
-- Match page prediction row → `target_type = 'prediction'`, keyed by `playerId::matchId`
-- Match discussion → `target_type = 'match'`, keyed by `matchId`
+A built-in AI "player" called **Karim** (🤖 avatar) does two things:
 
-So a comment Taha leaves on Yasin's feed card is invisible on the match page, and vice versa. We'll collapse this to one canonical thread per (player, match) plus the match-wide discussion that aggregates them.
+1. **Roasts losers.** Whenever a match finishes and a player gets **0 points** on their pick, Karim posts a short, savage comment on that player's prediction thread.
+2. **Daily wrap.** Every day at **09:00 UTC**, Karim publishes a single feed post recapping the previous 24h: who scored the most, top movers, current leaderboard top-3, and a one-liner about the day.
 
-## Behavior after the change
+Karim is rendered exactly like a normal player but with a permanent **"AI" pill** next to the name everywhere their avatar appears (feed cards, comments). The avatar slot shows the 🤖 emoji.
 
-- Every feed card that represents a specific pick ("made a pick", "updated pick", "exact score", "correct result", "no points") shares one thread with that player's prediction row on the match page. Same comments, same reactions, same count.
-- The match page's "Match discussion" shows a merged view: all comments left on the match itself **plus** all comments left on any prediction for that match, sorted by time, each row labeled with whose pick it was on (or "On the match" for match-level ones). New comments typed into the match discussion box are still saved as match-level.
-- Notification triggers keep working unchanged — `notify_on_comment` / `notify_on_reaction` already handle `prediction` and `activity` target types; we just stop using `activity` going forward.
+## Behavior rules
 
-## Changes
+- **Tone:** ~1–2 sentences, blunt, funny, roasty. No emojis other than the avatar. No insults about people, only about the pick.
+- **Language:** matches the actor's last-used locale isn't tracked, so Karim posts in **English** for v1.
+- **Roast trigger:** fires only on `feed_activities.kind = 'points_awarded'` with `points = 0`. Idempotent — one roast per (player, match).
+- **Daily wrap:** one post per UTC day. If a day has zero finished matches and zero new picks, Karim skips it.
+- Karim never roasts itself, never comments on its own posts, and is excluded from the leaderboard.
 
-### Frontend
-- `src/components/FeedCard.tsx`: switch `ReactionBar` and `CommentThread` from `targetType="activity"` + `activity.id` to `targetType="prediction"` + `predictionTargetId(activity.actor_id, activity.match_id)`. Drop the `useComments("activity", …)` call.
-- `src/lib/social.ts`: add `useMatchDiscussion(matchId)` that loads + realtime-subscribes to comments where `target_type='match' AND target_id=matchId` **union** `target_type='prediction' AND target_id LIKE '%::matchId'`, returning each row with its `target_type` and (for predictions) the resolved `player_id`.
-- New `src/components/MatchDiscussionThread.tsx`: renders that merged feed (with a small "on <name>'s pick" label per prediction comment), and a composer that posts new comments as `target_type='match'`. Replaces the `CommentThread targetType="match"` block in `src/routes/matches.$matchId.tsx`.
-- `src/lib/social.ts` `fetchMatchCommentCounts`: unchanged in behavior (already sums match + prediction comments).
+## Identity & UI
 
-### Data migration (one-off backfill)
-Migrate existing `comments`/`reactions` rows with `target_type='activity'` to the new prediction key so historical conversations don't vanish:
+- Seed one row in `players` with a fixed UUID and `display_name = 'Karim'`, `avatar = '🤖'`. Constant `KARIM_ID` exported from `src/lib/bot.ts`.
+- New small `<AiTag />` component (rounded "AI" pill). Shown in:
+  - `FeedCard` header when `actor.id === KARIM_ID`
+  - `CommentThread` + `MatchDiscussionThread` comment rows when `comment.player_id === KARIM_ID`
+- `FeedCard` gets a new branch for `kind = 'daily_summary'`: no match block, just Karim's text body inside the card.
+- Leaderboard query filters out `KARIM_ID`.
 
-```text
-UPDATE comments c
-SET target_type='prediction',
-    target_id = fa.actor_id || '::' || fa.match_id
-FROM feed_activities fa
-WHERE c.target_type='activity' AND c.target_id = fa.id::text;
+## Data model
 
--- same for reactions, with ON CONFLICT cleanup for the (target,player) uniqueness
-```
+Add to `public.feed_activities`:
+- `body text` — used only by `daily_summary` posts (null for others)
+- extend the kind check constraint to allow `'daily_summary'`
 
-Reactions have a unique-per-player constraint, so the migration de-dupes by keeping the most recent row per `(target_type, target_id, player_id)` before the update.
+No new tables for the roast trigger guard — uniqueness is enforced by adding a partial unique index on `comments(target_type, target_id, player_id) WHERE player_id = KARIM_ID`, so a second roast attempt is a no-op.
+
+## Server pieces
+
+All AI calls go through Lovable AI Gateway (`google/gemini-3-flash-preview`) from server-only TanStack code.
+
+1. **`src/lib/karim.server.ts`** — provider helper + two functions:
+   - `roastPrediction({ playerName, homeTeam, awayTeam, predHome, predAway, finalHome, finalAway })` → short string
+   - `writeDailySummary({ topScorers, topMovers, leaderboardTop3, finishedMatches, newPicks })` → short string
+2. **`src/routes/api/public/karim-roast.ts`** (POST) — called by a Postgres trigger via `pg_net` whenever a new `feed_activities` row lands with `kind='points_awarded' AND points=0`. Validates `apikey` header against the anon key, generates the roast, inserts into `comments` as Karim (admin client) using `target_type='prediction'`, `target_id = playerId::matchId`. Idempotent thanks to the partial unique index.
+3. **`src/routes/api/public/karim-daily.ts`** (POST) — called by `pg_cron` at `0 9 * * *`. Aggregates the previous UTC day's `feed_activities` + `prediction_points` + leaderboard top 3, generates the summary, inserts one `feed_activities` row with `kind='daily_summary'`, `actor_id=KARIM_ID`, `match_id=''` (sentinel — see below), `body=<summary>`.
+
+Both endpoints live under `/api/public/*` so they bypass auth at the edge; both still verify the `apikey` header matches the project's anon/publishable key before doing any work.
+
+### `match_id` for daily summaries
+
+`feed_activities.match_id` is currently `text NOT NULL`. We'll relax it to nullable in the same migration so `daily_summary` rows don't need a fake match.
+
+## Database migration
+
+- `ALTER TABLE feed_activities ALTER COLUMN match_id DROP NOT NULL`
+- Drop and recreate the `kind` check constraint to include `'daily_summary'`
+- `ALTER TABLE feed_activities ADD COLUMN body text`
+- Partial unique index on comments for Karim roasts (described above)
+- Insert Karim's `players` row (fixed UUID)
+- Trigger `notify_karim_on_zero_points`: AFTER INSERT on `feed_activities` WHEN `NEW.kind='points_awarded' AND NEW.points=0` → `pg_net.http_post` to `/api/public/karim-roast`
+- `cron.schedule('karim-daily-summary', '0 9 * * *', ...)` → `pg_net.http_post` to `/api/public/karim-daily`
+- Enable `pg_net` and `pg_cron` if not already enabled
+
+The stable URL `https://project--bdd50858-c6d6-4698-b754-84bbaed5dc0b.lovable.app` is used for both pg_net calls so they keep working across renames.
+
+## Frontend touches
+
+- `src/lib/bot.ts` — `KARIM_ID`, `isKarim(id)` helper
+- `src/components/AiTag.tsx` — small "AI" pill
+- `src/components/FeedCard.tsx` — render `kind='daily_summary'` branch + AI tag
+- `src/components/CommentThread.tsx` + `MatchDiscussionThread.tsx` — AI tag next to Karim's comments
+- `src/routes/leaderboard.tsx` — exclude `KARIM_ID`
+- `src/lib/i18n.ts` — `ai_tag` ("AI"), `karim_daily_title` ("Daily wrap")
+- `src/integrations/supabase/types.ts` — add `body` and nullable `match_id` to `feed_activities`
 
 ## Out of scope
-- No schema change to `comments`/`reactions` (target_type stays a free text column).
-- No edit to notification triggers — they already cover `prediction` targets.
-- Match-level composer still posts match-level comments; we are not forcing all new comments into a prediction thread.
+
+- No Farsi roasts for v1 (the model is fine at it, but we'd need per-recipient language metadata).
+- No reactions/comments from Karim on its own daily post.
+- No per-player opt-out of being roasted.
+- No mid-match live commentary.
+- No "hype" comments on exact scores or correct results — strictly 0-point roasts as you asked.
