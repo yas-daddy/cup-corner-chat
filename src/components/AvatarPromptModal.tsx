@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AVATAR_EMOJIS, Avatar } from "@/components/AvatarPicker";
+import { AVATAR_EMOJIS, Avatar, useTakenAvatars } from "@/components/AvatarPicker";
 import { supabase } from "@/integrations/supabase/client";
 import type { Player } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
