@@ -97,27 +97,31 @@ function MatchDetailPage() {
             })),
         );
       } else {
-        // Upcoming, not locked — only show the current user's own pick (others hidden)
-        if (!me) { setRows([]); return; }
-        const { data: mine } = await supabase
+        // Upcoming — show every player's pick
+        const { data: preds } = await supabase
           .from("predictions")
           .select("*")
-          .eq("match_id", matchId)
-          .eq("player_id", me.id)
-          .maybeSingle();
+          .eq("match_id", matchId);
+        const list = (preds as Prediction[] | null) ?? [];
+        const ids = list.map((p) => p.player_id);
+        const { data: players } = ids.length
+          ? await supabase.from("players").select("*").in("id", ids)
+          : { data: [] as Player[] };
+        const pmap: Record<string, Player> = {};
+        (players as Player[] | null)?.forEach((p) => (pmap[p.id] = p));
         if (!active) return;
-        if (mine) {
-          setRows([{
-            player: me,
-            pred_home: (mine as Prediction).pred_home,
-            pred_away: (mine as Prediction).pred_away,
-            points: 0,
-            is_exact: false,
-            is_correct_result: false,
-          }]);
-        } else {
-          setRows([]);
-        }
+        setRows(
+          list
+            .filter((p) => pmap[p.player_id])
+            .map((p) => ({
+              player: pmap[p.player_id],
+              pred_home: p.pred_home,
+              pred_away: p.pred_away,
+              points: 0,
+              is_exact: false,
+              is_correct_result: false,
+            })),
+        );
       }
     })();
     return () => { active = false; };
