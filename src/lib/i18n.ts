@@ -22,6 +22,8 @@ const EN: Dict = {
   upcoming: "Upcoming",
   live: "Live",
   finished: "Finished",
+  results: "Results",
+
   locked: "Locked",
   saved: "Saved",
   not_predicted: "Not predicted",
