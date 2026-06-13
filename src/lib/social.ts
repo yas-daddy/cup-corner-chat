@@ -212,3 +212,19 @@ export async function fetchMatchCommentCounts(matchIds: string[]) {
   });
   return out;
 }
+
+/**
+ * Fetch how many players have made a prediction for each match.
+ */
+export async function fetchMatchPredictionCounts(matchIds: string[]) {
+  const out: Record<string, number> = {};
+  if (matchIds.length === 0) return out;
+  const { data } = await supabase
+    .from("predictions")
+    .select("match_id")
+    .in("match_id", matchIds);
+  ((data as { match_id: string }[] | null) ?? []).forEach((r) => {
+    out[r.match_id] = (out[r.match_id] ?? 0) + 1;
+  });
+  return out;
+}
