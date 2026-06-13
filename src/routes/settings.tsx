@@ -33,14 +33,8 @@ function SettingsPage() {
     if (!error && data) setPlayer(data as typeof player);
   }
 
-  async function refresh() {
-    setSyncing(true);
-    try {
-      await fetch("/api/public/sync-matches", { method: "POST" });
-    } finally {
-      setSyncing(false);
-    }
-  }
+
+
 
   function signOut() {
     storePlayerId(null);
