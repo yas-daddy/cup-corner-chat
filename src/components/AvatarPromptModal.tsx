@@ -14,6 +14,7 @@ export function AvatarPromptModal({
   const { t } = useI18n();
   const [picked, setPicked] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const taken = useTakenAvatars(player.id);
 
   async function save(emoji: string) {
     if (saving) return;
@@ -26,8 +27,14 @@ export function AvatarPromptModal({
       .select()
       .single();
     setSaving(false);
-    if (!error && data) onSaved(data as Player);
+    if (error) {
+      setPicked(null);
+      alert("That emoji was just taken — please pick another.");
+      return;
+    }
+    if (data) onSaved(data as Player);
   }
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
