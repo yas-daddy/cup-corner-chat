@@ -65,13 +65,16 @@ function HomePage() {
   const grouped = useMemo(() => {
     const now = Date.now();
     const horizon = now + 1000 * 60 * 60 * 48;
+    const pastWindow = now - 1000 * 60 * 60 * 48;
     const live: Match[] = [];
+    const results: Match[] = [];
     const upcoming: Map<string, Match[]> = new Map();
     (matches ?? []).forEach((m) => {
       const k = new Date(m.kickoff_at).getTime();
       if (m.status === "LIVE") live.push(m);
-      else if (m.status === "FINISHED") return;
-      else if (k > now - 1000 * 60 * 60 * 2 && k <= horizon) {
+      else if (m.status === "FINISHED") {
+        if (k >= pastWindow) results.push(m);
+      } else if (k > now - 1000 * 60 * 60 * 2 && k <= horizon) {
         const day = new Date(m.kickoff_at).toLocaleDateString(lang === "fa" ? "fa-IR" : undefined, {
           weekday: "long",
           day: "numeric",
@@ -81,8 +84,10 @@ function HomePage() {
         upcoming.get(day)!.push(m);
       }
     });
-    return { live, upcoming };
+    results.sort((a, b) => new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime());
+    return { live, results, upcoming };
   }, [matches, lang]);
+
 
 
   if (loading) {
