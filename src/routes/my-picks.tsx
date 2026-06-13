@@ -23,7 +23,7 @@ function MyPicksPage() {
   const [rows, setRows] = useState<PredictionPointRow[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
-  const [resultsOpen, setResultsOpen] = useState(true);
+
 
 
   useEffect(() => {
