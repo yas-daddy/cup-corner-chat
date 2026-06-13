@@ -64,6 +64,7 @@ const EN: Dict = {
   no_comments: "No comments yet.",
   write_a_comment: "Write a comment…",
   match_discussion: "Match discussion",
+  on_pick_of: "on the pick of",
   load_more: "Load more",
   more_comments: "more",
   final: "FT",
