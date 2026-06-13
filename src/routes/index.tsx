@@ -52,15 +52,15 @@ function HomePage() {
     setMatches((data as Match[] | null) ?? []);
   }
 
-  async function refresh() {
-    setSyncing(true);
-    try {
-      await fetch("/api/public/sync-matches", { method: "POST" });
-      await loadMatches();
-    } finally {
-      setSyncing(false);
+  function handleTitleTap() {
+    const now = Date.now();
+    tapTimes.current = [...tapTimes.current.filter((t) => now - t < 700), now];
+    if (tapTimes.current.length >= 3) {
+      tapTimes.current = [];
+      navigate({ to: "/admin" });
     }
   }
+
 
   const grouped = useMemo(() => {
     const now = Date.now();
