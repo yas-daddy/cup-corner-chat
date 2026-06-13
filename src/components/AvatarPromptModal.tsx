@@ -47,19 +47,28 @@ export function AvatarPromptModal({
           </div>
         </div>
         <div className="grid grid-cols-8 gap-2 rounded-2xl border border-border bg-surface p-3">
-          {AVATAR_EMOJIS.map((e) => (
-            <button
-              key={e}
-              type="button"
-              disabled={saving}
-              onClick={() => save(e)}
-              className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
-                picked === e ? "bg-primary/15 ring-2 ring-primary" : "hover:bg-white active:bg-white"
-              }`}
-            >
-              {e}
-            </button>
-          ))}
+          {AVATAR_EMOJIS.map((e) => {
+            const isTaken = taken.has(e);
+            return (
+              <button
+                key={e}
+                type="button"
+                disabled={saving || isTaken}
+                title={isTaken ? "Already taken" : undefined}
+                onClick={() => save(e)}
+                className={`grid aspect-square place-items-center rounded-xl text-2xl transition ${
+                  picked === e
+                    ? "bg-primary/15 ring-2 ring-primary"
+                    : isTaken
+                      ? "opacity-25 grayscale cursor-not-allowed"
+                      : "hover:bg-white active:bg-white"
+                }`}
+              >
+                {e}
+              </button>
+            );
+          })}
+
         </div>
       </div>
     </div>
