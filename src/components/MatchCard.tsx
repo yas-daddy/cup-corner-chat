@@ -90,7 +90,11 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         {finished ? (
           <ScoreBox value={`${n(match.home_score ?? 0)} - ${n(match.away_score ?? 0)}`} />
         ) : locked ? (
-          <Badge tone="accent" icon={<Lock className="h-3 w-3" />}>{t("locked")}</Badge>
+          prediction ? (
+            <ScoreBox value={`${n(prediction.pred_home)} - ${n(prediction.pred_away)}`} />
+          ) : (
+            <Badge tone="accent" icon={<Lock className="h-3 w-3" />}>{t("locked")}</Badge>
+          )
         ) : (
           <Stepper value={h} onChange={(v) => { setH(v); scheduleSave(v, a); }} />
         )}
@@ -108,6 +112,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         ) : (
           <Stepper value={a} onChange={(v) => { setA(v); scheduleSave(h, v); }} />
         )}
+
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs">
