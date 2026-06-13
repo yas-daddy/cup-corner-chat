@@ -6,6 +6,7 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { MatchCard } from "@/components/MatchCard";
 import { Avatar } from "@/components/AvatarPicker";
 import { AvatarPromptModal } from "@/components/AvatarPromptModal";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
@@ -119,7 +120,7 @@ function HomePage() {
       {!player.avatar && <AvatarPromptModal player={player} onSaved={(p) => setPlayer(p)} />}
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-xs uppercase tracking-wider text-ink-soft truncate">{player.display_name}</p>
           <h1
             onClick={handleTitleTap}
@@ -128,6 +129,7 @@ function HomePage() {
             {t("home")}
           </h1>
         </div>
+        <NotificationsBell playerId={player.id} />
       </header>
 
 

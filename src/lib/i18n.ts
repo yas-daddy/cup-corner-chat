@@ -74,6 +74,15 @@ const EN: Dict = {
   activity_no_points: "scored zero on this one",
   pick_avatar_title: "Pick your avatar",
   pick_avatar_sub: "Choose an emoji so other players can spot you in the feed.",
+  notifications: "Notifications",
+  no_notifications: "You're all caught up.",
+  someone: "Someone",
+  notif_liked: "liked your pick",
+  notif_commented: "commented on your pick",
+  notif_replied: "replied in a thread you're in",
+  notif_result_exact: "You nailed the exact score! +8",
+  notif_result_correct: "You got the result right. +3",
+  notif_result_none: "Result is in — no points this time.",
 };
 
 const FA: Dict = {
@@ -146,6 +155,15 @@ const FA: Dict = {
   activity_no_points: "امتیازی نگرفت",
   pick_avatar_title: "آواتار خود را انتخاب کنید",
   pick_avatar_sub: "یک ایموجی انتخاب کنید تا بازیکنان دیگر شما را در فید بشناسند.",
+  notifications: "اعلان‌ها",
+  no_notifications: "همه چیز خوانده شده است.",
+  someone: "یک نفر",
+  notif_liked: "پیش‌بینی شما را پسندید",
+  notif_commented: "روی پیش‌بینی شما نظر گذاشت",
+  notif_replied: "در گفتگویی که شما هم بودید پاسخ داد",
+  notif_result_exact: "نتیجه دقیق را زدید! ۸+",
+  notif_result_correct: "نتیجه را درست زدید. ۳+",
+  notif_result_none: "نتیجه آمد — این بار امتیازی نگرفتید.",
 };
 
 // Country name translations (Farsi). Default to English name otherwise.
