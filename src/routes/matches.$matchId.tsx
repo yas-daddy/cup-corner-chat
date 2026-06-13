@@ -217,6 +217,9 @@ function MatchDetailPage() {
       <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
         {t("predictions")}
       </h2>
+      {live && match.home_score != null && match.away_score != null && rows.length > 0 && (
+        <p className="mb-2 px-1 text-xs text-ink-soft">Ranked by closeness to live score</p>
+      )}
 
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
@@ -231,6 +234,8 @@ function MatchDetailPage() {
               matchId={matchId}
               finished={finished}
               currentPlayerId={me?.id ?? null}
+              liveHome={live ? match.home_score : null}
+              liveAway={live ? match.away_score : null}
             />
           ))}
         </ul>
