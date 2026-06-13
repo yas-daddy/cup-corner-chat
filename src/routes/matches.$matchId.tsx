@@ -257,12 +257,17 @@ function MatchDetailPage() {
 }
 
 function PredictionRow({
-  row, matchId, finished, currentPlayerId,
-}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null }) {
+  row, matchId, finished, currentPlayerId, liveHome, liveAway,
+}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null; liveHome?: number | null; liveAway?: number | null }) {
   const { t, n, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const targetId = predictionTargetId(row.player.id, matchId);
   const { comments } = useComments("prediction", targetId);
+
+  const liveActive = liveHome != null && liveAway != null;
+  const homeBusted = liveActive && liveHome! > row.pred_home;
+  const awayBusted = liveActive && liveAway! > row.pred_away;
+  const bothBusted = homeBusted && awayBusted;
 
   return (
     <li
@@ -285,8 +290,10 @@ function PredictionRow({
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
-            {n(row.pred_home)} - {n(row.pred_away)}
+          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-white"}`}>
+            <span className={!bothBusted && homeBusted ? "text-destructive" : ""}>{n(row.pred_home)}</span>
+            {" - "}
+            <span className={!bothBusted && awayBusted ? "text-destructive" : ""}>{n(row.pred_away)}</span>
           </span>
           {finished && (
             row.is_exact ? (
