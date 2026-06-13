@@ -192,6 +192,8 @@ const FA: Dict = {
   no_results: "نتیجه‌ای نیست.",
   champion_locks_in: "قفل می‌شود تا",
   champion_locked: "قفل شده — مسابقات شروع شده است.",
+  champion_hidden_until_lock: "تا ۲۰ ژوئن مخفی است",
+
   d_short: "روز",
   h_short: "ساعت",
 };
