@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, Lock, Check } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
 import { flagFromCode } from "@/lib/flags";
