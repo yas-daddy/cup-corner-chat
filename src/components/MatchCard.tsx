@@ -90,7 +90,11 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         {finished ? (
           <ScoreBox value={`${n(match.home_score ?? 0)} - ${n(match.away_score ?? 0)}`} />
         ) : locked ? (
-          <Badge tone="accent" icon={<Lock className="h-3 w-3" />}>{t("locked")}</Badge>
+          prediction ? (
+            <ScoreBox value={`${n(prediction.pred_home)} - ${n(prediction.pred_away)}`} />
+          ) : (
+            <Badge tone="accent" icon={<Lock className="h-3 w-3" />}>{t("locked")}</Badge>
+          )
         ) : (
           <Stepper value={h} onChange={(v) => { setH(v); scheduleSave(v, a); }} />
         )}
@@ -108,6 +112,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
         ) : (
           <Stepper value={a} onChange={(v) => { setA(v); scheduleSave(h, v); }} />
         )}
+
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs">
@@ -116,11 +121,20 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
             {hasPick ? `${t("predicted")}: ${n(h)} - ${n(a)}` : t("not_predicted")}
           </span>
         )}
+        {!finished && locked && (
+          <span className="flex items-center gap-1 text-ink-soft">
+            <Lock className="h-3 w-3" />
+            {prediction
+              ? `${t("predicted")}: ${n(prediction.pred_home)} - ${n(prediction.pred_away)}`
+              : t("not_predicted")}
+          </span>
+        )}
         {finished && prediction && (
           <span className="text-ink-soft">
             {t("predicted")}: {n(prediction.pred_home)} - {n(prediction.pred_away)}
           </span>
         )}
+
         {showSaved && (
           <span className="anim-pop flex items-center gap-1 font-semibold text-success">
             <Check className="h-3 w-3" /> {t("saved")}
