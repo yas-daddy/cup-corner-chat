@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, RefreshCw, LogOut } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
