@@ -123,7 +123,7 @@ export function useReactions(
     }
     void load();
     const ch = supabase
-      .channel(`reactions:${targetType}:${targetId}`)
+      .channel(`reactions:${targetType}:${targetId}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "reactions", filter: `target_id=eq.${targetId}` },
