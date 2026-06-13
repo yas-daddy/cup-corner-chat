@@ -35,8 +35,8 @@ export function AvatarPromptModal({
         <div className="mb-4 flex items-center gap-3">
           <Avatar avatar={picked} name={player.display_name} size={56} className="border border-border text-3xl" />
           <div className="min-w-0">
-            <h2 className="text-lg font-extrabold">{t("pick_avatar_title") ?? "Pick your avatar"}</h2>
-            <p className="text-xs text-ink-soft">{t("pick_avatar_sub") ?? "Choose an emoji to represent you in the feed."}</p>
+            <h2 className="text-lg font-extrabold">{t("pick_avatar_title")}</h2>
+            <p className="text-xs text-ink-soft">{t("pick_avatar_sub")}</p>
           </div>
         </div>
         <div className="grid grid-cols-8 gap-2 rounded-2xl border border-border bg-surface p-3">

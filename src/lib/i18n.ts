@@ -72,6 +72,8 @@ const EN: Dict = {
   activity_exact_score: "nailed the exact score",
   activity_correct_result: "got the result right",
   activity_no_points: "scored zero on this one",
+  pick_avatar_title: "Pick your avatar",
+  pick_avatar_sub: "Choose an emoji so other players can spot you in the feed.",
 };
 
 const FA: Dict = {
@@ -142,6 +144,8 @@ const FA: Dict = {
   activity_exact_score: "نتیجه دقیق را زد",
   activity_correct_result: "نتیجه را درست زد",
   activity_no_points: "امتیازی نگرفت",
+  pick_avatar_title: "آواتار خود را انتخاب کنید",
+  pick_avatar_sub: "یک ایموجی انتخاب کنید تا بازیکنان دیگر شما را در فید بشناسند.",
 };
 
 // Country name translations (Farsi). Default to English name otherwise.
