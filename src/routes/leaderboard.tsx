@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Trophy, Medal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 import type { LeaderRow } from "@/lib/types";
+import { Avatar } from "@/components/AvatarPicker";
+
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
