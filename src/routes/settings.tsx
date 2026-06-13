@@ -108,16 +108,6 @@ function SettingsPage() {
       )}
 
 
-      <Section>
-        <button
-          onClick={refresh}
-          disabled={syncing}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 font-semibold text-ink"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? t("refreshing") : t("refresh")}
-        </button>
-      </Section>
 
       <Section label={t("scoring_title")}>
         <p className="rounded-2xl border border-border bg-surface px-4 py-4 text-sm leading-relaxed text-ink-soft">
