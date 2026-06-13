@@ -27,29 +27,35 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
 
   const isPoints = activity.kind === "points_awarded";
   const pts = activity.points ?? 0;
+  const name = actor?.display_name ?? "…";
+  const action =
+    activity.kind === "prediction_created"
+      ? t("activity_predicted")
+      : activity.kind === "prediction_updated"
+        ? t("activity_updated_pick")
+        : pts === 8
+          ? t("activity_exact_score")
+          : pts === 3
+            ? t("activity_correct_result")
+            : t("activity_no_points");
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <div className="flex items-center gap-3" dir={dir}>
-        <Link to="/players/$playerId" params={{ playerId: activity.actor_id }}>
-          <Avatar avatar={actor?.avatar ?? null} name={actor?.display_name ?? "?"} size={40} className="border border-border text-xl" />
-        </Link>
+        {actor?.avatar && (
+          <Link to="/players/$playerId" params={{ playerId: activity.actor_id }}>
+            <Avatar avatar={actor.avatar} name={name} size={40} className="border border-border text-xl" />
+          </Link>
+        )}
         <div className="min-w-0 flex-1">
           <Link
             to="/players/$playerId"
             params={{ playerId: activity.actor_id }}
-            className="block truncate text-sm font-bold"
+            className="block text-sm font-bold leading-snug"
           >
-            {actor?.display_name ?? "…"}
+            {name} {action}
           </Link>
-          <p className="truncate text-xs text-ink-soft">
-            {activity.kind === "prediction_created" && t("activity_predicted")}
-            {activity.kind === "prediction_updated" && t("activity_updated_pick")}
-            {activity.kind === "points_awarded" &&
-              (pts === 8 ? t("activity_exact_score") : pts === 3 ? t("activity_correct_result") : t("activity_no_points"))}
-            {" · "}
-            {relTime(activity.created_at, n)}
-          </p>
+          <p className="text-xs text-ink-soft">{relTime(activity.created_at, n)}</p>
         </div>
         {isPoints && (
           pts === 8 ? (
