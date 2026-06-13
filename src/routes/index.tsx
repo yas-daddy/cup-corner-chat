@@ -5,6 +5,7 @@ import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
 import { MatchCard } from "@/components/MatchCard";
 import { Avatar } from "@/components/AvatarPicker";
+import { AvatarPromptModal } from "@/components/AvatarPromptModal";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
