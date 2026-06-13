@@ -121,11 +121,20 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
             {hasPick ? `${t("predicted")}: ${n(h)} - ${n(a)}` : t("not_predicted")}
           </span>
         )}
+        {!finished && locked && (
+          <span className="flex items-center gap-1 text-ink-soft">
+            <Lock className="h-3 w-3" />
+            {prediction
+              ? `${t("predicted")}: ${n(prediction.pred_home)} - ${n(prediction.pred_away)}`
+              : t("not_predicted")}
+          </span>
+        )}
         {finished && prediction && (
           <span className="text-ink-soft">
             {t("predicted")}: {n(prediction.pred_home)} - {n(prediction.pred_away)}
           </span>
         )}
+
         {showSaved && (
           <span className="anim-pop flex items-center gap-1 font-semibold text-success">
             <Check className="h-3 w-3" /> {t("saved")}
