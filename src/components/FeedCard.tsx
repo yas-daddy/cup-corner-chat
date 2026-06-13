@@ -20,7 +20,8 @@ type Props = {
 export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
   const { t, tc, n, dir } = useI18n();
   const [showComments, setShowComments] = useState(false);
-  const { comments } = useComments("activity", activity.id);
+  const threadTargetId = predictionTargetId(activity.actor_id, activity.match_id);
+  const { comments } = useComments("prediction", threadTargetId);
 
   const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
   const ac = match?.away_code || (match ? codeForTeam(match.away_team) : "");
