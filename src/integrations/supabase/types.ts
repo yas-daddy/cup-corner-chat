@@ -61,16 +61,19 @@ export type Database = {
       }
       players: {
         Row: {
+          avatar: string | null
           created_at: string
           display_name: string
           id: string
         }
         Insert: {
+          avatar?: string | null
           created_at?: string
           display_name: string
           id?: string
         }
         Update: {
+          avatar?: string | null
           created_at?: string
           display_name?: string
           id?: string
@@ -133,6 +136,7 @@ export type Database = {
     Views: {
       leaderboard: {
         Row: {
+          avatar: string | null
           correct_results: number | null
           created_at: string | null
           display_name: string | null

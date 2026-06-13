@@ -4,6 +4,8 @@ import { ChevronLeft, RefreshCw, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
+import { AvatarPicker } from "@/components/AvatarPicker";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "WC26 Predictor — Settings" }] }),
@@ -70,6 +72,23 @@ function SettingsPage() {
       </Section>
 
       {player && (
+        <Section label={t("avatar")}>
+          <AvatarPicker
+            value={player.avatar}
+            onChange={async (next) => {
+              const { data } = await supabase
+                .from("players")
+                .update({ avatar: next })
+                .eq("id", player.id)
+                .select()
+                .single();
+              if (data) setPlayer(data as typeof player);
+            }}
+          />
+        </Section>
+      )}
+
+      {player && (
         <Section label={t("change_name")}>
           <div className="flex gap-2">
             <input
@@ -87,6 +106,7 @@ function SettingsPage() {
           </div>
         </Section>
       )}
+
 
       <Section>
         <button
