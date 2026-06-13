@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, Lock, Check, MessageCircle } from "lucide-react";
+import { Minus, Plus, Lock, Check, MessageCircle, Users } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
@@ -13,9 +13,10 @@ type Props = {
   prediction: Prediction | null;
   onSaved?: (p: Prediction) => void;
   commentCount?: number;
+  predictionCount?: number;
 };
 
-export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0 }: Props) {
+export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0, predictionCount = 0 }: Props) {
   const { t, tc, n, lang, dir } = useI18n();
   const kickoff = new Date(match.kickoff_at);
   const now = Date.now();
@@ -154,10 +155,20 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         )}
       </div>
 
-      {commentCount > 0 && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
-          <MessageCircle className="h-3 w-3" />
-          <span className="tabular-nums">{n(commentCount)}</span>
+      {(commentCount > 0 || predictionCount > 0) && (
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1.5 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
+          {predictionCount > 0 && (
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              <span className="tabular-nums">{n(predictionCount)}</span>
+            </span>
+          )}
+          {commentCount > 0 && (
+            <span className="flex items-center gap-1">
+              <MessageCircle className="h-3 w-3" />
+              <span className="tabular-nums">{n(commentCount)}</span>
+            </span>
+          )}
         </div>
       )}
     </div>
