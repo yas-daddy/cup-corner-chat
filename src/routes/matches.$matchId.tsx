@@ -252,12 +252,16 @@ function MatchDetailPage() {
 }
 
 function PredictionRow({
-  row, matchId, finished, currentPlayerId,
-}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null }) {
+  row, matchId, finished, liveScore, currentPlayerId,
+}: { row: Row; matchId: string; finished: boolean; liveScore: { home: number; away: number } | null; currentPlayerId: string | null }) {
   const { t, n, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const targetId = predictionTargetId(row.player.id, matchId);
   const { comments } = useComments("prediction", targetId);
+
+  const homeBusted = !!liveScore && liveScore.away > row.pred_away;
+  const awayBusted = !!liveScore && liveScore.home > row.pred_home;
+  const liveProjected = liveScore ? projectPoints(row.pred_home, row.pred_away, liveScore.home, liveScore.away) : null;
 
   return (
     <li
@@ -281,9 +285,11 @@ function PredictionRow({
         </Link>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
-            {n(row.pred_home)} - {n(row.pred_away)}
+            <span className={homeBusted ? "text-destructive" : undefined}>{n(row.pred_home)}</span>
+            {" - "}
+            <span className={awayBusted ? "text-destructive" : undefined}>{n(row.pred_away)}</span>
           </span>
-          {finished && (
+          {finished ? (
             row.is_exact ? (
               <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
                 +{n(8)} ⭐
@@ -295,9 +301,22 @@ function PredictionRow({
             ) : (
               <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
             )
-          )}
+          ) : liveProjected != null ? (
+            liveProjected === 8 ? (
+              <span className="rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
+                +{n(8)} ⭐ {t("live")}
+              </span>
+            ) : liveProjected === 3 ? (
+              <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">
+                +{n(3)} {t("live")}
+              </span>
+            ) : (
+              <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)} {t("live")}</span>
+            )
+          ) : null}
         </div>
       </div>
+
       <div className="mt-2 flex items-center justify-end">
         <ReactionBar
           targetType="prediction"
