@@ -180,3 +180,32 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: "gol
     </div>
   );
 }
+
+function ChampionRow({ champion }: { champion: ChampionPick | null }) {
+  const { t, tc } = useI18n();
+  const revealed = Date.now() >= CHAMPION_LOCK_AT;
+  return (
+    <div className="mb-4 rounded-2xl border border-border bg-surface px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+          <Trophy className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("champion_title")}</p>
+          {!champion ? (
+            <p className="text-sm text-ink-soft">{t("champion_no_pick")}</p>
+          ) : revealed ? (
+            <p className="truncate text-base font-bold">
+              {flagFromCode(champion.team_code || codeForTeam(champion.team) || "")} {tc(champion.team)}
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 text-sm text-ink-soft">
+              <Lock className="h-3.5 w-3.5" /> {t("champion_hidden_until_lock")}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
