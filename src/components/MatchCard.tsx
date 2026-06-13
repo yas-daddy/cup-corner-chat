@@ -160,7 +160,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { n } = useI18n();
   return (
-    <div className="flex items-center gap-1 rounded-full border border-border bg-white p-1">
+    <div className="relative z-10 flex items-center gap-1 rounded-full border border-border bg-white p-1">
       <button
         type="button"
         aria-label="minus"
