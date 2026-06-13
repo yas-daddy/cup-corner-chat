@@ -78,6 +78,8 @@ const FA: Dict = {
   upcoming: "آینده",
   live: "زنده",
   finished: "تمام‌شده",
+  results: "نتایج",
+
   locked: "قفل شده",
   saved: "ذخیره شد",
   not_predicted: "پیش‌بینی نشده",
