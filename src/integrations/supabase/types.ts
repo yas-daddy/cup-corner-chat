@@ -187,7 +187,33 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      admin_delete_prediction: {
+        Args: { _match_id: string; _player_id: string }
+        Returns: undefined
+      }
+      admin_upsert_prediction: {
+        Args: {
+          _away: number
+          _home: number
+          _match_id: string
+          _player_id: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          match_id: string
+          player_id: string
+          pred_away: number
+          pred_home: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "predictions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
