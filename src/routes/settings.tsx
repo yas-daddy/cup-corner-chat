@@ -18,7 +18,7 @@ function SettingsPage() {
   const { player, setPlayer } = useCurrentPlayer();
   const [name, setName] = useState(player?.display_name ?? "");
   const [savingName, setSavingName] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  
 
   async function saveName() {
     if (!player || !name.trim()) return;
