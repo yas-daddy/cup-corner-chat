@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Settings as SettingsIcon, Check, ChevronDown } from "lucide-react";
+import { Settings as SettingsIcon, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -23,7 +23,7 @@ function MyPicksPage() {
   const [rows, setRows] = useState<PredictionPointRow[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
-  const [resultsOpen, setResultsOpen] = useState(true);
+
 
 
   useEffect(() => {
@@ -53,27 +53,11 @@ function MyPicksPage() {
   if (loading) return <div className="grid min-h-[60vh] place-items-center text-ink-soft">{t("loading")}</div>;
   if (!player) return <SignInScreen onSignedIn={(p) => setPlayer(p)} />;
 
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const upcoming: PredictionPointRow[] = [];
-  const results: PredictionPointRow[] = [];
-  for (const r of rows) {
-    const m = matches[r.match_id];
-    if (!m) continue;
-    if (m.status === "FINISHED") {
-      const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
-      if (k >= cutoff) results.push(r);
-    } else {
-      upcoming.push(r);
-    }
-  }
-  const sortByKickoff = (a: PredictionPointRow, b: PredictionPointRow) =>
-    (matches[b.match_id]?.kickoff_at ?? "").localeCompare(matches[a.match_id]?.kickoff_at ?? "");
-  upcoming.sort(sortByKickoff);
-  results.sort(sortByKickoff);
-
-
-
-
+  const sorted = [...rows].sort((a, b) => {
+    const ma = matches[a.match_id]?.kickoff_at ?? "";
+    const mb = matches[b.match_id]?.kickoff_at ?? "";
+    return mb.localeCompare(ma);
+  });
 
   return (
     <div className="px-4 pt-6">
@@ -99,47 +83,19 @@ function MyPicksPage() {
 
       <ChampionPickCard playerId={player.id} />
 
-
-      {upcoming.length === 0 && results.length === 0 ? (
+      {sorted.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("no_picks")}
         </div>
       ) : (
-        <>
-          {upcoming.length > 0 && (
-            <ul className="space-y-2">
-              {upcoming.map((r) => (
-                <PickRow key={r.id} r={r} m={matches[r.match_id]} t={t} tc={tc} n={n} dir={dir} />
-              ))}
-            </ul>
-          )}
-
-          {results.length > 0 && (
-            <div className={upcoming.length > 0 ? "mt-4" : ""}>
-              <button
-                type="button"
-                onClick={() => setResultsOpen((v) => !v)}
-                className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold"
-              >
-                <span>
-                  {t("results")} <span className="text-ink-soft">({n(results.length)})</span>
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 text-ink-soft transition-transform ${resultsOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {resultsOpen && (
-                <ul className="mt-2 space-y-2">
-                  {results.map((r) => (
-                    <PickRow key={r.id} r={r} m={matches[r.match_id]} t={t} tc={tc} n={n} dir={dir} />
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </>
+        <ul className="space-y-2">
+          {sorted.map((r) => (
+            <PickRow key={r.id} r={r} m={matches[r.match_id]} t={t} tc={tc} n={n} dir={dir} />
+          ))}
+        </ul>
       )}
     </div>
+
 
   );
 }
