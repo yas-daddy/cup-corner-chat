@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, RefreshCw, LogOut } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -18,7 +18,7 @@ function SettingsPage() {
   const { player, setPlayer } = useCurrentPlayer();
   const [name, setName] = useState(player?.display_name ?? "");
   const [savingName, setSavingName] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  
 
   async function saveName() {
     if (!player || !name.trim()) return;
@@ -33,14 +33,8 @@ function SettingsPage() {
     if (!error && data) setPlayer(data as typeof player);
   }
 
-  async function refresh() {
-    setSyncing(true);
-    try {
-      await fetch("/api/public/sync-matches", { method: "POST" });
-    } finally {
-      setSyncing(false);
-    }
-  }
+
+
 
   function signOut() {
     storePlayerId(null);
@@ -108,16 +102,6 @@ function SettingsPage() {
       )}
 
 
-      <Section>
-        <button
-          onClick={refresh}
-          disabled={syncing}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 font-semibold text-ink"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? t("refreshing") : t("refresh")}
-        </button>
-      </Section>
 
       <Section label={t("scoring_title")}>
         <p className="rounded-2xl border border-border bg-surface px-4 py-4 text-sm leading-relaxed text-ink-soft">
