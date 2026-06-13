@@ -180,7 +180,15 @@ export function useComments(targetType: TargetType, targetId: string) {
     return () => { active = false; void supabase.removeChannel(ch); };
   }, [targetType, targetId]);
 
-  return { comments, loading };
+  function addLocal(comment: Comment) {
+    setComments((current) => [comment, ...current.filter((c) => c.id !== comment.id)]);
+  }
+
+  function removeLocal(id: string) {
+    setComments((current) => current.filter((c) => c.id !== id));
+  }
+
+  return { comments, loading, addLocal, removeLocal };
 }
 
 /**
