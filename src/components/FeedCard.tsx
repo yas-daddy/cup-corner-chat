@@ -80,9 +80,6 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
                     {n(activity.home_score ?? 0)} - {n(activity.away_score ?? 0)}
                   </span>
                   <span className="text-[10px] text-ink-soft">{t("final")}</span>
-                  <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold tabular-nums border border-border">
-                    {n(activity.pred_home ?? 0)} - {n(activity.pred_away ?? 0)}
-                  </span>
                 </>
               ) : (
                 <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold tabular-nums border border-border">
