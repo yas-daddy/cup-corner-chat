@@ -17,7 +17,7 @@ type Props = {
 
 export function CommentThread({ targetType, targetId, currentPlayerId, limit, emptyHint, onCountChange }: Props) {
   const { t, n, dir } = useI18n();
-  const { comments } = useComments(targetType, targetId);
+  const { comments, addLocal, removeLocal } = useComments(targetType, targetId);
   const [players, setPlayers] = useState<Record<string, Player>>({});
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,8 +41,11 @@ export function CommentThread({ targetType, targetId, currentPlayerId, limit, em
     const txt = body.trim();
     if (!txt) return;
     setBusy(true);
-    await addComment(targetType, targetId, currentPlayerId, txt);
-    setBody("");
+    const saved = await addComment(targetType, targetId, currentPlayerId, txt);
+    if (saved) {
+      addLocal(saved);
+      setBody("");
+    }
     setBusy(false);
   }
 
@@ -89,7 +92,7 @@ export function CommentThread({ targetType, targetId, currentPlayerId, limit, em
                     <button
                       type="button"
                       aria-label="delete"
-                      onClick={() => void deleteComment(c.id)}
+                      onClick={() => { removeLocal(c.id); void deleteComment(c.id); }}
                       className="text-ink-soft active:text-accent"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
