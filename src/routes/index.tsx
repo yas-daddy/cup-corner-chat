@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
 import { MatchCard } from "@/components/MatchCard";
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
