@@ -1,0 +1,168 @@
+import { useEffect, useMemo, useState } from "react";
+import { Bell } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar } from "@/components/AvatarPicker";
+import { useI18n } from "@/lib/i18n";
+import type { Player } from "@/lib/identity";
+
+type Notification = {
+  id: string;
+  recipient_id: string;
+  actor_id: string | null;
+  kind: "like" | "comment" | "reply" | "result";
+  target_type: "prediction" | "activity" | "match";
+  target_id: string;
+  match_id: string | null;
+  points: number | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export function NotificationsBell({ playerId }: { playerId: string }) {
+  const { t, n, dir } = useI18n();
+  const navigate = useNavigate();
+  const [items, setItems] = useState<Notification[]>([]);
+  const [actors, setActors] = useState<Record<string, Player>>({});
+  const [open, setOpen] = useState(false);
+
+  async function load() {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("recipient_id", playerId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    const rows = (data as Notification[] | null) ?? [];
+    setItems(rows);
+    const actorIds = Array.from(new Set(rows.map((r) => r.actor_id).filter(Boolean) as string[]));
+    if (actorIds.length) {
+      const { data: ps } = await supabase.from("players").select("*").in("id", actorIds);
+      const map: Record<string, Player> = {};
+      ((ps as Player[] | null) ?? []).forEach((p) => (map[p.id] = p));
+      setActors(map);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    const ch = supabase
+      .channel(`notifications:${playerId}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `recipient_id=eq.${playerId}` },
+        () => { void load(); },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerId]);
+
+  const unread = useMemo(() => items.filter((i) => !i.read_at).length, [items]);
+
+  async function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (next && unread > 0) {
+      const ids = items.filter((i) => !i.read_at).map((i) => i.id);
+      // optimistic
+      setItems((cur) => cur.map((i) => (i.read_at ? i : { ...i, read_at: new Date().toISOString() })));
+      await supabase.from("notifications").update({ read_at: new Date().toISOString() }).in("id", ids);
+    }
+  }
+
+  function openItem(item: Notification) {
+    setOpen(false);
+    if (item.match_id) {
+      void navigate({ to: "/matches/$matchId", params: { matchId: item.match_id } });
+    }
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          aria-label={t("notifications")}
+          className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink hover:bg-white"
+        >
+          <Bell className="h-5 w-5" />
+          {unread > 0 && (
+            <span className="absolute -top-1 -right-1 grid h-5 min-w-[20px] place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
+              {unread > 9 ? "9+" : n(unread)}
+            </span>
+          )}
+        </button>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full max-w-sm p-0">
+        <SheetHeader className="border-b border-border px-4 py-3">
+          <SheetTitle>{t("notifications")}</SheetTitle>
+        </SheetHeader>
+        <div className="max-h-[calc(100dvh-56px)] overflow-y-auto">
+          {items.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("no_notifications")}</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {items.map((item) => {
+                const actor = item.actor_id ? actors[item.actor_id] : null;
+                return (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => openItem(item)}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-white ${!item.read_at ? "bg-accent/5" : ""}`}
+                      dir={dir}
+                    >
+                      {actor?.avatar ? (
+                        <Avatar avatar={actor.avatar} name={actor.display_name} size={36} className="border border-border text-lg" />
+                      ) : (
+                        <div className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-base">
+                          {item.kind === "result" ? "🏆" : "🔔"}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm leading-snug">
+                          {renderText(item, actor?.display_name ?? null, t, n)}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink-soft">{relTime(item.created_at, n)}</p>
+                      </div>
+                      {!item.read_at && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent" />}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function renderText(
+  item: Notification,
+  actorName: string | null,
+  t: (k: string) => string,
+  n: (v: string | number) => string,
+) {
+  const who = actorName ?? t("someone");
+  if (item.kind === "like") return `${who} ${t("notif_liked")}`;
+  if (item.kind === "comment") return `${who} ${t("notif_commented")}`;
+  if (item.kind === "reply") return `${who} ${t("notif_replied")}`;
+  // result
+  const pts = item.points ?? 0;
+  if (pts === 8) return t("notif_result_exact");
+  if (pts === 3) return t("notif_result_correct");
+  return t("notif_result_none");
+  void n;
+}
+
+function relTime(iso: string, n: (v: string | number) => string) {
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${n(s)}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${n(m)}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${n(h)}h`;
+  return `${n(Math.floor(h / 24))}d`;
+}
