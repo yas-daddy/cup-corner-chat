@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
+import { KARIM_ID } from "@/lib/bot";
 import type { LeaderRow } from "@/lib/types";
 import { Avatar } from "@/components/AvatarPicker";
 
@@ -24,7 +25,7 @@ function LeaderboardPage() {
       .from("leaderboard")
       .select("*")
       .order("total_points", { ascending: false })
-      .then(({ data }) => setRows(((data as LeaderRow[] | null) ?? []).filter(r => r != null)));
+      .then(({ data }) => setRows(((data as LeaderRow[] | null) ?? []).filter((r) => r != null && r.player_id !== KARIM_ID)));
   }, []);
 
   return (

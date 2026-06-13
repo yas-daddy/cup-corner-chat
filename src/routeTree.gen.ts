@@ -18,6 +18,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
+import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
+import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -64,6 +66,16 @@ const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   path: '/api/public/sync-matches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicKarimRoastRoute = ApiPublicKarimRoastRouteImport.update({
+  id: '/api/public/karim-roast',
+  path: '/api/public/karim-roast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicKarimDailyRoute = ApiPublicKarimDailyRouteImport.update({
+  id: '/api/public/karim-daily',
+  path: '/api/public/karim-daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,6 +86,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
+  '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +99,8 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
+  '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRoutesById {
@@ -97,6 +113,8 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
+  '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +128,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/karim-daily'
+    | '/api/public/karim-roast'
     | '/api/public/sync-matches'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +141,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/karim-daily'
+    | '/api/public/karim-roast'
     | '/api/public/sync-matches'
   id:
     | '__root__'
@@ -132,6 +154,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/karim-daily'
+    | '/api/public/karim-roast'
     | '/api/public/sync-matches'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +168,8 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
+  ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
+  ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
 }
 
@@ -212,6 +238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncMatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/karim-roast': {
+      id: '/api/public/karim-roast'
+      path: '/api/public/karim-roast'
+      fullPath: '/api/public/karim-roast'
+      preLoaderRoute: typeof ApiPublicKarimRoastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/karim-daily': {
+      id: '/api/public/karim-daily'
+      path: '/api/public/karim-daily'
+      fullPath: '/api/public/karim-daily'
+      preLoaderRoute: typeof ApiPublicKarimDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,6 +264,8 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
+  ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
+  ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
 }
 export const routeTree = rootRouteImport

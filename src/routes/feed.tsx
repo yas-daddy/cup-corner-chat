@@ -57,7 +57,7 @@ function FeedPage() {
 
   async function hydrate(rows: FeedActivity[]) {
     const playerIds = Array.from(new Set(rows.map((r) => r.actor_id))).filter((id) => !players[id]);
-    const matchIds = Array.from(new Set(rows.map((r) => r.match_id))).filter((id) => !matches[id]);
+    const matchIds = Array.from(new Set(rows.map((r) => r.match_id).filter((id): id is string => !!id))).filter((id) => !matches[id]);
     if (playerIds.length) {
       const { data } = await supabase.from("players").select("*").in("id", playerIds);
       setPlayers((prev) => {
@@ -114,7 +114,7 @@ function FeedPage() {
               key={a.id}
               activity={a}
               actor={players[a.actor_id] ?? null}
-              match={matches[a.match_id] ?? null}
+              match={a.match_id ? (matches[a.match_id] ?? null) : null}
               currentPlayerId={player.id}
             />
           ))}

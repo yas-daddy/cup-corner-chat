@@ -84,13 +84,14 @@ export type Database = {
         Row: {
           actor_id: string
           away_score: number | null
+          body: string | null
           created_at: string
           home_score: number | null
           id: string
           is_correct_result: boolean | null
           is_exact: boolean | null
           kind: string
-          match_id: string
+          match_id: string | null
           points: number | null
           pred_away: number | null
           pred_home: number | null
@@ -98,13 +99,14 @@ export type Database = {
         Insert: {
           actor_id: string
           away_score?: number | null
+          body?: string | null
           created_at?: string
           home_score?: number | null
           id?: string
           is_correct_result?: boolean | null
           is_exact?: boolean | null
           kind: string
-          match_id: string
+          match_id?: string | null
           points?: number | null
           pred_away?: number | null
           pred_home?: number | null
@@ -112,13 +114,14 @@ export type Database = {
         Update: {
           actor_id?: string
           away_score?: number | null
+          body?: string | null
           created_at?: string
           home_score?: number | null
           id?: string
           is_correct_result?: boolean | null
           is_exact?: boolean | null
           kind?: string
-          match_id?: string
+          match_id?: string | null
           points?: number | null
           pred_away?: number | null
           pred_home?: number | null

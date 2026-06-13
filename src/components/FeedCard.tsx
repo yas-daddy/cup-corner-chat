@@ -1,12 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Avatar } from "@/components/AvatarPicker";
+import { AiTag } from "@/components/AiTag";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
 import { predictionTargetId, useComments, type FeedActivity } from "@/lib/social";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
+import { isKarim } from "@/lib/bot";
 import type { Match } from "@/lib/types";
 import type { Player } from "@/lib/identity";
 
@@ -17,11 +19,37 @@ type Props = {
   currentPlayerId: string | null;
 };
 
-export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
+export function FeedCard(props: Props) {
+  if (props.activity.kind === "daily_summary") return <DailySummaryCard {...props} />;
+  if (!props.activity.match_id) return null;
+  return <PickCard {...props} matchId={props.activity.match_id} />;
+}
+
+function DailySummaryCard({ activity, actor }: Props) {
+  const { t, n, dir } = useI18n();
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
+      <div className="flex items-center gap-3" dir={dir}>
+        <Avatar avatar={actor?.avatar ?? "🤖"} name={actor?.display_name ?? "Karim"} size={40} className="border border-border text-xl" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold leading-snug">{actor?.display_name ?? "Karim"}</span>
+            <AiTag />
+          </div>
+          <p className="text-xs text-ink-soft">{t("karim_daily_title")} · {relTime(activity.created_at, n)}</p>
+        </div>
+      </div>
+      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{activity.body}</p>
+    </div>
+  );
+}
+
+function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & { matchId: string }) {
   const { t, tc, n, dir } = useI18n();
-  const [showComments, setShowComments] = useState(false);
-  const threadTargetId = predictionTargetId(activity.actor_id, activity.match_id);
+  const isBot = isKarim(activity.actor_id);
+  const threadTargetId = predictionTargetId(activity.actor_id, matchId);
   const { comments } = useComments("prediction", threadTargetId);
+  const [showComments, setShowComments] = useState(false);
 
   const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
   const ac = match?.away_code || (match ? codeForTeam(match.away_team) : "");
@@ -55,6 +83,7 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
             className="block text-sm font-bold leading-snug"
           >
             {name} {action}
+            {isBot && <AiTag className="ml-1.5 align-middle" />}
           </Link>
           <p className="text-xs text-ink-soft">{relTime(activity.created_at, n)}</p>
         </div>
@@ -71,7 +100,7 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
 
       <Link
         to="/matches/$matchId"
-        params={{ matchId: activity.match_id }}
+        params={{ matchId }}
         className="mt-3 block rounded-xl border border-border bg-white px-3 py-2"
       >
         {match ? (
