@@ -22,9 +22,9 @@ export type Comment = {
 
 export type FeedActivity = {
   id: string;
-  kind: "prediction_created" | "prediction_updated" | "points_awarded";
+  kind: "prediction_created" | "prediction_updated" | "points_awarded" | "daily_summary";
   actor_id: string;
-  match_id: string;
+  match_id: string | null;
   pred_home: number | null;
   pred_away: number | null;
   home_score: number | null;
@@ -32,6 +32,7 @@ export type FeedActivity = {
   points: number | null;
   is_exact: boolean | null;
   is_correct_result: boolean | null;
+  body: string | null;
   created_at: string;
 };
 
