@@ -28,13 +28,6 @@ type Row = {
   is_correct_result: boolean;
 };
 
-function projectPoints(ph: number, pa: number, lh: number, la: number) {
-  if (ph === lh && pa === la) return 8;
-  if (Math.sign(ph - pa) === Math.sign(lh - la)) return 3;
-  return 0;
-}
-
-
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
   const { t, tc, n, dir } = useI18n();
@@ -153,11 +146,6 @@ function MatchDetailPage() {
 
   return (
     <div className="px-4 pt-6 pb-10">
-      {live && (
-        <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-accent">
-          {t("live")}
-        </h2>
-      )}
       <header className="mb-4 flex items-center gap-3">
         <Link to="/" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
           <ChevronLeft className="h-5 w-5" />
@@ -213,33 +201,17 @@ function MatchDetailPage() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {(live && match.home_score != null && match.away_score != null
-            ? [...rows].sort((a, b) => {
-                const lh = match.home_score!, la = match.away_score!;
-                const pa = projectPoints(a.pred_home, a.pred_away, lh, la);
-                const pb = projectPoints(b.pred_home, b.pred_away, lh, la);
-                if (pa !== pb) return pb - pa;
-                const da = Math.abs(a.pred_home - lh) + Math.abs(a.pred_away - la);
-                const db = Math.abs(b.pred_home - lh) + Math.abs(b.pred_away - la);
-                if (da !== db) return da - db;
-                return a.player.display_name.localeCompare(b.player.display_name);
-              })
-            : rows
-          ).map((r) => (
+          {rows.map((r) => (
             <PredictionRow
               key={r.player.id}
               row={r}
               matchId={matchId}
               finished={finished}
-              liveScore={live && match.home_score != null && match.away_score != null
-                ? { home: match.home_score, away: match.away_score }
-                : null}
               currentPlayerId={me?.id ?? null}
             />
           ))}
         </ul>
       )}
-
 
       <section className="mt-8">
         <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
@@ -257,16 +229,12 @@ function MatchDetailPage() {
 }
 
 function PredictionRow({
-  row, matchId, finished, liveScore, currentPlayerId,
-}: { row: Row; matchId: string; finished: boolean; liveScore: { home: number; away: number } | null; currentPlayerId: string | null }) {
+  row, matchId, finished, currentPlayerId,
+}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null }) {
   const { t, n, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const targetId = predictionTargetId(row.player.id, matchId);
   const { comments } = useComments("prediction", targetId);
-
-  const homeBusted = !!liveScore && liveScore.away > row.pred_away;
-  const awayBusted = !!liveScore && liveScore.home > row.pred_home;
-  const liveProjected = liveScore ? projectPoints(row.pred_home, row.pred_away, liveScore.home, liveScore.away) : null;
 
   return (
     <li
@@ -290,11 +258,9 @@ function PredictionRow({
         </Link>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
-            <span className={homeBusted ? "text-destructive" : undefined}>{n(row.pred_home)}</span>
-            {" - "}
-            <span className={awayBusted ? "text-destructive" : undefined}>{n(row.pred_away)}</span>
+            {n(row.pred_home)} - {n(row.pred_away)}
           </span>
-          {finished ? (
+          {finished && (
             row.is_exact ? (
               <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
                 +{n(8)} ⭐
@@ -306,22 +272,9 @@ function PredictionRow({
             ) : (
               <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
             )
-          ) : liveProjected != null ? (
-            liveProjected === 8 ? (
-              <span className="rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
-                +{n(8)} ⭐ {t("live")}
-              </span>
-            ) : liveProjected === 3 ? (
-              <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">
-                +{n(3)} {t("live")}
-              </span>
-            ) : (
-              <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)} {t("live")}</span>
-            )
-          ) : null}
+          )}
         </div>
       </div>
-
       <div className="mt-2 flex items-center justify-end">
         <ReactionBar
           targetType="prediction"
