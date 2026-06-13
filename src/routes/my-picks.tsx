@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Settings as SettingsIcon, Check } from "lucide-react";
+import { Settings as SettingsIcon, Check, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -23,6 +23,8 @@ function MyPicksPage() {
   const [rows, setRows] = useState<PredictionPointRow[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
+  const [resultsOpen, setResultsOpen] = useState(true);
+
 
   useEffect(() => {
     if (!player) return;
@@ -52,18 +54,23 @@ function MyPicksPage() {
   if (!player) return <SignInScreen onSignedIn={(p) => setPlayer(p)} />;
 
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const visible = rows.filter((r) => {
+  const upcoming: PredictionPointRow[] = [];
+  const results: PredictionPointRow[] = [];
+  for (const r of rows) {
     const m = matches[r.match_id];
-    if (!m) return false;
-    if (m.status !== "FINISHED") return true;
-    const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
-    return k >= cutoff;
-  });
-  const sorted = [...visible].sort((a, b) => {
-    const ma = matches[a.match_id]?.kickoff_at ?? "";
-    const mb = matches[b.match_id]?.kickoff_at ?? "";
-    return mb.localeCompare(ma);
-  });
+    if (!m) continue;
+    if (m.status === "FINISHED") {
+      const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
+      if (k >= cutoff) results.push(r);
+    } else {
+      upcoming.push(r);
+    }
+  }
+  const sortByKickoff = (a: PredictionPointRow, b: PredictionPointRow) =>
+    (matches[b.match_id]?.kickoff_at ?? "").localeCompare(matches[a.match_id]?.kickoff_at ?? "");
+  upcoming.sort(sortByKickoff);
+  results.sort(sortByKickoff);
+
 
 
 
@@ -93,60 +100,47 @@ function MyPicksPage() {
       <ChampionPickCard playerId={player.id} />
 
 
-      {sorted.length === 0 ? (
+      {upcoming.length === 0 && results.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("no_picks")}
         </div>
       ) : (
-        <ul className="space-y-2">
-          {sorted.map((r) => {
-            const m = matches[r.match_id];
-            if (!m) return null;
-            const hc = m.home_code || codeForTeam(m.home_team);
-            const ac = m.away_code || codeForTeam(m.away_team);
-            const finished = m.status === "FINISHED";
-            return (
-              <li key={r.id}>
-              <div
-                className={`block rounded-2xl border bg-surface px-4 py-3 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
+        <>
+          {upcoming.length > 0 && (
+            <ul className="space-y-2">
+              {upcoming.map((r) => (
+                <PickRow key={r.id} r={r} m={matches[r.match_id]} t={t} tc={tc} n={n} dir={dir} />
+              ))}
+            </ul>
+          )}
+
+          {results.length > 0 && (
+            <div className={upcoming.length > 0 ? "mt-4" : ""}>
+              <button
+                type="button"
+                onClick={() => setResultsOpen((v) => !v)}
+                className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm font-semibold"
               >
-                <div className="flex items-center justify-between text-xs text-ink-soft" dir={dir}>
-                  <span className="truncate">
-                    {flagFromCode(hc)} {tc(m.home_team)} {t("vs")} {tc(m.away_team)} {flagFromCode(ac)}
-                  </span>
-                  {finished && (
-                    <span className="font-bold text-ink">
-                      {n(m.home_score ?? 0)}-{n(m.away_score ?? 0)}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 flex items-center justify-between" dir={dir}>
-                  <span className="text-sm text-ink-soft">
-                    {t("predicted")}: <strong className="text-ink">{n(r.pred_home)}-{n(r.pred_away)}</strong>
-                  </span>
-                  <span className="flex items-center gap-1 text-sm font-bold">
-                    {r.is_exact ? (
-                      <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-[color:var(--gold)]">
-                        +{n(8)} ⭐
-                      </span>
-                    ) : r.is_correct_result ? (
-                      <span className="rounded-full bg-success/15 px-2 py-1 text-success">
-                        <Check className="mr-1 inline h-3 w-3" />+{n(3)}
-                      </span>
-                    ) : finished ? (
-                      <span className="text-ink-soft">+{n(0)}</span>
-                    ) : (
-                      <span className="text-ink-soft">…</span>
-                    )}
-                  </span>
-                </div>
-              </div>
-              </li>
-            );
-          })}
-        </ul>
+                <span>
+                  {t("results")} <span className="text-ink-soft">({n(results.length)})</span>
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-ink-soft transition-transform ${resultsOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {resultsOpen && (
+                <ul className="mt-2 space-y-2">
+                  {results.map((r) => (
+                    <PickRow key={r.id} r={r} m={matches[r.match_id]} t={t} tc={tc} n={n} dir={dir} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
+
   );
 }
 
@@ -159,3 +153,63 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: "gol
     </div>
   );
 }
+
+function PickRow({
+  r,
+  m,
+  t,
+  tc,
+  n,
+  dir,
+}: {
+  r: PredictionPointRow;
+  m: Match | undefined;
+  t: (k: string) => string;
+  tc: (s: string) => string;
+  n: (v: number) => string;
+  dir: "ltr" | "rtl";
+}) {
+  if (!m) return null;
+  const hc = m.home_code || codeForTeam(m.home_team);
+  const ac = m.away_code || codeForTeam(m.away_team);
+  const finished = m.status === "FINISHED";
+  return (
+    <li>
+      <div
+        className={`block rounded-2xl border bg-surface px-4 py-3 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
+      >
+        <div className="flex items-center justify-between text-xs text-ink-soft" dir={dir}>
+          <span className="truncate">
+            {flagFromCode(hc)} {tc(m.home_team)} {t("vs")} {tc(m.away_team)} {flagFromCode(ac)}
+          </span>
+          {finished && (
+            <span className="font-bold text-ink">
+              {n(m.home_score ?? 0)}-{n(m.away_score ?? 0)}
+            </span>
+          )}
+        </div>
+        <div className="mt-2 flex items-center justify-between" dir={dir}>
+          <span className="text-sm text-ink-soft">
+            {t("predicted")}: <strong className="text-ink">{n(r.pred_home)}-{n(r.pred_away)}</strong>
+          </span>
+          <span className="flex items-center gap-1 text-sm font-bold">
+            {r.is_exact ? (
+              <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-[color:var(--gold)]">
+                +{n(8)} ⭐
+              </span>
+            ) : r.is_correct_result ? (
+              <span className="rounded-full bg-success/15 px-2 py-1 text-success">
+                <Check className="mr-1 inline h-3 w-3" />+{n(3)}
+              </span>
+            ) : finished ? (
+              <span className="text-ink-soft">+{n(0)}</span>
+            ) : (
+              <span className="text-ink-soft">…</span>
+            )}
+          </span>
+        </div>
+      </div>
+    </li>
+  );
+}
+
