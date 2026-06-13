@@ -100,7 +100,7 @@ function HomePage() {
         upcoming.get(day)!.push(m);
       }
     });
-    results.sort((a, b) => new Date(b.kickoff_at).getTime() - new Date(a.kickoff_at).getTime());
+    results.sort((a, b) => new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime());
     return { live, results, upcoming };
   }, [matches, lang]);
 
