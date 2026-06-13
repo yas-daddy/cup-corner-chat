@@ -105,8 +105,8 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
       </Link>
 
       <ReactionBar
-        targetType="activity"
-        targetId={activity.id}
+        targetType="prediction"
+        targetId={threadTargetId}
         playerId={currentPlayerId}
         commentCount={comments.length}
         onCommentClick={() => setShowComments((v) => !v)}
@@ -115,8 +115,8 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
       {showComments && (
         <div className="mt-3 border-t border-border pt-3">
           <CommentThread
-            targetType="activity"
-            targetId={activity.id}
+            targetType="prediction"
+            targetId={threadTargetId}
             currentPlayerId={currentPlayerId}
           />
         </div>
