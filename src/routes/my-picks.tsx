@@ -54,18 +54,23 @@ function MyPicksPage() {
   if (!player) return <SignInScreen onSignedIn={(p) => setPlayer(p)} />;
 
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  const visible = rows.filter((r) => {
+  const upcoming: PredictionPointRow[] = [];
+  const results: PredictionPointRow[] = [];
+  for (const r of rows) {
     const m = matches[r.match_id];
-    if (!m) return false;
-    if (m.status !== "FINISHED") return true;
-    const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
-    return k >= cutoff;
-  });
-  const sorted = [...visible].sort((a, b) => {
-    const ma = matches[a.match_id]?.kickoff_at ?? "";
-    const mb = matches[b.match_id]?.kickoff_at ?? "";
-    return mb.localeCompare(ma);
-  });
+    if (!m) continue;
+    if (m.status === "FINISHED") {
+      const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
+      if (k >= cutoff) results.push(r);
+    } else {
+      upcoming.push(r);
+    }
+  }
+  const sortByKickoff = (a: PredictionPointRow, b: PredictionPointRow) =>
+    (matches[b.match_id]?.kickoff_at ?? "").localeCompare(matches[a.match_id]?.kickoff_at ?? "");
+  upcoming.sort(sortByKickoff);
+  results.sort(sortByKickoff);
+
 
 
 
