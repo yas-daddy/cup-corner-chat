@@ -14,6 +14,7 @@ import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
+  id: '/players/$playerId',
+  path: '/players/$playerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   id: '/api/public/sync-matches',
   path: '/api/public/sync-matches',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
+  '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
+    | '/players/$playerId'
     | '/api/public/sync-matches'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
+    | '/players/$playerId'
     | '/api/public/sync-matches'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
+    | '/players/$playerId'
     | '/api/public/sync-matches'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
   SettingsRoute: typeof SettingsRoute
+  PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
 }
 
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/players/$playerId': {
+      id: '/players/$playerId'
+      path: '/players/$playerId'
+      fullPath: '/players/$playerId'
+      preLoaderRoute: typeof PlayersPlayerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-matches': {
       id: '/api/public/sync-matches'
       path: '/api/public/sync-matches'
@@ -161,8 +181,19 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
   SettingsRoute: SettingsRoute,
+  PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
