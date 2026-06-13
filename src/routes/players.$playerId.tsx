@@ -26,6 +26,8 @@ function PlayerProfilePage() {
   const [rows, setRows] = useState<PredictionPointRow[]>([]);
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
+  const [champion, setChampion] = useState<ChampionPick | null>(null);
+
 
   useEffect(() => {
     let active = true;
