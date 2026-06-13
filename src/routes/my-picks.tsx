@@ -62,14 +62,13 @@ function MyPicksPage() {
     <div className="px-4 pt-6">
       <header className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-primary text-lg font-bold text-white">
-            {initial}
-          </div>
+          <Avatar avatar={player.avatar} name={player.display_name} size={48} className="border border-border text-2xl" />
           <div>
             <p className="text-xs uppercase tracking-wider text-ink-soft">{t("my_picks")}</p>
             <h1 className="text-xl font-extrabold">{player.display_name}</h1>
           </div>
         </div>
+
         <Link to="/settings" className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink-soft">
           <SettingsIcon className="h-5 w-5" />
         </Link>
