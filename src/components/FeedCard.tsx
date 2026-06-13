@@ -19,37 +19,36 @@ type Props = {
   currentPlayerId: string | null;
 };
 
-export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
+export function FeedCard(props: Props) {
+  if (props.activity.kind === "daily_summary") return <DailySummaryCard {...props} />;
+  if (!props.activity.match_id) return null;
+  return <PickCard {...props} matchId={props.activity.match_id} />;
+}
+
+function DailySummaryCard({ activity, actor }: Props) {
+  const { t, n, dir } = useI18n();
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
+      <div className="flex items-center gap-3" dir={dir}>
+        <Avatar avatar={actor?.avatar ?? "🤖"} name={actor?.display_name ?? "Karim"} size={40} className="border border-border text-xl" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold leading-snug">{actor?.display_name ?? "Karim"}</span>
+            <AiTag />
+          </div>
+          <p className="text-xs text-ink-soft">{t("karim_daily_title")} · {relTime(activity.created_at, n)}</p>
+        </div>
+      </div>
+      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{activity.body}</p>
+    </div>
+  );
+}
+
+function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & { matchId: string }) {
   const { t, tc, n, dir } = useI18n();
   const isBot = isKarim(activity.actor_id);
-
-  // Daily summary card — Karim only, no match, no thread.
-  if (activity.kind === "daily_summary") {
-    return (
-      <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
-        <div className="flex items-center gap-3" dir={dir}>
-          <Avatar avatar={actor?.avatar ?? "🤖"} name={actor?.display_name ?? "Karim"} size={40} className="border border-border text-xl" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold leading-snug">{actor?.display_name ?? "Karim"}</span>
-              <AiTag />
-            </div>
-            <p className="text-xs text-ink-soft">{t("karim_daily_title")} · {relTime(activity.created_at, n)}</p>
-          </div>
-        </div>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{activity.body}</p>
-      </div>
-    );
-  }
-
-  // Pick-related cards need a match_id; bail out gracefully if missing.
-  if (!activity.match_id) return null;
-
-  const matchId = activity.match_id;
   const threadTargetId = predictionTargetId(activity.actor_id, matchId);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { comments } = useComments("prediction", threadTargetId);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [showComments, setShowComments] = useState(false);
 
   const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
