@@ -22,6 +22,8 @@ const EN: Dict = {
   upcoming: "Upcoming",
   live: "Live",
   finished: "Finished",
+  results: "Results",
+
   locked: "Locked",
   saved: "Saved",
   not_predicted: "Not predicted",
@@ -76,6 +78,8 @@ const FA: Dict = {
   upcoming: "آینده",
   live: "زنده",
   finished: "تمام‌شده",
+  results: "نتایج",
+
   locked: "قفل شده",
   saved: "ذخیره شد",
   not_predicted: "پیش‌بینی نشده",
