@@ -51,11 +51,20 @@ function MyPicksPage() {
   if (loading) return <div className="grid min-h-[60vh] place-items-center text-ink-soft">{t("loading")}</div>;
   if (!player) return <SignInScreen onSignedIn={(p) => setPlayer(p)} />;
 
-  const sorted = [...rows].sort((a, b) => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const visible = rows.filter((r) => {
+    const m = matches[r.match_id];
+    if (!m) return false;
+    if (m.status !== "FINISHED") return true;
+    const k = m.kickoff_at ? new Date(m.kickoff_at).getTime() : 0;
+    return k >= cutoff;
+  });
+  const sorted = [...visible].sort((a, b) => {
     const ma = matches[a.match_id]?.kickoff_at ?? "";
     const mb = matches[b.match_id]?.kickoff_at ?? "";
     return mb.localeCompare(ma);
   });
+
 
 
 
