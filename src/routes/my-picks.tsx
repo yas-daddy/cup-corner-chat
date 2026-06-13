@@ -153,3 +153,63 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: "gol
     </div>
   );
 }
+
+function PickRow({
+  r,
+  m,
+  t,
+  tc,
+  n,
+  dir,
+}: {
+  r: PredictionPointRow;
+  m: Match | undefined;
+  t: (k: string) => string;
+  tc: (s: string) => string;
+  n: (v: number) => string;
+  dir: "ltr" | "rtl";
+}) {
+  if (!m) return null;
+  const hc = m.home_code || codeForTeam(m.home_team);
+  const ac = m.away_code || codeForTeam(m.away_team);
+  const finished = m.status === "FINISHED";
+  return (
+    <li>
+      <div
+        className={`block rounded-2xl border bg-surface px-4 py-3 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
+      >
+        <div className="flex items-center justify-between text-xs text-ink-soft" dir={dir}>
+          <span className="truncate">
+            {flagFromCode(hc)} {tc(m.home_team)} {t("vs")} {tc(m.away_team)} {flagFromCode(ac)}
+          </span>
+          {finished && (
+            <span className="font-bold text-ink">
+              {n(m.home_score ?? 0)}-{n(m.away_score ?? 0)}
+            </span>
+          )}
+        </div>
+        <div className="mt-2 flex items-center justify-between" dir={dir}>
+          <span className="text-sm text-ink-soft">
+            {t("predicted")}: <strong className="text-ink">{n(r.pred_home)}-{n(r.pred_away)}</strong>
+          </span>
+          <span className="flex items-center gap-1 text-sm font-bold">
+            {r.is_exact ? (
+              <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-[color:var(--gold)]">
+                +{n(8)} ⭐
+              </span>
+            ) : r.is_correct_result ? (
+              <span className="rounded-full bg-success/15 px-2 py-1 text-success">
+                <Check className="mr-1 inline h-3 w-3" />+{n(3)}
+              </span>
+            ) : finished ? (
+              <span className="text-ink-soft">+{n(0)}</span>
+            ) : (
+              <span className="text-ink-soft">…</span>
+            )}
+          </span>
+        </div>
+      </div>
+    </li>
+  );
+}
+
