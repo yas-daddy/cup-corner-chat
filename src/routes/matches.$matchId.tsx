@@ -9,6 +9,7 @@ import { Avatar } from "@/components/AvatarPicker";
 import { useCurrentPlayer } from "@/lib/identity";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
+import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
 import { predictionTargetId, useComments } from "@/lib/social";
 import type { Match, Prediction, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
