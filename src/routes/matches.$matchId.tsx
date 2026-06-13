@@ -28,6 +28,13 @@ type Row = {
   is_correct_result: boolean;
 };
 
+function projectPoints(ph: number, pa: number, lh: number, la: number) {
+  if (ph === lh && pa === la) return 8;
+  if (Math.sign(ph - pa) === Math.sign(lh - la)) return 3;
+  return 0;
+}
+
+
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
   const { t, tc, n, dir } = useI18n();
