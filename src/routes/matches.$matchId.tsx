@@ -85,18 +85,37 @@ function MatchDetailPage() {
         const pmap: Record<string, Player> = {};
         (players as Player[] | null)?.forEach((p) => (pmap[p.id] = p));
         if (!active) return;
-        setRows(
-          list
-            .filter((p) => pmap[p.player_id])
-            .map((p) => ({
-              player: pmap[p.player_id],
-              pred_home: p.pred_home,
-              pred_away: p.pred_away,
-              points: 0,
-              is_exact: false,
-              is_correct_result: false,
-            })),
-        );
+        const mapped = list
+          .filter((p) => pmap[p.player_id])
+          .map((p) => ({
+            player: pmap[p.player_id],
+            pred_home: p.pred_home,
+            pred_away: p.pred_away,
+            points: 0,
+            is_exact: false,
+            is_correct_result: false,
+          }));
+        const mm = m as Match;
+        const isLive = mm.status === "LIVE" && mm.home_score != null && mm.away_score != null;
+        if (isLive) {
+          const lh = mm.home_score!;
+          const la = mm.away_score!;
+          const sign = (x: number) => (x > 0 ? 1 : x < 0 ? -1 : 0);
+          const liveDir = sign(lh - la);
+          mapped.sort((a, b) => {
+            const aExact = a.pred_home === lh && a.pred_away === la ? 0 : 1;
+            const bExact = b.pred_home === lh && b.pred_away === la ? 0 : 1;
+            if (aExact !== bExact) return aExact - bExact;
+            const aDir = sign(a.pred_home - a.pred_away) === liveDir ? 0 : 1;
+            const bDir = sign(b.pred_home - b.pred_away) === liveDir ? 0 : 1;
+            if (aDir !== bDir) return aDir - bDir;
+            const aDist = Math.abs(a.pred_home - lh) + Math.abs(a.pred_away - la);
+            const bDist = Math.abs(b.pred_home - lh) + Math.abs(b.pred_away - la);
+            if (aDist !== bDist) return aDist - bDist;
+            return a.player.display_name.localeCompare(b.player.display_name);
+          });
+        }
+        setRows(mapped);
       } else {
         // Upcoming — show every player's pick
         const { data: preds } = await supabase
@@ -151,7 +170,11 @@ function MatchDetailPage() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("predictions")}</p>
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-ink-soft">
+            {live && <span className="font-bold text-accent">{t("live")}</span>}
+            {live && <span aria-hidden>·</span>}
+            <span>{t("predictions")}</span>
+          </p>
           <h1 className="truncate text-lg font-extrabold">
             {tc(match.home_team)} {t("vs")} {tc(match.away_team)}
           </h1>
@@ -194,6 +217,9 @@ function MatchDetailPage() {
       <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
         {t("predictions")}
       </h2>
+      {live && match.home_score != null && match.away_score != null && rows.length > 0 && (
+        <p className="mb-2 px-1 text-xs text-ink-soft">Ranked by closeness to live score</p>
+      )}
 
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
@@ -208,6 +234,8 @@ function MatchDetailPage() {
               matchId={matchId}
               finished={finished}
               currentPlayerId={me?.id ?? null}
+              liveHome={live ? match.home_score : null}
+              liveAway={live ? match.away_score : null}
             />
           ))}
         </ul>
@@ -229,12 +257,17 @@ function MatchDetailPage() {
 }
 
 function PredictionRow({
-  row, matchId, finished, currentPlayerId,
-}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null }) {
+  row, matchId, finished, currentPlayerId, liveHome, liveAway,
+}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null; liveHome?: number | null; liveAway?: number | null }) {
   const { t, n, dir } = useI18n();
   const [open, setOpen] = useState(false);
   const targetId = predictionTargetId(row.player.id, matchId);
   const { comments } = useComments("prediction", targetId);
+
+  const liveActive = liveHome != null && liveAway != null;
+  const homeBusted = liveActive && liveHome! > row.pred_home;
+  const awayBusted = liveActive && liveAway! > row.pred_away;
+  const bothBusted = homeBusted && awayBusted;
 
   return (
     <li
@@ -257,8 +290,10 @@ function PredictionRow({
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
-            {n(row.pred_home)} - {n(row.pred_away)}
+          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-white"}`}>
+            <span className={!bothBusted && homeBusted ? "text-destructive" : ""}>{n(row.pred_home)}</span>
+            {" - "}
+            <span className={!bothBusted && awayBusted ? "text-destructive" : ""}>{n(row.pred_away)}</span>
           </span>
           {finished && (
             row.is_exact ? (
