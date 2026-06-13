@@ -111,6 +111,10 @@ function PlayerProfilePage() {
         <Stat label={t("exact_scores")} value={n(summary.exact)} tone="primary" />
       </div>
 
+      <ChampionRow champion={champion} />
+
+
+
       {sorted.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("no_picks")}
