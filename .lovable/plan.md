@@ -1,47 +1,41 @@
-# Debounce prediction feed posts
+## Live-aware predictions on `/matches/:id`
 
-## Problem
+Only the match detail page changes. Behavior is purely visual + sorting; no DB changes, no scoring changes.
 
-Every save on a pick fires the `emit_prediction_activity` trigger, so the feed fills with `prediction_created` followed by a string of `prediction_updated` rows while a player is still tapping the score adjuster.
+### 1. LIVE tag on the match header
 
-## Approach
+When `match.status === "LIVE"`, render a `LIVE` chip above the match title, using the same style as the home tab's section heading (uppercase, bold, `text-accent`, small tracking) so it reads identically.
 
-Stop posting on save. Track what was last announced on the prediction row, and have a 1-minute scheduled job post a single feed entry once the pick has been stable for ≥60 seconds.
+### 2. Red side of a busted prediction
 
-## Changes
+For each prediction row, when the match is `LIVE` and has a current `home_score` / `away_score`:
 
-### 1. Database
+- If `live_home > pred_home` → render `pred_home` in red (busted side; that exact half can no longer come in).
+- If `live_away > pred_away` → render `pred_away` in red.
+- If both busted → the whole score chip turns red (exact + result both gone).
+- If neither side is exceeded → no change (still alive for exact and result).
 
-- Drop the existing per-write trigger that calls `emit_prediction_activity`.
-- Add columns to `predictions`:
-  - `last_emitted_home int`
-  - `last_emitted_away int`
-  - `last_emitted_at timestamptz`
-- Backfill these columns from the most recent existing `prediction_created`/`prediction_updated` row per `(player_id, match_id)` so we don't re-announce old picks.
-- Cleanup pass: for each `(actor_id, match_id)`, keep only the newest `prediction_created`/`prediction_updated` row in `feed_activities` and delete the rest.
+Uses the existing semantic `text-destructive` / `bg-destructive/15` tokens so it works in both themes. No copy change, no badge — just color on the digit(s).
 
-### 2. Scheduled emitter route
+### 3. Live ranking of predictions
 
-New public route `src/routes/api/public/hooks/emit-pending-predictions.ts` that, when POSTed, runs server-side (admin client) and:
+When `LIVE`, sort `rows` by "closest to current live score" instead of insertion order:
 
-- Selects predictions where `updated_at <= now() - interval '60 seconds'` AND (`last_emitted_at IS NULL` OR `last_emitted_home <> pred_home` OR `last_emitted_away <> pred_away`).
-- For each row, inserts one `feed_activities` row:
-  - `kind = 'prediction_created'` if `last_emitted_at IS NULL`, else `'prediction_updated'`.
-  - Same `actor_id`, `match_id`, `pred_home`, `pred_away` shape the trigger used.
-- Updates the prediction with `last_emitted_home/away = pred_home/away`, `last_emitted_at = now()`.
+1. Exact match to live score first (`pred_home == live_home && pred_away == live_away`).
+2. Then predictions where the result direction still matches the live result (`sign(pred_home - pred_away) == sign(live_home - live_away)`).
+3. Within each bucket, ascending by `|pred_home - live_home| + |pred_away - live_away|` (total goal distance).
+4. Stable tiebreaker on player display name.
 
-### 3. Cron
+Add a small `text-ink-soft` hint above the list, e.g. "Ranked by closeness to live score", only while `LIVE`. `FINISHED` keeps the existing points-desc sort; `SCHEDULED` / locked-pre-kickoff keep the existing order.
 
-Schedule via `pg_cron` + `pg_net` every minute, hitting the route with the project's anon `apikey` header (consistent with the existing Karim hooks).
+### Out of scope
 
-## Behavior notes
+- No change to `prediction_points`, feed activities, or the home tab.
+- No "still possible" math beyond the simple busted-side rule (we don't know minutes remaining).
+- No re-fetch loop on this page — it picks up new scores on the next normal navigation / refresh, same as today.
 
-- A player tweaking the score saves several times in <60s → only one feed row fires the next minute, reflecting the final score.
-- If they come back the next day and change it, that's a separate ≥60s-stable window and produces one `prediction_updated`.
-- Lock-time enforcement and notifications continue to work unchanged (we only stop the activity-emit trigger; `enforce_prediction_lock` and the result/notification flow are untouched).
+### Technical notes
 
-## Out of scope
-
-- No change to how predictions themselves are saved from the client (still immediate).
-- No change to `points_awarded`, comments, reactions, Karim, or any other feed kinds.
-- Granularity is ~1 minute (pg_cron minimum); a pick could surface 60–~110s after the final save.
+- All changes live in `src/routes/matches.$matchId.tsx` and the `PredictionRow` component there.
+- Compute `live = match.status === "LIVE"` and `liveHome` / `liveAway` once in the page; pass into `PredictionRow` so it can color the score chip.
+- Sorting happens in the existing `setRows(...)` LIVE branch (currently the `else` upcoming branch handles LIVE too — split it so LIVE uses the ranking comparator above).
