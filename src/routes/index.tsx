@@ -128,13 +128,8 @@ function HomePage() {
         </Section>
       ))}
 
-      {grouped.finished.length > 0 && (
-        <Section title={t("finished")}>
-          {grouped.finished.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} />
-          ))}
-        </Section>
-      )}
+
+
     </div>
   );
 }
