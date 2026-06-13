@@ -7,6 +7,9 @@ import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import { useCurrentPlayer } from "@/lib/identity";
+import { ReactionBar } from "@/components/ReactionBar";
+import { CommentThread } from "@/components/CommentThread";
+import { predictionTargetId, useComments } from "@/lib/social";
 import type { Match, Prediction, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
 
@@ -194,49 +197,99 @@ function MatchDetailPage() {
       ) : (
         <ul className="space-y-2">
           {rows.map((r) => (
-            <li
+            <PredictionRow
               key={r.player.id}
-              className={`rounded-2xl border bg-surface px-4 py-3 ${
-                r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20"
-                : r.is_correct_result ? "border-success/50"
-                : "border-border"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3" dir={dir}>
-                <Link
-                  to="/players/$playerId"
-                  params={{ playerId: r.player.id }}
-                  className="flex min-w-0 flex-1 items-center gap-3"
-                >
-                  <Avatar avatar={r.player.avatar} name={r.player.display_name} size={36} className="border border-border text-xl" />
-                  <span className="truncate font-semibold">
-                    {r.player.display_name}
-                    {me?.id === r.player.id && <span className="ml-1 text-xs text-ink-soft">({t("my_picks")})</span>}
-                  </span>
-                </Link>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
-                    {n(r.pred_home)} - {n(r.pred_away)}
-                  </span>
-                  {finished && (
-                    r.is_exact ? (
-                      <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
-                        +{n(8)} ⭐
-                      </span>
-                    ) : r.is_correct_result ? (
-                      <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">
-                        <Check className="mr-1 inline h-3 w-3" />+{n(3)}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
-                    )
-                  )}
-                </div>
-              </div>
-            </li>
+              row={r}
+              matchId={matchId}
+              finished={finished}
+              currentPlayerId={me?.id ?? null}
+            />
           ))}
         </ul>
       )}
+
+      <section className="mt-8">
+        <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
+          {t("match_discussion")}
+        </h2>
+        <div className="rounded-2xl border border-border bg-surface p-3">
+          <CommentThread
+            targetType="match"
+            targetId={matchId}
+            currentPlayerId={me?.id ?? null}
+          />
+        </div>
+      </section>
     </div>
+  );
+}
+
+function PredictionRow({
+  row, matchId, finished, currentPlayerId,
+}: { row: Row; matchId: string; finished: boolean; currentPlayerId: string | null }) {
+  const { t, n, dir } = useI18n();
+  const [open, setOpen] = useState(false);
+  const targetId = predictionTargetId(row.player.id, matchId);
+  const { comments } = useComments("prediction", targetId);
+
+  return (
+    <li
+      className={`rounded-2xl border bg-surface px-4 py-3 ${
+        row.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20"
+        : row.is_correct_result ? "border-success/50"
+        : "border-border"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3" dir={dir}>
+        <Link
+          to="/players/$playerId"
+          params={{ playerId: row.player.id }}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          <Avatar avatar={row.player.avatar} name={row.player.display_name} size={36} className="border border-border text-xl" />
+          <span className="truncate font-semibold">
+            {row.player.display_name}
+            {currentPlayerId === row.player.id && <span className="ml-1 text-xs text-ink-soft">({t("my_picks")})</span>}
+          </span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums">
+            {n(row.pred_home)} - {n(row.pred_away)}
+          </span>
+          {finished && (
+            row.is_exact ? (
+              <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
+                +{n(8)} ⭐
+              </span>
+            ) : row.is_correct_result ? (
+              <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">
+                <Check className="mr-1 inline h-3 w-3" />+{n(3)}
+              </span>
+            ) : (
+              <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
+            )
+          )}
+        </div>
+      </div>
+      <div className="mt-2 flex items-center justify-end">
+        <ReactionBar
+          targetType="prediction"
+          targetId={targetId}
+          playerId={currentPlayerId}
+          commentCount={comments.length}
+          onCommentClick={() => setOpen((v) => !v)}
+          compact
+        />
+      </div>
+      {open && (
+        <div className="mt-3 border-t border-border pt-3">
+          <CommentThread
+            targetType="prediction"
+            targetId={targetId}
+            currentPlayerId={currentPlayerId}
+          />
+        </div>
+      )}
+    </li>
   );
 }

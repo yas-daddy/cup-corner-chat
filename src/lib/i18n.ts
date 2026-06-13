@@ -58,6 +58,20 @@ const EN: Dict = {
   error_generic: "Something went wrong. Please try again.",
   language_en: "English",
   language_fa: "فارسی",
+  feed: "Feed",
+  feed_subtitle: "What other players are up to",
+  no_activity: "No activity yet.",
+  no_comments: "No comments yet.",
+  write_a_comment: "Write a comment…",
+  match_discussion: "Match discussion",
+  load_more: "Load more",
+  more_comments: "more",
+  final: "FT",
+  activity_predicted: "made a pick",
+  activity_updated_pick: "updated a pick",
+  activity_exact_score: "nailed the exact score",
+  activity_correct_result: "got the result right",
+  activity_no_points: "scored zero on this one",
 };
 
 const FA: Dict = {
@@ -114,6 +128,20 @@ const FA: Dict = {
   error_generic: "مشکلی پیش آمد. دوباره تلاش کنید.",
   language_en: "English",
   language_fa: "فارسی",
+  feed: "فید",
+  feed_subtitle: "فعالیت‌های دیگر بازیکنان",
+  no_activity: "هنوز فعالیتی نیست.",
+  no_comments: "هنوز نظری نیست.",
+  write_a_comment: "نظر بنویسید…",
+  match_discussion: "گفتگوی بازی",
+  load_more: "بیشتر",
+  more_comments: "بیشتر",
+  final: "پایان",
+  activity_predicted: "پیش‌بینی کرد",
+  activity_updated_pick: "پیش‌بینی را به‌روز کرد",
+  activity_exact_score: "نتیجه دقیق را زد",
+  activity_correct_result: "نتیجه را درست زد",
+  activity_no_points: "امتیازی نگرفت",
 };
 
 // Country name translations (Farsi). Default to English name otherwise.

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
@@ -31,6 +32,11 @@ const MyPicksRoute = MyPicksRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -62,6 +68,7 @@ const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/settings': typeof SettingsRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/feed'
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/feed'
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/feed'
     | '/leaderboard'
     | '/my-picks'
     | '/settings'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
   SettingsRoute: typeof SettingsRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
   SettingsRoute: SettingsRoute,

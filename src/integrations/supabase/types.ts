@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          player_id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          player_id: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          player_id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "comments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_activities: {
+        Row: {
+          actor_id: string
+          away_score: number | null
+          created_at: string
+          home_score: number | null
+          id: string
+          is_correct_result: boolean | null
+          is_exact: boolean | null
+          kind: string
+          match_id: string
+          points: number | null
+          pred_away: number | null
+          pred_home: number | null
+        }
+        Insert: {
+          actor_id: string
+          away_score?: number | null
+          created_at?: string
+          home_score?: number | null
+          id?: string
+          is_correct_result?: boolean | null
+          is_exact?: boolean | null
+          kind: string
+          match_id: string
+          points?: number | null
+          pred_away?: number | null
+          pred_home?: number | null
+        }
+        Update: {
+          actor_id?: string
+          away_score?: number | null
+          created_at?: string
+          home_score?: number | null
+          id?: string
+          is_correct_result?: boolean | null
+          is_exact?: boolean | null
+          kind?: string
+          match_id?: string
+          points?: number | null
+          pred_away?: number | null
+          pred_home?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_activities_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "feed_activities_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_activities_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_code: string | null
@@ -125,6 +234,48 @@ export type Database = {
           },
           {
             foreignKeyName: "predictions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reactions: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          target_id: string
+          target_type: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          target_id: string
+          target_type: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          target_id?: string
+          target_type?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "reactions_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
