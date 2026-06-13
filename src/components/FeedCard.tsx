@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Avatar } from "@/components/AvatarPicker";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
-import { useComments, type FeedActivity } from "@/lib/social";
+import { predictionTargetId, useComments, type FeedActivity } from "@/lib/social";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
