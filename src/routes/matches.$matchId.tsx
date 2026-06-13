@@ -170,7 +170,11 @@ function MatchDetailPage() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">
-          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("predictions")}</p>
+          <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-ink-soft">
+            {live && <span className="font-bold text-accent">{t("live")}</span>}
+            {live && <span aria-hidden>·</span>}
+            <span>{t("predictions")}</span>
+          </p>
           <h1 className="truncate text-lg font-extrabold">
             {tc(match.home_team)} {t("vs")} {tc(match.away_team)}
           </h1>
