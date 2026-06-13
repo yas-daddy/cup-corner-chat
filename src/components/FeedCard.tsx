@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Avatar } from "@/components/AvatarPicker";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
-import { useComments, type FeedActivity } from "@/lib/social";
+import { predictionTargetId, useComments, type FeedActivity } from "@/lib/social";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
@@ -20,7 +20,8 @@ type Props = {
 export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
   const { t, tc, n, dir } = useI18n();
   const [showComments, setShowComments] = useState(false);
-  const { comments } = useComments("activity", activity.id);
+  const threadTargetId = predictionTargetId(activity.actor_id, activity.match_id);
+  const { comments } = useComments("prediction", threadTargetId);
 
   const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
   const ac = match?.away_code || (match ? codeForTeam(match.away_team) : "");
@@ -104,8 +105,8 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
       </Link>
 
       <ReactionBar
-        targetType="activity"
-        targetId={activity.id}
+        targetType="prediction"
+        targetId={threadTargetId}
         playerId={currentPlayerId}
         commentCount={comments.length}
         onCommentClick={() => setShowComments((v) => !v)}
@@ -114,8 +115,8 @@ export function FeedCard({ activity, actor, match, currentPlayerId }: Props) {
       {showComments && (
         <div className="mt-3 border-t border-border pt-3">
           <CommentThread
-            targetType="activity"
-            targetId={activity.id}
+            targetType="prediction"
+            targetId={threadTargetId}
             currentPlayerId={currentPlayerId}
           />
         </div>

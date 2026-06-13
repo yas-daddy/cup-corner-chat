@@ -9,6 +9,7 @@ import { Avatar } from "@/components/AvatarPicker";
 import { useCurrentPlayer } from "@/lib/identity";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
+import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
 import { predictionTargetId, useComments } from "@/lib/social";
 import type { Match, Prediction, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
@@ -217,9 +218,8 @@ function MatchDetailPage() {
           {t("match_discussion")}
         </h2>
         <div className="rounded-2xl border border-border bg-surface p-3">
-          <CommentThread
-            targetType="match"
-            targetId={matchId}
+          <MatchDiscussionThread
+            matchId={matchId}
             currentPlayerId={me?.id ?? null}
           />
         </div>
