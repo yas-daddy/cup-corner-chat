@@ -1,12 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
 import { MatchCard } from "@/components/MatchCard";
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,10 +20,12 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const { player, loading, setPlayer } = useCurrentPlayer();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
-  const [syncing, setSyncing] = useState(false);
+  const tapTimes = useRef<number[]>([]);
+
 
   useEffect(() => {
     void loadMatches();
@@ -50,15 +52,15 @@ function HomePage() {
     setMatches((data as Match[] | null) ?? []);
   }
 
-  async function refresh() {
-    setSyncing(true);
-    try {
-      await fetch("/api/public/sync-matches", { method: "POST" });
-      await loadMatches();
-    } finally {
-      setSyncing(false);
+  function handleTitleTap() {
+    const now = Date.now();
+    tapTimes.current = [...tapTimes.current.filter((t) => now - t < 700), now];
+    if (tapTimes.current.length >= 3) {
+      tapTimes.current = [];
+      navigate({ to: "/admin" });
     }
   }
+
 
   const grouped = useMemo(() => {
     const now = Date.now();
@@ -94,20 +96,16 @@ function HomePage() {
 
   return (
     <div className="px-4 pt-6">
-      <header className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("app_name")}</p>
-          <h1 className="text-2xl font-extrabold">{t("home")}</h1>
-        </div>
-        <button
-          onClick={refresh}
-          disabled={syncing}
-          className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 text-xs font-semibold text-ink-soft active:opacity-80"
+      <header className="mb-4">
+        <p className="text-xs uppercase tracking-wider text-ink-soft">{t("app_name")}</p>
+        <h1
+          onClick={handleTitleTap}
+          className="select-none text-2xl font-extrabold"
         >
-          <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? t("refreshing") : t("refresh")}
-        </button>
+          {t("home")}
+        </h1>
       </header>
+
 
       {matches && matches.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
