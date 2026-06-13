@@ -85,7 +85,10 @@ export function CommentThread({ targetType, targetId, currentPlayerId, limit, em
                   <Avatar avatar={p?.avatar ?? null} name={p?.display_name ?? "?"} size={28} className="border border-border text-base" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-xs font-semibold">{p?.display_name ?? "…"}</span>
+                      <span className="flex min-w-0 items-center gap-1 truncate text-xs font-semibold">
+                        <span className="truncate">{p?.display_name ?? "…"}</span>
+                        {isKarim(c.player_id) && <AiTag />}
+                      </span>
                       <span className="text-[10px] text-ink-soft">{relativeTime(c.created_at, n)}</span>
                     </div>
                     <p className="whitespace-pre-wrap break-words text-sm">{c.body}</p>
