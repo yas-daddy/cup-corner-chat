@@ -100,15 +100,19 @@ function HomePage() {
 
   return (
     <div className="px-4 pt-6">
-      <header className="mb-4">
-        <p className="text-xs uppercase tracking-wider text-ink-soft">{t("app_name")}</p>
-        <h1
-          onClick={handleTitleTap}
-          className="select-none text-2xl font-extrabold"
-        >
-          {t("home")}
-        </h1>
+      <header className="mb-4 flex items-center gap-3">
+        <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-wider text-ink-soft truncate">{player.display_name}</p>
+          <h1
+            onClick={handleTitleTap}
+            className="select-none text-2xl font-extrabold"
+          >
+            {t("home")}
+          </h1>
+        </div>
       </header>
+
 
 
       {matches && matches.length === 0 && (
