@@ -72,6 +72,23 @@ function SettingsPage() {
       </Section>
 
       {player && (
+        <Section label={t("avatar")}>
+          <AvatarPicker
+            value={player.avatar}
+            onChange={async (next) => {
+              const { data } = await supabase
+                .from("players")
+                .update({ avatar: next })
+                .eq("id", player.id)
+                .select()
+                .single();
+              if (data) setPlayer(data as typeof player);
+            }}
+          />
+        </Section>
+      )}
+
+      {player && (
         <Section label={t("change_name")}>
           <div className="flex gap-2">
             <input
@@ -89,6 +106,7 @@ function SettingsPage() {
           </div>
         </Section>
       )}
+
 
       <Section>
         <button
