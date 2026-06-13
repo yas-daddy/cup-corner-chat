@@ -154,9 +154,16 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         )}
       </div>
 
+      {commentCount > 0 && (
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
+          <MessageCircle className="h-3 w-3" />
+          <span className="tabular-nums">{n(commentCount)}</span>
+        </div>
+      )}
     </div>
   );
 }
+// (closing braces below remain unchanged)
 
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { n } = useI18n();
