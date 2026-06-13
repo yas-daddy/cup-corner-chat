@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
 import type { Match, PredictionPointRow } from "@/lib/types";
+import { ChampionPickCard } from "@/components/ChampionPickCard";
 
 
 export const Route = createFileRoute("/my-picks")({
@@ -79,6 +80,9 @@ function MyPicksPage() {
         <Stat label={t("correct_results")} value={n(summary.correct)} tone="success" />
         <Stat label={t("exact_scores")} value={n(summary.exact)} tone="primary" />
       </div>
+
+      <ChampionPickCard playerId={player.id} />
+
 
       {sorted.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">

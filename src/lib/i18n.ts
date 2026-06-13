@@ -83,6 +83,17 @@ const EN: Dict = {
   notif_result_exact: "You nailed the exact score! +8",
   notif_result_correct: "You got the result right. +3",
   notif_result_none: "Result is in — no points this time.",
+  champion_title: "Competition Champion Prediction",
+  champion_sub: "Pick the nation you think will lift the trophy.",
+  champion_no_pick: "No champion picked yet.",
+  pick_champion: "Pick champion",
+  change: "Change",
+  search_team: "Search team…",
+  no_results: "No results.",
+  champion_locks_in: "Locks in",
+  champion_locked: "Locked — kickoff has begun.",
+  d_short: "d",
+  h_short: "h",
 };
 
 const FA: Dict = {
@@ -164,6 +175,17 @@ const FA: Dict = {
   notif_result_exact: "نتیجه دقیق را زدید! ۸+",
   notif_result_correct: "نتیجه را درست زدید. ۳+",
   notif_result_none: "نتیجه آمد — این بار امتیازی نگرفتید.",
+  champion_title: "پیش‌بینی قهرمان مسابقات",
+  champion_sub: "تیمی را که فکر می‌کنید قهرمان می‌شود انتخاب کنید.",
+  champion_no_pick: "هنوز قهرمانی انتخاب نشده.",
+  pick_champion: "انتخاب قهرمان",
+  change: "تغییر",
+  search_team: "جستجوی تیم…",
+  no_results: "نتیجه‌ای نیست.",
+  champion_locks_in: "قفل می‌شود تا",
+  champion_locked: "قفل شده — مسابقات شروع شده است.",
+  d_short: "روز",
+  h_short: "ساعت",
 };
 
 // Country name translations (Farsi). Default to English name otherwise.
