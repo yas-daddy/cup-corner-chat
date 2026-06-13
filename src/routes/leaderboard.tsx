@@ -25,7 +25,7 @@ function LeaderboardPage() {
       .from("leaderboard")
       .select("*")
       .order("total_points", { ascending: false })
-      .then(({ data }) => setRows(((data as LeaderRow[] | null) ?? []).filter(r => r != null)));
+      .then(({ data }) => setRows(((data as LeaderRow[] | null) ?? []).filter((r) => r != null && r.player_id !== KARIM_ID)));
   }, []);
 
   return (
