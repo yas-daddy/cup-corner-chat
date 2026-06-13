@@ -56,7 +56,7 @@ function MyPicksPage() {
     return mb.localeCompare(ma);
   });
 
-  const initial = player.display_name.trim().charAt(0).toUpperCase();
+
 
   return (
     <div className="px-4 pt-6">
