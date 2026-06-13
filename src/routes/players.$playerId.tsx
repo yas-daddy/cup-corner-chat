@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, Trophy, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
@@ -8,6 +8,10 @@ import { codeForTeam } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
+
+const CHAMPION_LOCK_AT = new Date("2026-06-20T00:00:00Z").getTime();
+type ChampionPick = { team: string; team_code: string | null };
+
 
 export const Route = createFileRoute("/players/$playerId")({
   head: () => ({ meta: [{ title: "WC26 Predictor — Player" }, { name: "robots", content: "noindex" }] }),
