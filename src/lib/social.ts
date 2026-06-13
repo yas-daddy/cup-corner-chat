@@ -170,7 +170,7 @@ export function useComments(targetType: TargetType, targetId: string) {
     }
     void load();
     const ch = supabase
-      .channel(`comments:${targetType}:${targetId}`)
+      .channel(`comments:${targetType}:${targetId}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "comments", filter: `target_id=eq.${targetId}` },
