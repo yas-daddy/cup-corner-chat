@@ -259,6 +259,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          last_emitted_at: string | null
+          last_emitted_away: number | null
+          last_emitted_home: number | null
           match_id: string
           player_id: string
           pred_away: number
@@ -268,6 +271,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          last_emitted_at?: string | null
+          last_emitted_away?: number | null
+          last_emitted_home?: number | null
           match_id: string
           player_id: string
           pred_away: number
@@ -277,6 +283,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          last_emitted_at?: string | null
+          last_emitted_away?: number | null
+          last_emitted_home?: number | null
           match_id?: string
           player_id?: string
           pred_away?: number
@@ -418,6 +427,9 @@ export type Database = {
         Returns: {
           created_at: string
           id: string
+          last_emitted_at: string | null
+          last_emitted_away: number | null
+          last_emitted_home: number | null
           match_id: string
           player_id: string
           pred_away: number
