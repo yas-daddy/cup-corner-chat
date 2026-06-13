@@ -123,22 +123,19 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs">
-        {!finished && !locked && (
+        {!locked && !finished ? (
           <span className={hasPick ? "text-ink-soft" : "text-accent font-semibold"}>
             {hasPick ? `${t("predicted")}: ${n(h)} - ${n(a)}` : t("not_predicted")}
           </span>
-        )}
-        {!finished && locked && (
+        ) : prediction ? (
           <span className="flex items-center gap-1 text-ink-soft">
-            <Lock className="h-3 w-3" />
-            {prediction
-              ? `${t("predicted")}: ${n(prediction.pred_home)} - ${n(prediction.pred_away)}`
-              : t("not_predicted")}
-          </span>
-        )}
-        {finished && prediction && (
-          <span className="text-ink-soft">
+            {!finished && <Lock className="h-3 w-3" />}
             {t("predicted")}: {n(prediction.pred_home)} - {n(prediction.pred_away)}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 text-ink-soft">
+            {!finished && <Lock className="h-3 w-3" />}
+            {t("not_predicted")}
           </span>
         )}
 
@@ -148,6 +145,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
           </span>
         )}
       </div>
+
     </div>
   );
 }
