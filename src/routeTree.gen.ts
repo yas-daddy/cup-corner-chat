@@ -20,6 +20,7 @@ import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
 import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
+import { Route as ApiPublicHooksEmitPendingPredictionsRouteImport } from './routes/api/public/hooks/emit-pending-predictions'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -76,6 +77,12 @@ const ApiPublicKarimDailyRoute = ApiPublicKarimDailyRouteImport.update({
   path: '/api/public/karim-daily',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksEmitPendingPredictionsRoute =
+  ApiPublicHooksEmitPendingPredictionsRouteImport.update({
+    id: '/api/public/hooks/emit-pending-predictions',
+    path: '/api/public/hooks/emit-pending-predictions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
+  '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +110,7 @@ export interface FileRoutesByTo {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
+  '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +125,7 @@ export interface FileRoutesById {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
+  '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/sync-matches'
+    | '/api/public/hooks/emit-pending-predictions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/sync-matches'
+    | '/api/public/hooks/emit-pending-predictions'
   id:
     | '__root__'
     | '/'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/sync-matches'
+    | '/api/public/hooks/emit-pending-predictions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +184,7 @@ export interface RootRouteChildren {
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
+  ApiPublicHooksEmitPendingPredictionsRoute: typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicKarimDailyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/emit-pending-predictions': {
+      id: '/api/public/hooks/emit-pending-predictions'
+      path: '/api/public/hooks/emit-pending-predictions'
+      fullPath: '/api/public/hooks/emit-pending-predictions'
+      preLoaderRoute: typeof ApiPublicHooksEmitPendingPredictionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +288,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
+  ApiPublicHooksEmitPendingPredictionsRoute:
+    ApiPublicHooksEmitPendingPredictionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
