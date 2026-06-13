@@ -74,7 +74,13 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+    <div className="relative rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <Link
+        to="/matches/$matchId"
+        params={{ matchId: match.id }}
+        aria-label="View predictions"
+        className="absolute inset-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40"
+      />
       <div className="mb-2 flex items-center justify-between text-xs text-ink-soft">
         <span>
           {match.stage ? match.stage : ""}
