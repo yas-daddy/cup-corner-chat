@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Minus, Plus, Lock, Check } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
 import { flagFromCode } from "@/lib/flags";
@@ -73,7 +74,13 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+    <div className="relative rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <Link
+        to="/matches/$matchId"
+        params={{ matchId: match.id }}
+        aria-label="View predictions"
+        className="absolute inset-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40"
+      />
       <div className="mb-2 flex items-center justify-between text-xs text-ink-soft">
         <span>
           {match.stage ? match.stage : ""}
@@ -153,7 +160,7 @@ export function MatchCard({ match, playerId, prediction, onSaved }: Props) {
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { n } = useI18n();
   return (
-    <div className="flex items-center gap-1 rounded-full border border-border bg-white p-1">
+    <div className="relative z-10 flex items-center gap-1 rounded-full border border-border bg-white p-1">
       <button
         type="button"
         aria-label="minus"
