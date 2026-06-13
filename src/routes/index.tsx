@@ -8,7 +8,7 @@ import { Avatar } from "@/components/AvatarPicker";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
-import { fetchMatchCommentCounts } from "@/lib/social";
+import { fetchMatchCommentCounts, fetchMatchPredictionCounts } from "@/lib/social";
 
 
 export const Route = createFileRoute("/")({
