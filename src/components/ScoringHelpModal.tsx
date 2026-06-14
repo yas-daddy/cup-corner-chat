@@ -36,7 +36,7 @@ export function ScoringHelpModal({ onClose }: { onClose: () => void }) {
             <li className="flex items-center justify-between rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
               <span className="text-sm font-bold">{t("scoring_row_exact")}</span>
               <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-sm font-extrabold text-[color:var(--gold)] tabular-nums">
-                +{n(10)} ⭐
+                +{n(8)} ⭐
               </span>
             </li>
           </ul>
