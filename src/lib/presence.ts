@@ -23,19 +23,20 @@ async function beacon() {
   if (now - lastBeacon < 60_000) return; // throttle to once per minute per tab
   lastBeacon = now;
   const standalone = isStandalone();
-  const patch: Record<string, unknown> = {
-    last_open_at: new Date().toISOString(),
-    pwa_display_mode: standalone ? "standalone" : "browser",
-  };
   if (standalone) {
-    // only set pwa_installed_at when null — use a separate update with filter
     await supabase
       .from("players")
       .update({ pwa_installed_at: new Date().toISOString() })
       .eq("id", id)
       .is("pwa_installed_at", null);
   }
-  await supabase.from("players").update(patch).eq("id", id);
+  await supabase
+    .from("players")
+    .update({
+      last_open_at: new Date().toISOString(),
+      pwa_display_mode: standalone ? "standalone" : "browser",
+    })
+    .eq("id", id);
 }
 
 export function usePresenceBeacon() {
