@@ -118,7 +118,9 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
           <span className="truncate font-semibold">{tc(match.away_team)}</span>
         </div>
         {finished ? (
-          <div className="w-[88px]" />
+          <SingleScore value={n(match.away_score ?? 0)} />
+        ) : match.status === "LIVE" && match.home_score != null && match.away_score != null ? (
+          <SingleScore value={n(match.away_score)} />
         ) : locked ? (
           <div className="w-[88px]" />
         ) : (
