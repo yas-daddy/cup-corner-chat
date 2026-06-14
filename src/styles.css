@@ -53,7 +53,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.theme-light) {
     --bg: #061019;
     --surface: #0d1d28;
     --border: #1a2e3c;
@@ -65,6 +65,19 @@
     --success: #9ed64a;
     --gold: #f5c542;
   }
+}
+
+:root.theme-dark {
+  --bg: #061019;
+  --surface: #0d1d28;
+  --border: #1a2e3c;
+  --ink: #f1f3f7;
+  --ink-soft: #6e8a9b;
+  --primary: #8b5cf6;
+  --secondary: #2dd4bf;
+  --accent: #ff7a80;
+  --success: #9ed64a;
+  --gold: #f5c542;
 }
 
 
