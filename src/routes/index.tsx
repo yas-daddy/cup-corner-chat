@@ -163,6 +163,8 @@ function HomePage() {
       {player.avatar && <ChampionPromptModal playerId={player.id} />}
       <PushAutoPrompt playerId={player.id} />
       <PwaInstallBanner />
+      <GodModePinModal open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={() => { setPinOpen(false); navigate({ to: "/admin" }); }} />
+
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
         <div className="min-w-0 flex-1">
