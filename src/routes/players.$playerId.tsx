@@ -196,7 +196,7 @@ function ChampionRow({ champion }: { champion: ChampionPick | null }) {
             <p className="text-sm text-ink-soft">{t("champion_no_pick")}</p>
           ) : revealed ? (
             <p className="truncate text-base font-bold">
-              {flagFromCode(champion.team_code || codeForTeam(champion.team) || "")} {tc(champion.team)}
+              {flagFromCode(resolveTeamCode(champion.team_code, champion.team) || "")} {tc(champion.team)}
             </p>
           ) : (
             <p className="flex items-center gap-1.5 text-sm text-ink-soft">
