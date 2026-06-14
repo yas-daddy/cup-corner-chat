@@ -11,6 +11,7 @@ import { ChampionPromptModal } from "@/components/ChampionPromptModal";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
+import { NewPicksPill } from "@/components/NewPicksPill";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
