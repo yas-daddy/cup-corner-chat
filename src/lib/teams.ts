@@ -88,3 +88,13 @@ export function codeForTeam(name?: string | null): string | null {
   if (!name) return null;
   return MAP.get(name.toLowerCase()) ?? null;
 }
+
+// The DB sometimes stores "GB" (Union Jack) for UK home nations. Resolve the
+// most specific code possible for a team, preferring the stored code when it
+// is concrete, and falling back to the team name mapping otherwise.
+export function resolveTeamCode(code: string | null | undefined, name?: string | null): string | null {
+  if (code && code.toUpperCase() !== "GB") return code;
+  const mapped = codeForTeam(name);
+  if (mapped && mapped !== "GB") return mapped;
+  return code ?? mapped ?? null;
+}
