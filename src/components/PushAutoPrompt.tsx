@@ -3,8 +3,6 @@ import { Bell, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { isPushSupported, isStandalone, getPermissionState, subscribePush } from "@/lib/push";
 
-const STORAGE_KEY = "wc26.push.autoprompt.shown";
-
 export function PushAutoPrompt({ playerId }: { playerId: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -13,13 +11,11 @@ export function PushAutoPrompt({ playerId }: { playerId: string }) {
     if (typeof window === "undefined") return;
     if (!isPushSupported() || !isStandalone()) return;
     if (getPermissionState() !== "default") return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
     const t = setTimeout(() => setOpen(true), 800);
     return () => clearTimeout(t);
   }, []);
 
   function dismiss() {
-    try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
     setOpen(false);
   }
 
@@ -29,6 +25,7 @@ export function PushAutoPrompt({ playerId }: { playerId: string }) {
     setBusy(false);
     dismiss();
   }
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? setOpen(true) : dismiss())}>
