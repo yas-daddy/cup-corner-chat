@@ -119,6 +119,7 @@ function HomePage() {
   return (
     <div className="px-4 pt-6">
       {!player.avatar && <AvatarPromptModal player={player} onSaved={(p) => setPlayer(p)} />}
+      {player.avatar && <ChampionPromptModal playerId={player.id} />}
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
         <div className="min-w-0 flex-1">
