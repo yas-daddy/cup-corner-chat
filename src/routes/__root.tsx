@@ -10,6 +10,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { BottomNav } from "@/components/BottomNav";
 import { I18nContext, useLangBootstrap } from "@/lib/i18n";
+import { usePresenceBeacon } from "@/lib/presence";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
