@@ -446,7 +446,7 @@ function NumInput({ value, onChange }: { value: number; onChange: (v: number) =>
   );
 }
 
-function StatTile({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+function StatTile({ icon, label, value, sub }: { icon: ReactNode; label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-xl border border-border bg-bg p-2">
       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ink-soft">
