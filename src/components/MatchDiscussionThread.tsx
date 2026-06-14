@@ -104,7 +104,7 @@ export function MatchDiscussionThread({ matchId, currentPlayerId }: Props) {
             onChange={(e) => setBody(e.target.value.slice(0, 500))}
             placeholder={t("write_a_comment")}
             onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
-            className="min-w-0 flex-1 rounded-full border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="min-w-0 flex-1 rounded-full border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <button
             type="button"

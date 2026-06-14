@@ -97,7 +97,7 @@ export function SignInScreen({ onSignedIn }: { onSignedIn: (p: Player) => void }
             autoFocus
             value={renameTo}
             onChange={(e) => setRenameTo(e.target.value)}
-            className="flex-1 rounded-xl border border-border bg-white px-3 py-2 text-base outline-none focus:border-primary"
+            className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-base outline-none focus:border-primary"
           />
         </div>
         <button
@@ -206,7 +206,7 @@ export function SignInScreen({ onSignedIn }: { onSignedIn: (p: Player) => void }
         <button
           onClick={tryCreate}
           disabled={!trimmed || busy}
-          className="mt-2 w-full rounded-2xl border border-border bg-white py-3 text-sm font-semibold text-secondary disabled:opacity-40"
+          className="mt-2 w-full rounded-2xl border border-border bg-surface py-3 text-sm font-semibold text-secondary disabled:opacity-40"
         >
           {trimmed ? `Create new player "${trimmed}"` : "Type a name above to create a new player"}
         </button>
