@@ -32,8 +32,9 @@ export function InstallPwaModal({
         <div className="mt-2 space-y-3 rounded-xl border border-border bg-surface p-4 text-sm">
           {ios ? (
             <>
-              <Step n={1} icon={<Share className="h-4 w-4" />} text="Tap [Share Icon] and then Add to Home Screen." />
-              <Step n={2} icon={stepIcon} text="Open the app from your home screen." />
+              <Step n={1} icon={<Share className="h-4 w-4" />} text="Tap the Share icon in Safari's toolbar." />
+              <Step n={2} icon={<Plus className="h-4 w-4" />} text='Scroll down and choose "Add to Home Screen".' />
+              <Step n={3} icon={stepIcon} text="Open the WC26 app from your home screen." />
             </>
           ) : (
             <>
