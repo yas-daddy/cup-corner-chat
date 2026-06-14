@@ -157,12 +157,26 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         )}
       </div>
 
-      {(commentCount > 0 || predictionCount > 0) && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1.5 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
-          {predictionCount > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              <span className="tabular-nums">{n(predictionCount)}</span>
+      {(commentCount > 0 || (predictionPreview?.count ?? 0) > 0) && (
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-2 rounded-full bg-surface/95 px-2 py-1 text-[11px] font-semibold text-ink-soft shadow-sm">
+          {predictionPreview && predictionPreview.count > 0 && (
+            <span className="flex items-center">
+              <span className="flex items-center">
+                {predictionPreview.avatars.map((p, i) => (
+                  <Avatar
+                    key={p.id}
+                    avatar={p.avatar}
+                    name={p.display_name}
+                    size={20}
+                    className={`text-[13px] ring-2 ring-surface ${i > 0 ? "-ml-1.5" : ""}`}
+                  />
+                ))}
+              </span>
+              {predictionPreview.count > predictionPreview.avatars.length && (
+                <span className="ml-1 tabular-nums">
+                  +{n(predictionPreview.count - predictionPreview.avatars.length)}
+                </span>
+              )}
             </span>
           )}
           {commentCount > 0 && (
