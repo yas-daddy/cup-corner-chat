@@ -305,8 +305,8 @@ function AdminPage() {
                 {list.map((m) => {
                   const d = drafts[m.id] ?? { home: 0, away: 0, dirty: false };
                   const hasPred = !!preds[m.id];
-                  const hc = m.home_code || codeForTeam(m.home_team);
-                  const ac = m.away_code || codeForTeam(m.away_team);
+                  const hc = resolveTeamCode(m.home_code, m.home_team) || "";
+                  const ac = resolveTeamCode(m.away_code, m.away_team) || "";
                   const finished = m.status === "FINISHED";
                   return (
                     <div key={m.id} className="rounded-2xl border border-border bg-surface p-3">
