@@ -198,6 +198,8 @@ const FA: Dict = {
   notif_result_exact: "نتیجه دقیق را زدید! ۸+",
   notif_result_correct: "نتیجه را درست زدید. ۳+",
   notif_result_none: "نتیجه آمد — این بار امتیازی نگرفتید.",
+  pwa_banner_text: "برنامه کامل را نصب کنید — دسترسی سریع و اعلان‌ها.",
+  pwa_banner_cta: "نصب",
   champion_title: "پیش‌بینی قهرمان مسابقات",
   champion_sub: "تیمی را که فکر می‌کنید قهرمان می‌شود انتخاب کنید.",
   champion_no_pick: "هنوز قهرمانی انتخاب نشده.",
