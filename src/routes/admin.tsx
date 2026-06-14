@@ -254,6 +254,49 @@ function AdminPage() {
       </section>
 
       {selectedPlayer && (
+        <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">
+            Overall champion pick
+          </div>
+          <div className="mb-2 flex items-center gap-2 text-sm">
+            <span className="text-2xl">{flagFromCode(champion?.team_code || codeForTeam(champion?.team ?? ""))}</span>
+            <span className="font-semibold">{champion?.team ?? "— None —"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={championDraft}
+              onChange={(e) => setChampionDraft(e.target.value)}
+              className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+            >
+              <option value="">— Choose team —</option>
+              {teamOptions.map((t) => (
+                <option key={t.name} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={saveChampion}
+              disabled={championSaving || !championDraft || championDraft === champion?.team}
+              className="flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {championSaving ? "Saving…" : championSavedAt && Date.now() - championSavedAt < 1500 ? "Saved" : champion ? "Update" : "Create"}
+            </button>
+            {champion && (
+              <button
+                onClick={removeChampion}
+                className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-surface text-accent"
+                aria-label="Delete champion pick"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
+      {selectedPlayer && (
         <section className="space-y-4">
           {Array.from(grouped.entries()).map(([day, list]) => (
             <div key={day}>
