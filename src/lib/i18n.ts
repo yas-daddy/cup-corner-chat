@@ -93,6 +93,7 @@ const EN: Dict = {
   change: "Change",
   search_team: "Search team…",
   no_results: "No results.",
+  maybe_later: "Maybe later",
   champion_locks_in: "Locks in",
   champion_locked: "Locked — kickoff has begun.",
   champion_hidden_until_lock: "Hidden until June 20",
