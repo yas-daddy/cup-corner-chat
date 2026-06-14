@@ -85,7 +85,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         aria-label="View predictions"
         className="absolute inset-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
-      <div className="mb-2 flex items-center justify-end text-xs text-ink-soft">
+      <div className="mb-2 flex items-center justify-start text-xs text-ink-soft">
         <span>{kickoffLabel}</span>
       </div>
 
