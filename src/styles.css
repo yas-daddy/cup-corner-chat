@@ -54,11 +54,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not(.theme-light) {
-    --bg: #061019;
-    --surface: #0d1d28;
-    --border: #1a2e3c;
-    --ink: #f1f3f7;
-    --ink-soft: #6e8a9b;
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --border: #2c2c2e;
+    --ink: #ffffff;
+    --ink-soft: #8e8e93;
     --primary: #8b5cf6;
     --secondary: #2dd4bf;
     --accent: #ff7a80;
@@ -68,11 +68,11 @@
 }
 
 :root.theme-dark {
-  --bg: #061019;
-  --surface: #0d1d28;
-  --border: #1a2e3c;
-  --ink: #f1f3f7;
-  --ink-soft: #6e8a9b;
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --border: #2c2c2e;
+  --ink: #ffffff;
+  --ink-soft: #8e8e93;
   --primary: #8b5cf6;
   --secondary: #2dd4bf;
   --accent: #ff7a80;
