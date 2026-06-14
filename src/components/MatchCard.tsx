@@ -95,13 +95,11 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
           <span className="truncate font-semibold">{tc(match.home_team)}</span>
         </div>
         {finished ? (
-          <ScoreBox value={`${n(match.home_score ?? 0)} - ${n(match.away_score ?? 0)}`} />
+          <SingleScore value={n(match.home_score ?? 0)} />
+        ) : match.status === "LIVE" && match.home_score != null && match.away_score != null ? (
+          <SingleScore value={n(match.home_score)} />
         ) : match.status === "LIVE" ? (
-          match.home_score != null && match.away_score != null ? (
-            <ScoreBox value={`${n(match.home_score)} - ${n(match.away_score)}`} />
-          ) : (
-            <Badge tone="accent">{t("live")}</Badge>
-          )
+          <Badge tone="accent">{t("live")}</Badge>
         ) : locked ? (
           prediction ? (
             <ScoreBox value={`${n(prediction.pred_home)} - ${n(prediction.pred_away)}`} />
@@ -120,7 +118,9 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
           <span className="truncate font-semibold">{tc(match.away_team)}</span>
         </div>
         {finished ? (
-          <div className="w-[88px]" />
+          <SingleScore value={n(match.away_score ?? 0)} />
+        ) : match.status === "LIVE" && match.home_score != null && match.away_score != null ? (
+          <SingleScore value={n(match.away_score)} />
         ) : locked ? (
           <div className="w-[88px]" />
         ) : (
@@ -221,6 +221,14 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
 function ScoreBox({ value }: { value: string }) {
   return (
     <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">{value}</div>
+  );
+}
+
+function SingleScore({ value }: { value: string }) {
+  return (
+    <div className="grid h-8 min-w-8 place-items-center rounded-full bg-white px-3 text-sm font-bold text-black tabular-nums shadow-sm">
+      {value}
+    </div>
   );
 }
 
