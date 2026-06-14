@@ -38,6 +38,9 @@ function AdminPage() {
   const [championSavedAt, setChampionSavedAt] = useState<number>(0);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+  const [stats, setStats] = useState<PlayerStats[]>([]);
+  const [pushPlayerIds, setPushPlayerIds] = useState<Set<string>>(new Set());
+  const [pushSubCount, setPushSubCount] = useState(0);
 
 
   useEffect(() => {
@@ -45,12 +48,23 @@ function AdminPage() {
       .from("players")
       .select("*")
       .order("display_name")
-      .then(({ data }) => setPlayers((data as Player[]) ?? []));
+      .then(({ data }) => {
+        setPlayers((data as Player[]) ?? []);
+        setStats((data as PlayerStats[]) ?? []);
+      });
     supabase
       .from("matches")
       .select("*")
       .order("kickoff_at", { ascending: true })
       .then(({ data }) => setMatches((data as Match[]) ?? []));
+    supabase
+      .from("push_subscriptions")
+      .select("player_id")
+      .then(({ data }) => {
+        const rows = (data as { player_id: string }[] | null) ?? [];
+        setPushSubCount(rows.length);
+        setPushPlayerIds(new Set(rows.map((r) => r.player_id)));
+      });
   }, []);
 
   useEffect(() => {
