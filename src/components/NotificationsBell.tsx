@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import type { Player } from "@/lib/identity";
+import { isPushSupported, getPermissionState, subscribePush } from "@/lib/push";
 
 type Notification = {
   id: string;
@@ -26,6 +27,20 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
   const [items, setItems] = useState<Notification[]>([]);
   const [actors, setActors] = useState<Record<string, Player>>({});
   const [open, setOpen] = useState(false);
+  const [pushPerm, setPushPerm] = useState<NotificationPermission | "unsupported">("default");
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    if (isPushSupported()) setPushPerm(getPermissionState());
+    else setPushPerm("unsupported");
+  }, []);
+
+  async function enablePush() {
+    setPushBusy(true);
+    await subscribePush(playerId);
+    setPushBusy(false);
+    setPushPerm(getPermissionState());
+  }
 
   async function load() {
     const { data } = await supabase
