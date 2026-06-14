@@ -129,63 +129,65 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
 
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-xs">
-        {!locked && !finished ? (
-          <span className={hasPick ? "text-ink-soft" : "text-accent font-semibold"}>
-            {hasPick ? `${t("predicted")}: ${n(h)} - ${n(a)}` : t("not_predicted")}
-          </span>
-        ) : prediction ? (
-          <span className="flex items-center gap-1 text-ink-soft">
-            {!finished && <Lock className="h-3 w-3" />}
-            {t("predicted")}: {n(prediction.pred_home)} - {n(prediction.pred_away)}
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-ink-soft">
-            {!finished && <Lock className="h-3 w-3" />}
-            {t("not_predicted")}
-          </span>
-        )}
-
-        {showSaved && (
-          <span className="anim-pop flex items-center gap-1 font-semibold text-success">
-            <Check className="h-3 w-3" /> {t("saved")}
-          </span>
-        )}
-      </div>
-
-      {(commentCount > 0 || (predictionPreview?.count ?? 0) > 0) && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-2 text-[12px] font-semibold text-ink-soft">
-          {predictionPreview && predictionPreview.count > 0 && (
-            <span className="flex items-center">
-              <span className="flex items-center">
-                {predictionPreview.avatars.map((p, i) => (
-                  <Avatar
-                    key={p.id}
-                    avatar={p.avatar}
-                    name={p.display_name}
-                    size={32}
-                    className={`rounded-full bg-surface ring-2 ring-border ${i > 0 ? "-ml-2" : ""}`}
-                  />
-                ))}
-              </span>
-              {predictionPreview.count > predictionPreview.avatars.length && (
-                <span
-                  className="-ml-2 grid place-items-center rounded-full bg-ink text-bg ring-2 ring-border tabular-nums"
-                  style={{ width: 32, height: 32, fontSize: 12 }}
-                >
-                  +{n(predictionPreview.count - predictionPreview.avatars.length)}
-                </span>
-              )}
+      <div className="absolute bottom-2 left-4 right-2 z-[1] flex items-center justify-between text-xs">
+        <div className="flex min-w-0 items-center gap-2">
+          {!locked && !finished ? (
+            <span className={hasPick ? "text-ink-soft" : "text-accent font-semibold"}>
+              {hasPick ? `${t("predicted")}: ${n(h)} - ${n(a)}` : t("not_predicted")}
+            </span>
+          ) : prediction ? (
+            <span className="flex items-center gap-1 text-ink-soft">
+              {!finished && <Lock className="h-3 w-3" />}
+              {t("predicted")}: {n(prediction.pred_home)} - {n(prediction.pred_away)}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-ink-soft">
+              {!finished && <Lock className="h-3 w-3" />}
+              {t("not_predicted")}
             </span>
           )}
-          {commentCount > 0 && (
-            <span className="flex items-center gap-1">
-              <MessageCircle className="h-3 w-3" />
-              <span className="tabular-nums">{n(commentCount)}</span>
+
+          {showSaved && (
+            <span className="anim-pop flex items-center gap-1 font-semibold text-success">
+              <Check className="h-3 w-3" /> {t("saved")}
             </span>
           )}
         </div>
-      )}
+
+        {(commentCount > 0 || (predictionPreview?.count ?? 0) > 0) && (
+          <div className="pointer-events-none flex shrink-0 items-center gap-2 text-[12px] font-semibold text-ink-soft">
+            {predictionPreview && predictionPreview.count > 0 && (
+              <span className="flex items-center">
+                <span className="flex items-center">
+                  {predictionPreview.avatars.map((p, i) => (
+                    <Avatar
+                      key={p.id}
+                      avatar={p.avatar}
+                      name={p.display_name}
+                      size={32}
+                      className={`rounded-full bg-surface ring-2 ring-border ${i > 0 ? "-ml-2" : ""}`}
+                    />
+                  ))}
+                </span>
+                {predictionPreview.count > predictionPreview.avatars.length && (
+                  <span
+                    className="-ml-2 grid place-items-center rounded-full bg-ink text-bg ring-2 ring-border tabular-nums"
+                    style={{ width: 32, height: 32, fontSize: 12 }}
+                  >
+                    +{n(predictionPreview.count - predictionPreview.avatars.length)}
+                  </span>
+                )}
+              </span>
+            )}
+            {commentCount > 0 && (
+              <span className="flex items-center gap-1">
+                <MessageCircle className="h-3 w-3" />
+                <span className="tabular-nums">{n(commentCount)}</span>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
