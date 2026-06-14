@@ -95,6 +95,8 @@ const EN: Dict = {
   push_ios_hint: "On iPhone/iPad? Tap Share → Add to Home Screen first, then enable.",
   push_soft_prompt: "Get pinged when someone likes your pick or you score points.",
   push_soft_enable: "Turn on",
+  pwa_banner_text: "Get the full app — install for quick access & push alerts.",
+  pwa_banner_cta: "Install",
   push_new_fixtures_title: "New matches added",
   push_new_fixtures_body_one: "1 new match — tap to make your pick",
   push_new_fixtures_body_other: "{n} new matches — tap to make your picks",
