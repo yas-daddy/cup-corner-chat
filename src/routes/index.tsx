@@ -81,7 +81,7 @@ function HomePage() {
     tapTimes.current = [...tapTimes.current.filter((t) => now - t < 700), now];
     if (tapTimes.current.length >= 3) {
       tapTimes.current = [];
-      navigate({ to: "/admin" });
+      setPinOpen(true);
     }
   }
 
