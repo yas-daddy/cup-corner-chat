@@ -18,7 +18,7 @@ const RAW: Record<string, string> = {
   France: "FR",
   Spain: "ES",
   Germany: "DE",
-  England: "GB",
+  England: "ENG",
   Italy: "IT",
   Netherlands: "NL",
   Portugal: "PT",
