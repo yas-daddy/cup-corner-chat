@@ -26,8 +26,13 @@ function AdminPage() {
   const [playerId, setPlayerId] = useState<string>("");
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [champion, setChampion] = useState<{ team: string; team_code: string | null } | null>(null);
+  const [championDraft, setChampionDraft] = useState<string>("");
+  const [championSaving, setChampionSaving] = useState(false);
+  const [championSavedAt, setChampionSavedAt] = useState<number>(0);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+
 
   useEffect(() => {
     supabase
