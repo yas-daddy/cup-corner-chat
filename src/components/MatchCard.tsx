@@ -226,7 +226,7 @@ function ScoreBox({ value }: { value: string }) {
 
 function SingleScore({ value }: { value: string }) {
   return (
-    <div className="grid h-8 min-w-8 place-items-center rounded-full bg-white px-3 text-sm font-bold text-black tabular-nums shadow-sm">
+    <div className="grid h-8 min-w-8 place-items-center rounded-full bg-bg px-3 text-sm font-bold text-ink tabular-nums shadow-sm ring-1 ring-border">
       {value}
     </div>
   );
