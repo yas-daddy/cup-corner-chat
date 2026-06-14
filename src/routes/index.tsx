@@ -176,7 +176,9 @@ function HomePage() {
         <NotificationsBell playerId={player.id} />
       </header>
 
-
+      {!firstVisible && (
+        <NewPicksPill count={unpredictedUpcomingIds.length} onTap={scrollToFirstUnpredicted} />
+      )}
 
       {matches && matches.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
@@ -204,7 +206,9 @@ function HomePage() {
       {Array.from(grouped.upcoming.entries()).map(([day, list]) => (
         <Section key={day} title={day}>
           {list.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            <div key={m.id} data-match-id={m.id} className="transition-shadow">
+              <MatchCard match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            </div>
           ))}
         </Section>
       ))}
