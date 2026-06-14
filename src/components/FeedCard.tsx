@@ -112,7 +112,7 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
             <div className="flex items-center gap-2">
               {isPoints ? (
                 <>
-                  <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                  <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold text-bg tabular-nums">
                     {n(activity.home_score ?? 0)} - {n(activity.away_score ?? 0)}
                   </span>
                   <span className="text-[10px] text-ink-soft">{t("final")}</span>

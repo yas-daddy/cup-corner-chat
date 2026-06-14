@@ -203,7 +203,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
 
 function ScoreBox({ value }: { value: string }) {
   return (
-    <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-white tabular-nums">{value}</div>
+    <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">{value}</div>
   );
 }
 

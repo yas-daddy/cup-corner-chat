@@ -106,7 +106,7 @@ export function ChampionPickCard({ playerId }: { playerId: string }) {
             <SheetTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white"
+                className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-bg"
               >
                 <Pencil className="h-3.5 w-3.5" /> {pick ? t("change") : t("pick_champion")}
               </button>
