@@ -25,8 +25,11 @@ export function FeedCard(props: Props) {
   return <PickCard {...props} matchId={props.activity.match_id} />;
 }
 
-function DailySummaryCard({ activity, actor }: Props) {
+function DailySummaryCard({ activity, actor, currentPlayerId }: Props) {
   const { t, n, dir } = useI18n();
+  const targetId = activity.id;
+  const { comments } = useComments("activity", targetId);
+  const [showComments, setShowComments] = useState(false);
   return (
     <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
       <div className="flex items-center gap-3" dir={dir}>
@@ -40,9 +43,28 @@ function DailySummaryCard({ activity, actor }: Props) {
         </div>
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{activity.body}</p>
+
+      <ReactionBar
+        targetType="activity"
+        targetId={targetId}
+        playerId={currentPlayerId}
+        commentCount={comments.length}
+        onCommentClick={() => setShowComments((v) => !v)}
+      />
+
+      {showComments && (
+        <div className="mt-3 border-t border-border pt-3">
+          <CommentThread
+            targetType="activity"
+            targetId={targetId}
+            currentPlayerId={currentPlayerId}
+          />
+        </div>
+      )}
     </div>
   );
 }
+
 
 function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & { matchId: string }) {
   const { t, tc, n, dir } = useI18n();
