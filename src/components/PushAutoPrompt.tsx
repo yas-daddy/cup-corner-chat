@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { isPushSupported, isStandalone, getPermissionState, subscribePush } from "@/lib/push";
 
@@ -54,13 +54,6 @@ export function PushAutoPrompt({ playerId }: { playerId: string }) {
             Not now
           </button>
         </div>
-        <button
-          onClick={dismiss}
-          aria-label="Close"
-          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-ink-soft hover:bg-border/60"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </DialogContent>
     </Dialog>
   );
