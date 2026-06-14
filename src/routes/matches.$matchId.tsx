@@ -298,11 +298,11 @@ function PredictionRow({
           {finished && (
             row.is_exact ? (
               <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">
-                +{n(8)} ⭐
+                +{n(row.points)} ⭐
               </span>
-            ) : row.is_correct_result ? (
+            ) : row.points > 0 ? (
               <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">
-                <Check className="mr-1 inline h-3 w-3" />+{n(3)}
+                <Check className="mr-1 inline h-3 w-3" />+{n(row.points)}
               </span>
             ) : (
               <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
