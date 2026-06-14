@@ -38,8 +38,9 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
   }, []);
 
   async function enablePush() {
-    // If user is in a regular browser (not installed as a PWA), explain they need to install first.
-    if (!isStandalone()) {
+    // If push isn't supported here, or the user is in a regular browser (not installed as a PWA),
+    // explain they need to install to the home screen first.
+    if (!isPushSupported() || !isStandalone()) {
       setInstallModalOpen(true);
       return;
     }
