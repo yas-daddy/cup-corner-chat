@@ -164,7 +164,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
                       key={p.id}
                       avatar={p.avatar}
                       name={p.display_name}
-                      size={32}
+                      size={22}
                       className={`rounded-full bg-surface ring-2 ring-border ${i > 0 ? "-ml-2" : ""}`}
                     />
                   ))}
@@ -172,7 +172,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
                 {predictionPreview.count > predictionPreview.avatars.length && (
                   <span
                     className="-ml-2 grid place-items-center rounded-full bg-ink text-bg ring-2 ring-border tabular-nums"
-                    style={{ width: 32, height: 32, fontSize: 12 }}
+                    style={{ width: 22, height: 22, fontSize: 10 }}
                   >
                     +{n(predictionPreview.count - predictionPreview.avatars.length)}
                   </span>
