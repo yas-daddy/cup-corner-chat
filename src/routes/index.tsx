@@ -38,6 +38,7 @@ function HomePage() {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [predictionPreviews, setPredictionPreviews] = useState<Record<string, PredictionPreview>>({});
   const tapTimes = useRef<number[]>([]);
+  const [pinOpen, setPinOpen] = useState(false);
 
 
   useEffect(() => {
