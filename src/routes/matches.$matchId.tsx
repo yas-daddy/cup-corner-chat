@@ -4,7 +4,7 @@ import { ChevronLeft, Check, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import { useCurrentPlayer } from "@/lib/identity";
 import { ReactionBar } from "@/components/ReactionBar";
