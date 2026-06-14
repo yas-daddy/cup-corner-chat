@@ -4,7 +4,7 @@ import { ChevronLeft, Check, Trophy, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
