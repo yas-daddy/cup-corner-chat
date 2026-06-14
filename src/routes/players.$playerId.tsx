@@ -124,8 +124,8 @@ function PlayerProfilePage() {
           {sorted.map((r) => {
             const m = matches[r.match_id];
             if (!m) return null;
-            const hc = m.home_code || codeForTeam(m.home_team);
-            const ac = m.away_code || codeForTeam(m.away_team);
+            const hc = resolveTeamCode(m.home_code, m.home_team) || "";
+            const ac = resolveTeamCode(m.away_code, m.away_team) || "";
             const finished = m.status === "FINISHED";
             return (
               <li
