@@ -51,6 +51,8 @@ function AdminPage() {
     if (!playerId) {
       setPreds({});
       setDrafts({});
+      setChampion(null);
+      setChampionDraft("");
       return;
     }
     supabase
@@ -67,7 +69,60 @@ function AdminPage() {
         setPreds(map);
         setDrafts(d);
       });
+    supabase
+      .from("champion_predictions")
+      .select("team,team_code")
+      .eq("player_id", playerId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const c = (data as { team: string; team_code: string | null } | null) ?? null;
+        setChampion(c);
+        setChampionDraft(c?.team ?? "");
+      });
   }, [playerId]);
+
+  const teamOptions = useMemo(() => {
+    const set = new Map<string, string>();
+    matches.forEach((m) => {
+      if (m.home_team) set.set(m.home_team, m.home_code || codeForTeam(m.home_team) || "");
+      if (m.away_team) set.set(m.away_team, m.away_code || codeForTeam(m.away_team) || "");
+    });
+    return Array.from(set.entries())
+      .map(([name, code]) => ({ name, code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [matches]);
+
+  async function saveChampion() {
+    if (!playerId || !championDraft) return;
+    setChampionSaving(true);
+    const code = teamOptions.find((t) => t.name === championDraft)?.code ?? "";
+    const { data, error } = await supabase.rpc("admin_upsert_champion", {
+      _player_id: playerId,
+      _team: championDraft,
+      _team_code: code,
+    });
+    setChampionSaving(false);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    const row = (Array.isArray(data) ? data[0] : data) as { team: string; team_code: string | null } | null;
+    if (row) setChampion({ team: row.team, team_code: row.team_code });
+    setChampionSavedAt(Date.now());
+  }
+
+  async function removeChampion() {
+    if (!playerId) return;
+    if (!confirm("Delete this player's champion pick?")) return;
+    const { error } = await supabase.rpc("admin_delete_champion", { _player_id: playerId });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setChampion(null);
+    setChampionDraft("");
+  }
+
 
   async function runSync() {
     setSyncing(true);
