@@ -108,6 +108,25 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
             +25
           </span>
         </div>
+        <div className="flex items-center justify-center gap-2 border-b border-border bg-[color:var(--gold)]/5 px-4 py-3" dir={dir}>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+            {t("champion_locks_in") ?? "Locks in"}
+          </span>
+          <div className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums text-[color:var(--gold)]">
+            {countdown.ms === 0 ? (
+              <span>00:00:00</span>
+            ) : (
+              <>
+                {countdown.days > 0 && <span>{countdown.days}d</span>}
+                <span>{String(countdown.hours).padStart(2, "0")}</span>
+                <span>:</span>
+                <span>{String(countdown.minutes).padStart(2, "0")}</span>
+                <span>:</span>
+                <span>{String(countdown.seconds).padStart(2, "0")}</span>
+              </>
+            )}
+          </div>
+        </div>
         <div className="px-4 py-3">
           <input
             type="text"
