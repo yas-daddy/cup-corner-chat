@@ -14,7 +14,7 @@ export function InstallPwaModal({
   open,
   onOpenChange,
   title = "Install the WC26 app",
-  description = "Add this site to your home screen for quick access, push notifications, and the full app experience.",
+  description = "Get push notifications and better features.",
   icon,
 }: Props) {
   const ios = typeof navigator !== "undefined" && isIOS();
@@ -32,9 +32,8 @@ export function InstallPwaModal({
         <div className="mt-2 space-y-3 rounded-xl border border-border bg-surface p-4 text-sm">
           {ios ? (
             <>
-              <Step n={1} icon={<Share className="h-4 w-4" />} text="Tap the Share button in Safari's toolbar." />
-              <Step n={2} icon={<Plus className="h-4 w-4" />} text='Choose "Add to Home Screen".' />
-              <Step n={3} icon={stepIcon} text="Open the app from your home screen." />
+              <Step n={1} icon={<Share className="h-4 w-4" />} text="Tap [Share Icon] and then Add to Home Screen." />
+              <Step n={2} icon={stepIcon} text="Open the app from your home screen." />
             </>
           ) : (
             <>
