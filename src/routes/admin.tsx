@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
 import type { Player } from "@/lib/identity";
 
@@ -84,8 +84,8 @@ function AdminPage() {
   const teamOptions = useMemo(() => {
     const set = new Map<string, string>();
     matches.forEach((m) => {
-      if (m.home_team) set.set(m.home_team, m.home_code || codeForTeam(m.home_team) || "");
-      if (m.away_team) set.set(m.away_team, m.away_code || codeForTeam(m.away_team) || "");
+      if (m.home_team) set.set(m.home_team, resolveTeamCode(m.home_code, m.home_team) || "");
+      if (m.away_team) set.set(m.away_team, resolveTeamCode(m.away_code, m.away_team) || "");
     });
     return Array.from(set.entries())
       .map(([name, code]) => ({ name, code }))
@@ -259,7 +259,7 @@ function AdminPage() {
             Overall champion pick
           </div>
           <div className="mb-2 flex items-center gap-2 text-sm">
-            <span className="text-2xl">{flagFromCode(champion?.team_code || codeForTeam(champion?.team ?? ""))}</span>
+            <span className="text-2xl">{flagFromCode(resolveTeamCode(champion?.team_code, champion?.team) || "")}</span>
             <span className="font-semibold">{champion?.team ?? "— None —"}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -305,8 +305,8 @@ function AdminPage() {
                 {list.map((m) => {
                   const d = drafts[m.id] ?? { home: 0, away: 0, dirty: false };
                   const hasPred = !!preds[m.id];
-                  const hc = m.home_code || codeForTeam(m.home_team);
-                  const ac = m.away_code || codeForTeam(m.away_team);
+                  const hc = resolveTeamCode(m.home_code, m.home_team) || "";
+                  const ac = resolveTeamCode(m.away_code, m.away_team) || "";
                   const finished = m.status === "FINISHED";
                   return (
                     <div key={m.id} className="rounded-2xl border border-border bg-surface p-3">

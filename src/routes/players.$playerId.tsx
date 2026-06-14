@@ -4,7 +4,7 @@ import { ChevronLeft, Check, Trophy, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { Avatar } from "@/components/AvatarPicker";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
@@ -124,8 +124,8 @@ function PlayerProfilePage() {
           {sorted.map((r) => {
             const m = matches[r.match_id];
             if (!m) return null;
-            const hc = m.home_code || codeForTeam(m.home_team);
-            const ac = m.away_code || codeForTeam(m.away_team);
+            const hc = resolveTeamCode(m.home_code, m.home_team) || "";
+            const ac = resolveTeamCode(m.away_code, m.away_team) || "";
             const finished = m.status === "FINISHED";
             return (
               <li
@@ -196,7 +196,7 @@ function ChampionRow({ champion }: { champion: ChampionPick | null }) {
             <p className="text-sm text-ink-soft">{t("champion_no_pick")}</p>
           ) : revealed ? (
             <p className="truncate text-base font-bold">
-              {flagFromCode(champion.team_code || codeForTeam(champion.team) || "")} {tc(champion.team)}
+              {flagFromCode(resolveTeamCode(champion.team_code, champion.team) || "")} {tc(champion.team)}
             </p>
           ) : (
             <p className="flex items-center gap-1.5 text-sm text-ink-soft">

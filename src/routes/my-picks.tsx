@@ -7,7 +7,7 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import { ChampionPickCard } from "@/components/ChampionPickCard";
 
@@ -126,8 +126,8 @@ function PickRow({
   dir: "ltr" | "rtl";
 }) {
   if (!m) return null;
-  const hc = m.home_code || codeForTeam(m.home_team);
-  const ac = m.away_code || codeForTeam(m.away_team);
+  const hc = resolveTeamCode(m.home_code, m.home_team) || "";
+  const ac = resolveTeamCode(m.away_code, m.away_team) || "";
   const finished = m.status === "FINISHED";
   return (
     <li>

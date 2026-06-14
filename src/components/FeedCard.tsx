@@ -7,7 +7,7 @@ import { CommentThread } from "@/components/CommentThread";
 import { predictionTargetId, useComments, type FeedActivity } from "@/lib/social";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { isKarim } from "@/lib/bot";
 import type { Match } from "@/lib/types";
 import type { Player } from "@/lib/identity";
@@ -73,8 +73,8 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
   const { comments } = useComments("prediction", threadTargetId);
   const [showComments, setShowComments] = useState(false);
 
-  const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
-  const ac = match?.away_code || (match ? codeForTeam(match.away_team) : "");
+  const hc = match ? resolveTeamCode(match.home_code, match.home_team) ?? "" : "";
+  const ac = match ? resolveTeamCode(match.away_code, match.away_team) ?? "" : "";
 
   const isPoints = activity.kind === "points_awarded";
   const pts = activity.points ?? 0;

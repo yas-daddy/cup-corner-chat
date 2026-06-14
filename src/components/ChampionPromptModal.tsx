@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
 import type { Match } from "@/lib/types";
 
@@ -52,8 +52,8 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
         .select("home_team,away_team,home_code,away_code");
       const set = new Map<string, string>();
       ((ms as Match[] | null) ?? []).forEach((m) => {
-        if (m.home_team) set.set(m.home_team, m.home_code || codeForTeam(m.home_team) || "");
-        if (m.away_team) set.set(m.away_team, m.away_code || codeForTeam(m.away_team) || "");
+        if (m.home_team) set.set(m.home_team, resolveTeamCode(m.home_code, m.home_team) || "");
+        if (m.away_team) set.set(m.away_team, resolveTeamCode(m.away_code, m.away_team) || "");
       });
       setTeams(
         Array.from(set.entries())
