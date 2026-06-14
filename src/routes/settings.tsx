@@ -24,6 +24,7 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { t, lang, setLang } = useI18n();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const { player, setPlayer } = useCurrentPlayer();
   const [name, setName] = useState(player?.display_name ?? "");
@@ -74,6 +75,26 @@ function SettingsPage() {
           ))}
         </div>
       </Section>
+
+      <Section label="Theme">
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            { id: "light", label: "Light", Icon: Sun },
+            { id: "dark", label: "Dark", Icon: Moon },
+            { id: "system", label: "System", Icon: Monitor },
+          ] as { id: Theme; label: string; Icon: typeof Sun }[]).map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => setTheme(id)}
+              className={`flex flex-col items-center gap-1 rounded-2xl border px-3 py-3 text-xs font-semibold ${theme === id ? "border-primary bg-primary text-white" : "border-border bg-surface text-ink"}`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </Section>
+
 
       {player && (
         <Section label={t("avatar")}>
