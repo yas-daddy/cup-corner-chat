@@ -445,3 +445,29 @@ function NumInput({ value, onChange }: { value: number; onChange: (v: number) =>
     />
   );
 }
+
+function StatTile({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-bg p-2">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ink-soft">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className="mt-1 text-lg font-extrabold tabular-nums">{value}</div>
+      {sub && <div className="text-[10px] text-ink-soft">{sub}</div>}
+    </div>
+  );
+}
+
+function formatLastOpen(iso: string | null): string {
+  if (!iso) return "never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d`;
+  return new Date(iso).toLocaleDateString();
+}
