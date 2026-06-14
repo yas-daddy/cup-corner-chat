@@ -11,7 +11,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
-import { fetchMatchCommentCounts, fetchMatchPredictionCounts } from "@/lib/social";
+import { fetchMatchCommentCounts, fetchMatchPredictionPreviews, type PredictionPreview } from "@/lib/social";
 
 
 export const Route = createFileRoute("/")({
