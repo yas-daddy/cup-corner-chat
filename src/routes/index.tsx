@@ -11,7 +11,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
-import { fetchMatchCommentCounts, fetchMatchPredictionPreviews, type PredictionPreview } from "@/lib/social";
+import { fetchMatchCommentCounts, fetchMatchPredictionCounts } from "@/lib/social";
 
 
 export const Route = createFileRoute("/")({
@@ -31,7 +31,7 @@ function HomePage() {
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
-  const [predictionPreviews, setPredictionPreviews] = useState<Record<string, PredictionPreview>>({});
+  const [predictionCounts, setPredictionCounts] = useState<Record<string, number>>({});
   const tapTimes = useRef<number[]>([]);
 
 
@@ -61,12 +61,12 @@ function HomePage() {
     setMatches(list);
     if (list.length) {
       const ids = list.map((m) => m.id);
-      const [counts, previews] = await Promise.all([
+      const [counts, predCounts] = await Promise.all([
         fetchMatchCommentCounts(ids),
-        fetchMatchPredictionPreviews(ids),
+        fetchMatchPredictionCounts(ids),
       ]);
       setCommentCounts(counts);
-      setPredictionPreviews(previews);
+      setPredictionCounts(predCounts);
     }
   }
 
@@ -145,7 +145,7 @@ function HomePage() {
       {grouped.results.length > 0 && (
         <Section title={t("results") ?? "Results"}>
           {grouped.results.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} />
           ))}
         </Section>
       )}
@@ -153,7 +153,7 @@ function HomePage() {
       {grouped.live.length > 0 && (
         <Section title={t("live")} accent>
           {grouped.live.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
           ))}
         </Section>
       )}
@@ -162,7 +162,7 @@ function HomePage() {
       {Array.from(grouped.upcoming.entries()).map(([day, list]) => (
         <Section key={day} title={day}>
           {list.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
+            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionCount={predictionCounts[m.id] ?? 0} onSaved={(p) => setPreds((x) => ({ ...x, [m.id]: p }))} />
           ))}
         </Section>
       ))}
