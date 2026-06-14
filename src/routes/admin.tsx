@@ -259,7 +259,7 @@ function AdminPage() {
             Overall champion pick
           </div>
           <div className="mb-2 flex items-center gap-2 text-sm">
-            <span className="text-2xl">{flagFromCode(champion?.team_code || codeForTeam(champion?.team ?? ""))}</span>
+            <span className="text-2xl">{flagFromCode(resolveTeamCode(champion?.team_code, champion?.team) || "")}</span>
             <span className="font-semibold">{champion?.team ?? "— None —"}</span>
           </div>
           <div className="flex items-center gap-2">
