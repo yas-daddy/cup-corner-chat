@@ -43,7 +43,7 @@ export async function sendPush(
     const res = await fetch(sub.endpoint, {
       method: built.method,
       headers: built.headers,
-      body: built.body,
+      body: built.body as BodyInit,
     });
     const dead = res.status === 404 || res.status === 410;
     return { ok: res.ok, status: res.status, dead };
