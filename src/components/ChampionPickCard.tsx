@@ -106,7 +106,7 @@ export function ChampionPickCard({ playerId }: { playerId: string }) {
             <SheetTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white"
+                className="inline-flex items-center gap-1 rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-bg"
               >
                 <Pencil className="h-3.5 w-3.5" /> {pick ? t("change") : t("pick_champion")}
               </button>
@@ -121,7 +121,7 @@ export function ChampionPickCard({ playerId }: { playerId: string }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("search_team")}
-                  className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-ink"
                 />
               </div>
               <ul className="max-h-[calc(85dvh-110px)] overflow-y-auto divide-y divide-border">

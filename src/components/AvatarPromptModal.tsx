@@ -38,7 +38,7 @@ export function AvatarPromptModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl">
+      <div className="w-full max-w-md rounded-t-3xl bg-surface p-5 shadow-xl sm:rounded-3xl">
         <div className="mb-4 flex items-center gap-3">
           <Avatar avatar={picked} name={player.display_name} size={56} className="border border-border text-3xl" />
           <div className="min-w-0">
@@ -61,7 +61,7 @@ export function AvatarPromptModal({
                     ? "bg-primary/15 ring-2 ring-primary"
                     : isTaken
                       ? "opacity-25 grayscale cursor-not-allowed"
-                      : "hover:bg-white active:bg-white"
+                      : "hover:bg-surface active:bg-surface"
                 }`}
               >
                 {e}

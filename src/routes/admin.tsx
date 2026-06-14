@@ -242,7 +242,7 @@ function AdminPage() {
                         {hasPred && (
                           <button
                             onClick={() => remove(m.id)}
-                            className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-white text-accent"
+                            className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-surface text-accent"
                             aria-label="Delete"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -269,7 +269,7 @@ function NumInput({ value, onChange }: { value: number; onChange: (v: number) =>
       max={20}
       value={value}
       onChange={(e) => onChange(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
-      className="w-12 rounded-lg border border-border bg-white py-1.5 text-center text-base font-bold tabular-nums outline-none focus:border-primary"
+      className="w-12 rounded-lg border border-border bg-surface py-1.5 text-center text-base font-bold tabular-nums outline-none focus:border-primary"
     />
   );
 }

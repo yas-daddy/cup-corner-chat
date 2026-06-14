@@ -101,7 +101,7 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
       <Link
         to="/matches/$matchId"
         params={{ matchId }}
-        className="mt-3 block rounded-xl border border-border bg-white px-3 py-2"
+        className="mt-3 block rounded-xl border border-border bg-surface px-3 py-2"
       >
         {match ? (
           <div className="flex items-center justify-between gap-2" dir={dir}>
@@ -112,13 +112,13 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
             <div className="flex items-center gap-2">
               {isPoints ? (
                 <>
-                  <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold text-white tabular-nums">
+                  <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-bold text-bg tabular-nums">
                     {n(activity.home_score ?? 0)} - {n(activity.away_score ?? 0)}
                   </span>
                   <span className="text-[10px] text-ink-soft">{t("final")}</span>
                 </>
               ) : (
-                <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold tabular-nums border border-border">
+                <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs font-bold tabular-nums border border-border">
                   {n(activity.pred_home ?? 0)} - {n(activity.pred_away ?? 0)}
                 </span>
               )}

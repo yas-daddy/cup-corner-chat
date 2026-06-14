@@ -195,7 +195,7 @@ function MatchDetailPage() {
             <span className="truncate font-semibold">{tc(match.home_team)}</span>
           </div>
           {(finished || (live && match.home_score != null && match.away_score != null)) ? (
-            <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-white tabular-nums">
+            <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">
               {n(match.home_score ?? 0)} - {n(match.away_score ?? 0)}
             </div>
           ) : live ? (
@@ -290,7 +290,7 @@ function PredictionRow({
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-white"}`}>
+          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-surface"}`}>
             <span className={!bothBusted && homeBusted ? "text-destructive" : ""}>{n(row.pred_home)}</span>
             {" - "}
             <span className={!bothBusted && awayBusted ? "text-destructive" : ""}>{n(row.pred_away)}</span>

@@ -25,7 +25,7 @@ export function Avatar({
   const fontSize = Math.round(size * 0.55);
   return (
     <div
-      className={`grid shrink-0 place-items-center rounded-full bg-white ${className}`}
+      className={`grid shrink-0 place-items-center rounded-full bg-surface ${className}`}
       style={{ width: size, height: size, fontSize }}
       aria-hidden
     >
@@ -108,7 +108,7 @@ export function AvatarPicker({
                     ? "bg-primary/15 ring-2 ring-primary"
                     : isTaken
                       ? "opacity-25 grayscale cursor-not-allowed"
-                      : "hover:bg-white"
+                      : "hover:bg-surface"
                 }`}
               >
                 {e}

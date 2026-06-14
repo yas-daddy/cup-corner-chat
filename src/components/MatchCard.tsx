@@ -156,7 +156,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
       </div>
 
       {(commentCount > 0 || predictionCount > 0) && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1.5 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1.5 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
           {predictionCount > 0 && (
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
@@ -179,7 +179,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
 function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { n } = useI18n();
   return (
-    <div className="relative z-10 flex items-center gap-1 rounded-full border border-border bg-white p-1">
+    <div className="relative z-10 flex items-center gap-1 rounded-full border border-border bg-surface p-1">
       <button
         type="button"
         aria-label="minus"
@@ -203,7 +203,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
 
 function ScoreBox({ value }: { value: string }) {
   return (
-    <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-white tabular-nums">{value}</div>
+    <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">{value}</div>
   );
 }
 
