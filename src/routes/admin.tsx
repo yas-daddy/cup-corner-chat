@@ -1,11 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
 import type { Player } from "@/lib/identity";
+
+type PlayerStats = Player & {
+  last_open_at: string | null;
+  pwa_installed_at: string | null;
+  pwa_display_mode: string | null;
+};
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -32,6 +38,9 @@ function AdminPage() {
   const [championSavedAt, setChampionSavedAt] = useState<number>(0);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+  const [stats, setStats] = useState<PlayerStats[]>([]);
+  const [pushPlayerIds, setPushPlayerIds] = useState<Set<string>>(new Set());
+  const [pushSubCount, setPushSubCount] = useState(0);
 
 
   useEffect(() => {
@@ -39,12 +48,23 @@ function AdminPage() {
       .from("players")
       .select("*")
       .order("display_name")
-      .then(({ data }) => setPlayers((data as Player[]) ?? []));
+      .then(({ data }) => {
+        setPlayers((data as Player[]) ?? []);
+        setStats((data as PlayerStats[]) ?? []);
+      });
     supabase
       .from("matches")
       .select("*")
       .order("kickoff_at", { ascending: true })
       .then(({ data }) => setMatches((data as Match[]) ?? []));
+    supabase
+      .from("push_subscriptions")
+      .select("player_id")
+      .then(({ data }) => {
+        const rows = (data as { player_id: string }[] | null) ?? [];
+        setPushSubCount(rows.length);
+        setPushPlayerIds(new Set(rows.map((r) => r.player_id)));
+      });
   }, []);
 
   useEffect(() => {
@@ -236,6 +256,55 @@ function AdminPage() {
         {syncMsg && <p className="mt-2 text-xs text-ink-soft">{syncMsg}</p>}
       </section>
 
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
+        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-ink-soft">Player activity</div>
+        <div className="mb-3 grid grid-cols-3 gap-2">
+          <StatTile
+            icon={<Smartphone className="h-4 w-4" />}
+            label="Installed PWA"
+            value={`${stats.filter((s) => s.pwa_installed_at).length}/${stats.length}`}
+          />
+          <StatTile
+            icon={<Bell className="h-4 w-4" />}
+            label="Push on"
+            value={`${pushPlayerIds.size}/${stats.length}`}
+            sub={`${pushSubCount} devices`}
+          />
+          <StatTile
+            icon={<Clock className="h-4 w-4" />}
+            label="Active 24h"
+            value={`${stats.filter((s) => s.last_open_at && Date.now() - new Date(s.last_open_at).getTime() < 86_400_000).length}`}
+          />
+        </div>
+        <div className="divide-y divide-border">
+          {[...stats]
+            .sort((a, b) => {
+              const at = a.last_open_at ? new Date(a.last_open_at).getTime() : 0;
+              const bt = b.last_open_at ? new Date(b.last_open_at).getTime() : 0;
+              return bt - at;
+            })
+            .map((p) => (
+              <div key={p.id} className="flex items-center gap-2 py-2 text-sm">
+                <span className="text-lg">{p.avatar ?? "👤"}</span>
+                <span className="flex-1 truncate font-semibold">{p.display_name}</span>
+                {p.pwa_installed_at && (
+                  <span title={`Installed ${new Date(p.pwa_installed_at).toLocaleString()}`} className="text-primary">
+                    <Smartphone className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                {pushPlayerIds.has(p.id) && (
+                  <span title="Push enabled" className="text-accent">
+                    <Bell className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                <span className="tabular-nums text-xs text-ink-soft">{formatLastOpen(p.last_open_at)}</span>
+              </div>
+            ))}
+        </div>
+      </section>
+
+
+
       <section className="mb-5">
         <div className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">Edit a player's picks</div>
         <select
@@ -375,4 +444,30 @@ function NumInput({ value, onChange }: { value: number; onChange: (v: number) =>
       className="w-12 rounded-lg border border-border bg-surface py-1.5 text-center text-base font-bold tabular-nums outline-none focus:border-primary"
     />
   );
+}
+
+function StatTile({ icon, label, value, sub }: { icon: ReactNode; label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-bg p-2">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-ink-soft">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className="mt-1 text-lg font-extrabold tabular-nums">{value}</div>
+      {sub && <div className="text-[10px] text-ink-soft">{sub}</div>}
+    </div>
+  );
+}
+
+function formatLastOpen(iso: string | null): string {
+  if (!iso) return "never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d}d`;
+  return new Date(iso).toLocaleDateString();
 }
