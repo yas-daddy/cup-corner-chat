@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Smartphone, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -8,6 +9,8 @@ import { Avatar } from "@/components/AvatarPicker";
 import { AvatarPromptModal } from "@/components/AvatarPromptModal";
 import { ChampionPromptModal } from "@/components/ChampionPromptModal";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { InstallPwaModal } from "@/components/InstallPwaModal";
+import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
 import type { Match, Prediction } from "@/lib/types";
@@ -120,6 +123,7 @@ function HomePage() {
     <div className="px-4 pt-6">
       {!player.avatar && <AvatarPromptModal player={player} onSaved={(p) => setPlayer(p)} />}
       {player.avatar && <ChampionPromptModal playerId={player.id} />}
+      <PwaInstallBanner />
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
         <div className="min-w-0 flex-1">
@@ -170,6 +174,52 @@ function HomePage() {
 
 
     </div>
+  );
+}
+
+function PwaInstallBanner() {
+  const { t } = useI18n();
+  const [visible, setVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const installed = isStandalone();
+    const dismissed = (() => {
+      try { return localStorage.getItem("wc26.pwa.banner.dismissed") === "1"; }
+      catch { return false; }
+    })();
+    if (!installed && !dismissed) setVisible(true);
+  }, []);
+
+  function dismiss() {
+    setVisible(false);
+    try { localStorage.setItem("wc26.pwa.banner.dismissed", "1"); } catch {}
+  }
+
+  if (!visible) return null;
+
+  return (
+    <>
+      <div className="mb-4 flex items-start gap-3 rounded-2xl border border-border bg-primary/5 px-4 py-3">
+        <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <p className="min-w-0 flex-1 text-sm leading-snug">{t("pwa_banner_text")}</p>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white"
+        >
+          {t("pwa_banner_cta")}
+        </button>
+        <button
+          onClick={dismiss}
+          aria-label="Dismiss"
+          className="shrink-0 -mr-1 grid h-7 w-7 place-items-center rounded-full text-ink-soft hover:bg-border/60"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <InstallPwaModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
   );
 }
 
