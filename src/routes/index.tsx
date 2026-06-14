@@ -6,6 +6,7 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { MatchCard } from "@/components/MatchCard";
 import { Avatar } from "@/components/AvatarPicker";
 import { AvatarPromptModal } from "@/components/AvatarPromptModal";
+import { ChampionPromptModal } from "@/components/ChampionPromptModal";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useI18n } from "@/lib/i18n";
