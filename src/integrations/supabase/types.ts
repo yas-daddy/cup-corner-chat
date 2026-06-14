@@ -240,18 +240,27 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          last_open_at: string | null
+          pwa_display_mode: string | null
+          pwa_installed_at: string | null
         }
         Insert: {
           avatar?: string | null
           created_at?: string
           display_name: string
           id?: string
+          last_open_at?: string | null
+          pwa_display_mode?: string | null
+          pwa_installed_at?: string | null
         }
         Update: {
           avatar?: string | null
           created_at?: string
           display_name?: string
           id?: string
+          last_open_at?: string | null
+          pwa_display_mode?: string | null
+          pwa_installed_at?: string | null
         }
         Relationships: []
       }
