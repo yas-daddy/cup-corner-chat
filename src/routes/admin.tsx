@@ -1,11 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert } from "lucide-react";
+import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
 import type { Player } from "@/lib/identity";
+
+type PlayerStats = Player & {
+  last_open_at: string | null;
+  pwa_installed_at: string | null;
+  pwa_display_mode: string | null;
+};
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
