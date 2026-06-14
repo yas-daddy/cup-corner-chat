@@ -25,8 +25,8 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
   const locked = kickoff.getTime() <= now || match.status !== "SCHEDULED";
   const finished = match.status === "FINISHED";
 
-  const homeCode = match.home_code || codeForTeam(match.home_team);
-  const awayCode = match.away_code || codeForTeam(match.away_team);
+  const homeCode = resolveTeamCode(match.home_code, match.home_team);
+  const awayCode = resolveTeamCode(match.away_code, match.away_team);
 
   const [h, setH] = useState<number>(prediction?.pred_home ?? 0);
   const [a, setA] = useState<number>(prediction?.pred_away ?? 0);
