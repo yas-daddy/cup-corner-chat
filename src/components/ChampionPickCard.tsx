@@ -3,7 +3,7 @@ import { Trophy, Lock, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
 import type { Match } from "@/lib/types";
 
