@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, Lock, Check, MessageCircle, Users } from "lucide-react";
+import { Minus, Plus, Lock, Check, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
+import { Avatar } from "@/components/AvatarPicker";
+import type { PredictionPreview } from "@/lib/social";
 
 type Props = {
   match: Match;
@@ -13,10 +15,10 @@ type Props = {
   prediction: Prediction | null;
   onSaved?: (p: Prediction) => void;
   commentCount?: number;
-  predictionCount?: number;
+  predictionPreview?: PredictionPreview;
 };
 
-export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0, predictionCount = 0 }: Props) {
+export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0, predictionPreview }: Props) {
   const { t, tc, n, lang, dir } = useI18n();
   const kickoff = new Date(match.kickoff_at);
   const now = Date.now();
