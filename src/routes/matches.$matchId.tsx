@@ -290,7 +290,7 @@ function PredictionRow({
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-white"}`}>
+          <span className={`rounded-full px-3 py-1 text-sm font-bold tabular-nums ${bothBusted ? "bg-destructive/15 text-destructive" : "bg-surface"}`}>
             <span className={!bothBusted && homeBusted ? "text-destructive" : ""}>{n(row.pred_home)}</span>
             {" - "}
             <span className={!bothBusted && awayBusted ? "text-destructive" : ""}>{n(row.pred_away)}</span>

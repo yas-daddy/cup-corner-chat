@@ -84,7 +84,7 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
         <button
           type="button"
           aria-label={t("notifications")}
-          className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink hover:bg-white"
+          className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink hover:bg-border/60"
         >
           <Bell className="h-5 w-5" />
           {unread > 0 && (
@@ -109,7 +109,7 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
                   <li key={item.id}>
                     <button
                       onClick={() => openItem(item)}
-                      className={`flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-white ${!item.read_at ? "bg-accent/5" : ""}`}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-border/60 ${!item.read_at ? "bg-accent/5" : ""}`}
                       dir={dir}
                     >
                       {actor?.avatar ? (
