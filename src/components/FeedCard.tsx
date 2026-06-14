@@ -78,15 +78,16 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
 
   const isPoints = activity.kind === "points_awarded";
   const pts = activity.points ?? 0;
+  const isExact = !!activity.is_exact;
   const name = actor?.display_name ?? "…";
   const action =
     activity.kind === "prediction_created"
       ? t("activity_predicted")
       : activity.kind === "prediction_updated"
         ? t("activity_updated_pick")
-        : pts === 8
+        : isExact
           ? t("activity_exact_score")
-          : pts === 3
+          : pts > 0
             ? t("activity_correct_result")
             : t("activity_no_points");
 
@@ -110,10 +111,10 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
           <p className="text-xs text-ink-soft">{relTime(activity.created_at, n)}</p>
         </div>
         {isPoints && (
-          pts === 8 ? (
-            <span className="rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">+{n(8)} ⭐</span>
-          ) : pts === 3 ? (
-            <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">+{n(3)}</span>
+          isExact ? (
+            <span className="rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-xs font-bold text-[color:var(--gold)]">+{n(pts)} ⭐</span>
+          ) : pts > 0 ? (
+            <span className="rounded-full bg-success/15 px-2 py-1 text-xs font-bold text-success">+{n(pts)}</span>
           ) : (
             <span className="rounded-full bg-surface px-2 py-1 text-xs text-ink-soft">+{n(0)}</span>
           )

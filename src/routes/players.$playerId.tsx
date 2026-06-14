@@ -149,11 +149,11 @@ function PlayerProfilePage() {
                   <span className="flex items-center gap-1 text-sm font-bold">
                     {r.is_exact ? (
                       <span className="anim-pop rounded-full bg-[color:var(--gold)]/15 px-2 py-1 text-[color:var(--gold)]">
-                        +{n(8)} ⭐
+                        +{n(r.points)} ⭐
                       </span>
-                    ) : r.is_correct_result ? (
+                    ) : (r.points ?? 0) > 0 ? (
                       <span className="rounded-full bg-success/15 px-2 py-1 text-success">
-                        <Check className="mr-1 inline h-3 w-3" />+{n(3)}
+                        <Check className="mr-1 inline h-3 w-3" />+{n(r.points)}
                       </span>
                     ) : finished ? (
                       <span className="text-ink-soft">+{n(0)}</span>
