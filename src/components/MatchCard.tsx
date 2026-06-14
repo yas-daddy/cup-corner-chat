@@ -78,7 +78,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
   });
 
   return (
-    <div className="relative rounded-2xl border border-border bg-surface p-4 shadow-sm">
+    <div className="relative rounded-2xl border border-border bg-surface p-4 pb-12 shadow-sm">
       <Link
         to="/matches/$matchId"
         params={{ matchId: match.id }}
