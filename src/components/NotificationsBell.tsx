@@ -178,7 +178,7 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
       open={installModalOpen}
       onOpenChange={setInstallModalOpen}
       title="Install the app to get notifications"
-      description="Browsers can't send push notifications here. Add this site to your home screen first, then open it from the app icon to turn on alerts."
+      description="Get push notifications and better features."
       icon={<Bell className="h-6 w-6" />}
     />
     </>
