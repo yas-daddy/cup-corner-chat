@@ -95,7 +95,7 @@ const EN: Dict = {
   push_ios_hint: "On iPhone/iPad? Tap [Share Icon] and then Add to Home Screen first, then enable.",
   push_soft_prompt: "Get pinged when someone likes your pick or you score points.",
   push_soft_enable: "Turn on",
-  pwa_banner_text: "Get push notifications and better features.",
+  pwa_banner_text: "Install the WC26 app to get push notifications, easy access and a better experience.",
   pwa_banner_cta: "Install",
   push_new_fixtures_title: "New matches added",
   push_new_fixtures_body_one: "1 new match — tap to make your pick",
