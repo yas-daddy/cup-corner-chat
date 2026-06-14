@@ -76,7 +76,7 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 pb-[env(safe-area-inset-bottom)] sm:items-center sm:p-4 sm:pb-4">
       <div className="flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-3xl bg-surface shadow-xl sm:rounded-3xl" dir={dir}>
         <div className="flex items-start gap-3 border-b border-border p-5">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[color:var(--gold)]/20 text-[color:var(--gold)]">
