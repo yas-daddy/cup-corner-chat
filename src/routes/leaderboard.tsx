@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { useI18n } from "@/lib/i18n";
 import { KARIM_ID } from "@/lib/bot";
 import type { LeaderRow } from "@/lib/types";
 import { Avatar } from "@/components/AvatarPicker";
+import { ScoringHelpModal } from "@/components/ScoringHelpModal";
 
 
 export const Route = createFileRoute("/leaderboard")({
@@ -19,6 +21,7 @@ function LeaderboardPage() {
   const { t, n } = useI18n();
   const { player } = useCurrentPlayer();
   const [rows, setRows] = useState<LeaderRow[]>([]);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     supabase
@@ -30,10 +33,23 @@ function LeaderboardPage() {
 
   return (
     <div className="px-4 pt-6">
-      <header className="mb-4">
-        <p className="text-xs uppercase tracking-wider text-ink-soft">{t("app_name")}</p>
-        <h1 className="text-2xl font-extrabold">{t("leaderboard")}</h1>
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("app_name")}</p>
+          <h1 className="text-2xl font-extrabold">{t("leaderboard")}</h1>
+        </div>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label={t("scoring_help_title")}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-surface text-ink-soft active:opacity-80"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
       </header>
+
+      {helpOpen && <ScoringHelpModal onClose={() => setHelpOpen(false)} />}
+
 
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
