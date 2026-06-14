@@ -158,7 +158,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
       </div>
 
       {(commentCount > 0 || (predictionPreview?.count ?? 0) > 0) && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-2 rounded-full bg-surface/95 px-1.5 py-1 text-[12px] font-semibold text-ink-soft shadow-sm">
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-2 rounded-full bg-bg/90 px-1.5 py-1 text-[12px] font-semibold text-ink-soft shadow-sm ring-1 ring-border">
           {predictionPreview && predictionPreview.count > 0 && (
             <span className="flex items-center">
               <span className="flex items-center">
@@ -168,13 +168,13 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
                     avatar={p.avatar}
                     name={p.display_name}
                     size={32}
-                    className={`rounded-full ring-2 ring-surface ${i > 0 ? "-ml-2" : ""}`}
+                    className={`rounded-full bg-bg ring-2 ring-border ${i > 0 ? "-ml-2" : ""}`}
                   />
                 ))}
               </span>
               {predictionPreview.count > predictionPreview.avatars.length && (
                 <span
-                  className="-ml-2 grid place-items-center rounded-full bg-ink text-bg ring-2 ring-surface tabular-nums"
+                  className="-ml-2 grid place-items-center rounded-full bg-primary text-white ring-2 ring-border tabular-nums"
                   style={{ width: 32, height: 32, fontSize: 12 }}
                 >
                   +{n(predictionPreview.count - predictionPreview.avatars.length)}
