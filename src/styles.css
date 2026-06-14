@@ -104,7 +104,7 @@ html[dir="rtl"] body {
   inset-inline: 0;
   bottom: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.95);
+  background: color-mix(in oklab, var(--bg) 92%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   border-top: 1px solid var(--border);
   max-width: 480px;
