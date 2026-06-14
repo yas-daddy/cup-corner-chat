@@ -73,8 +73,8 @@ function PickCard({ activity, actor, match, currentPlayerId, matchId }: Props & 
   const { comments } = useComments("prediction", threadTargetId);
   const [showComments, setShowComments] = useState(false);
 
-  const hc = match?.home_code || (match ? codeForTeam(match.home_team) : "");
-  const ac = match?.away_code || (match ? codeForTeam(match.away_team) : "");
+  const hc = match ? resolveTeamCode(match.home_code, match.home_team) ?? "" : "";
+  const ac = match ? resolveTeamCode(match.away_code, match.away_team) ?? "" : "";
 
   const isPoints = activity.kind === "points_awarded";
   const pts = activity.points ?? 0;
