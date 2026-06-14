@@ -7,7 +7,7 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { resolveTeamCode } from "@/lib/teams";
 import type { Match, PredictionPointRow } from "@/lib/types";
 import { ChampionPickCard } from "@/components/ChampionPickCard";
 
