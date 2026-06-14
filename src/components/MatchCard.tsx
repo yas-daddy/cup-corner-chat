@@ -174,7 +174,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
               </span>
               {predictionPreview.count > predictionPreview.avatars.length && (
                 <span
-                  className="-ml-2 grid place-items-center rounded-full bg-primary text-white ring-2 ring-border tabular-nums"
+                  className="-ml-2 grid place-items-center rounded-full bg-primary text-white ring-2 ring-border tabular-nums dark:bg-white dark:text-bg"
                   style={{ width: 32, height: 32, fontSize: 12 }}
                 >
                   +{n(predictionPreview.count - predictionPreview.avatars.length)}
