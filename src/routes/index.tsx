@@ -111,6 +111,41 @@ function HomePage() {
     return { live, results, upcoming };
   }, [matches, lang]);
 
+  const unpredictedUpcomingIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const list of grouped.upcoming.values()) {
+      for (const m of list) {
+        if (!preds[m.id]) ids.push(m.id);
+      }
+    }
+    return ids;
+  }, [grouped.upcoming, preds]);
+
+  const firstUnpredictedId = unpredictedUpcomingIds[0] ?? null;
+  const [firstVisible, setFirstVisible] = useState(false);
+
+  useEffect(() => {
+    setFirstVisible(false);
+    if (!firstUnpredictedId) return;
+    const el = document.querySelector(`[data-match-id="${firstUnpredictedId}"]`);
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFirstVisible(entry.isIntersecting),
+      { threshold: 0.4 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [firstUnpredictedId]);
+
+  function scrollToFirstUnpredicted() {
+    if (!firstUnpredictedId) return;
+    const el = document.querySelector(`[data-match-id="${firstUnpredictedId}"]`) as HTMLElement | null;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-primary", "rounded-2xl");
+    setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-2xl"), 1400);
+  }
+
 
 
   if (loading) {
