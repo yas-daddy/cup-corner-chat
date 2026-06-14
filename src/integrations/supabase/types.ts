@@ -316,6 +316,57 @@ export type Database = {
           },
         ]
       }
+      push_seen_matches: {
+        Row: {
+          match_id: string
+          notified_at: string
+          player_id: string
+        }
+        Insert: {
+          match_id: string
+          notified_at?: string
+          player_id: string
+        }
+        Update: {
+          match_id?: string
+          notified_at?: string
+          player_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_seen_at: string
+          p256dh: string
+          player_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          player_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          player_id?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string

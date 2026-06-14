@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import type { Player } from "@/lib/identity";
+import { isPushSupported, getPermissionState, subscribePush } from "@/lib/push";
 
 type Notification = {
   id: string;
@@ -26,6 +27,20 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
   const [items, setItems] = useState<Notification[]>([]);
   const [actors, setActors] = useState<Record<string, Player>>({});
   const [open, setOpen] = useState(false);
+  const [pushPerm, setPushPerm] = useState<NotificationPermission | "unsupported">("default");
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    if (isPushSupported()) setPushPerm(getPermissionState());
+    else setPushPerm("unsupported");
+  }, []);
+
+  async function enablePush() {
+    setPushBusy(true);
+    await subscribePush(playerId);
+    setPushBusy(false);
+    setPushPerm(getPermissionState());
+  }
 
   async function load() {
     const { data } = await supabase
@@ -99,6 +114,21 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
           <SheetTitle>{t("notifications")}</SheetTitle>
         </SheetHeader>
         <div className="max-h-[calc(100dvh-56px)] overflow-y-auto">
+          {pushPerm === "default" && (
+            <div className="flex items-start gap-3 border-b border-border bg-primary/5 px-4 py-3">
+              <Bell className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm leading-snug">{t("push_soft_prompt")}</p>
+              </div>
+              <button
+                onClick={enablePush}
+                disabled={pushBusy}
+                className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {t("push_soft_enable")}
+              </button>
+            </div>
+          )}
           {items.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("no_notifications")}</p>
           ) : (

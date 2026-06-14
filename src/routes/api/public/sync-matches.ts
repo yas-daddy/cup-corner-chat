@@ -161,9 +161,89 @@ async function handler() {
     if (error) {
       return Response.json({ ok: false, error: error.message }, { status: 500 });
     }
+
+    // Detect truly new SCHEDULED matches with a future kickoff and fire
+    // "new fixtures" pushes to every subscribed player who hasn't been
+    // notified about them yet. Fire-and-forget — never blocks the sync.
+    try {
+      const existingIds = new Set((existing ?? []).map((m) => m.id));
+      const nowIso = new Date().toISOString();
+      const newMatches = merged.filter(
+        (m) =>
+          !existingIds.has(m.id) &&
+          m.status === "SCHEDULED" &&
+          new Date(m.kickoff_at).getTime() > Date.now(),
+      );
+      if (newMatches.length > 0) {
+        await dispatchNewFixturePushes(
+          newMatches.map((m) => m.id),
+          nowIso,
+        );
+      }
+    } catch (e) {
+      console.error("new-fixture push dispatch failed", e);
+    }
+
     return Response.json({ ok: true, synced: merged.length, source });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return Response.json({ ok: false, error: message }, { status: 500 });
+  }
+}
+
+async function dispatchNewFixturePushes(newMatchIds: string[], nowIso: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { sendPushToPlayers } = await import("@/lib/webpush.server");
+
+  // Get every player who has at least one push subscription
+  const { data: subs } = await supabaseAdmin
+    .from("push_subscriptions")
+    .select("player_id");
+  const playerIds = Array.from(new Set((subs ?? []).map((s) => s.player_id)));
+  if (playerIds.length === 0) return;
+
+  // For each player, find matches in newMatchIds that they:
+  //  - haven't been notified about (push_seen_matches)
+  //  - haven't predicted (predictions)
+  const { data: seen } = await supabaseAdmin
+    .from("push_seen_matches")
+    .select("player_id, match_id")
+    .in("player_id", playerIds)
+    .in("match_id", newMatchIds);
+  const seenSet = new Set((seen ?? []).map((r) => `${r.player_id}|${r.match_id}`));
+
+  const { data: preds } = await supabaseAdmin
+    .from("predictions")
+    .select("player_id, match_id")
+    .in("player_id", playerIds)
+    .in("match_id", newMatchIds);
+  const predSet = new Set((preds ?? []).map((r) => `${r.player_id}|${r.match_id}`));
+
+  const inserts: { player_id: string; match_id: string; notified_at: string }[] = [];
+
+  for (const pid of playerIds) {
+    const fresh = newMatchIds.filter(
+      (mid) => !seenSet.has(`${pid}|${mid}`) && !predSet.has(`${pid}|${mid}`),
+    );
+    if (fresh.length === 0) continue;
+    const body =
+      fresh.length === 1
+        ? "1 new match — tap to make your pick"
+        : `${fresh.length} new matches — tap to make your picks`;
+    void sendPushToPlayers([pid], {
+      title: "New matches added",
+      body,
+      url: "/",
+      tag: "new-fixtures",
+    });
+    for (const mid of fresh) {
+      inserts.push({ player_id: pid, match_id: mid, notified_at: nowIso });
+    }
+  }
+
+  if (inserts.length > 0) {
+    await supabaseAdmin.from("push_seen_matches").upsert(inserts, {
+      onConflict: "player_id,match_id",
+    });
   }
 }

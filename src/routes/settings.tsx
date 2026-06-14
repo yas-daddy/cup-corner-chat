@@ -1,10 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ChevronLeft, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, LogOut, Bell, BellOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import {
+  isPushSupported,
+  getPermissionState,
+  isIOS,
+  isStandalone,
+  subscribePush,
+  unsubscribePush,
+  getCurrentEndpoint,
+} from "@/lib/push";
 
 
 export const Route = createFileRoute("/settings")({
@@ -18,7 +27,7 @@ function SettingsPage() {
   const { player, setPlayer } = useCurrentPlayer();
   const [name, setName] = useState(player?.display_name ?? "");
   const [savingName, setSavingName] = useState(false);
-  
+
 
   async function saveName() {
     if (!player || !name.trim()) return;
@@ -107,7 +116,11 @@ function SettingsPage() {
         </Section>
       )}
 
-
+      {player && (
+        <Section label={t("push_section")}>
+          <PushToggle playerId={player.id} />
+        </Section>
+      )}
 
       <Section label={t("scoring_title")}>
         <p className="rounded-2xl border border-border bg-surface px-4 py-4 text-sm leading-relaxed text-ink-soft">
@@ -125,6 +138,91 @@ function SettingsPage() {
             {player.display_name} →
           </button>
         </Section>
+      )}
+    </div>
+  );
+}
+
+function PushToggle({ playerId }: { playerId: string }) {
+  const { t } = useI18n();
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
+  const [subscribed, setSubscribed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [iosNeedsInstall, setIosNeedsInstall] = useState(false);
+
+  async function refresh() {
+    const p = getPermissionState();
+    setPerm(p);
+    if (p === "granted") {
+      const ep = await getCurrentEndpoint();
+      setSubscribed(Boolean(ep));
+    } else {
+      setSubscribed(false);
+    }
+    setIosNeedsInstall(isIOS() && !isStandalone());
+  }
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  if (!isPushSupported() || perm === "unsupported") {
+    return (
+      <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-soft">
+        {t("push_unsupported")}
+      </p>
+    );
+  }
+
+  async function enable() {
+    setBusy(true);
+    const r = await subscribePush(playerId);
+    setBusy(false);
+    if (!r.ok && r.reason === "denied") setPerm("denied");
+    await refresh();
+  }
+
+  async function disable() {
+    setBusy(true);
+    await unsubscribePush();
+    setBusy(false);
+    await refresh();
+  }
+
+  return (
+    <div className="space-y-2">
+      {iosNeedsInstall && (
+        <p className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          {t("push_ios_hint")}
+        </p>
+      )}
+      {perm === "denied" ? (
+        <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-soft">
+          {t("push_blocked")}
+        </p>
+      ) : subscribed ? (
+        <div className="space-y-2">
+          <p className="rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink-soft">
+            {t("push_enabled")}
+          </p>
+          <button
+            onClick={disable}
+            disabled={busy}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 font-semibold text-ink disabled:opacity-50"
+          >
+            <BellOff className="h-4 w-4" />
+            {t("push_disable")}
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={enable}
+          disabled={busy || iosNeedsInstall}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 font-semibold text-white disabled:opacity-50"
+        >
+          <Bell className="h-4 w-4" />
+          {t("push_enable")}
+        </button>
       )}
     </div>
   );

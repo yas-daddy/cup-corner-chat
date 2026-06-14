@@ -5,7 +5,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { BottomNav } from "@/components/BottomNav";
@@ -82,6 +82,21 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const i18n = useLangBootstrap();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+    const host = window.location.hostname;
+    const isPreview =
+      host.startsWith("id-preview--") ||
+      host.startsWith("preview--") ||
+      host.endsWith(".lovableproject.com") ||
+      host === "lovableproject.com";
+    if (isPreview || window.top !== window.self) return;
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((e) => {
+      console.error("SW register failed", e);
+    });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
