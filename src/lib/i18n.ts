@@ -191,6 +191,7 @@ const FA: Dict = {
   change: "تغییر",
   search_team: "جستجوی تیم…",
   no_results: "نتیجه‌ای نیست.",
+  maybe_later: "بعداً",
   champion_locks_in: "قفل می‌شود تا",
   champion_locked: "قفل شده — مسابقات شروع شده است.",
   champion_hidden_until_lock: "تا ۲۰ ژوئن مخفی است",
