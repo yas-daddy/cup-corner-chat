@@ -256,6 +256,55 @@ function AdminPage() {
         {syncMsg && <p className="mt-2 text-xs text-ink-soft">{syncMsg}</p>}
       </section>
 
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
+        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-ink-soft">Player activity</div>
+        <div className="mb-3 grid grid-cols-3 gap-2">
+          <StatTile
+            icon={<Smartphone className="h-4 w-4" />}
+            label="Installed PWA"
+            value={`${stats.filter((s) => s.pwa_installed_at).length}/${stats.length}`}
+          />
+          <StatTile
+            icon={<Bell className="h-4 w-4" />}
+            label="Push on"
+            value={`${pushPlayerIds.size}/${stats.length}`}
+            sub={`${pushSubCount} devices`}
+          />
+          <StatTile
+            icon={<Clock className="h-4 w-4" />}
+            label="Active 24h"
+            value={`${stats.filter((s) => s.last_open_at && Date.now() - new Date(s.last_open_at).getTime() < 86_400_000).length}`}
+          />
+        </div>
+        <div className="divide-y divide-border">
+          {[...stats]
+            .sort((a, b) => {
+              const at = a.last_open_at ? new Date(a.last_open_at).getTime() : 0;
+              const bt = b.last_open_at ? new Date(b.last_open_at).getTime() : 0;
+              return bt - at;
+            })
+            .map((p) => (
+              <div key={p.id} className="flex items-center gap-2 py-2 text-sm">
+                <span className="text-lg">{p.avatar ?? "👤"}</span>
+                <span className="flex-1 truncate font-semibold">{p.display_name}</span>
+                {p.pwa_installed_at && (
+                  <span title={`Installed ${new Date(p.pwa_installed_at).toLocaleString()}`} className="text-primary">
+                    <Smartphone className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                {pushPlayerIds.has(p.id) && (
+                  <span title="Push enabled" className="text-accent">
+                    <Bell className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                <span className="tabular-nums text-xs text-ink-soft">{formatLastOpen(p.last_open_at)}</span>
+              </div>
+            ))}
+        </div>
+      </section>
+
+
+
       <section className="mb-5">
         <div className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">Edit a player's picks</div>
         <select
