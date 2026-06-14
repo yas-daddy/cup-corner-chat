@@ -12,6 +12,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { NewPicksPill } from "@/components/NewPicksPill";
+import { GodModePinModal } from "@/components/GodModePinModal";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
@@ -38,6 +39,7 @@ function HomePage() {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [predictionPreviews, setPredictionPreviews] = useState<Record<string, PredictionPreview>>({});
   const tapTimes = useRef<number[]>([]);
+  const [pinOpen, setPinOpen] = useState(false);
 
 
   useEffect(() => {
@@ -80,7 +82,7 @@ function HomePage() {
     tapTimes.current = [...tapTimes.current.filter((t) => now - t < 700), now];
     if (tapTimes.current.length >= 3) {
       tapTimes.current = [];
-      navigate({ to: "/admin" });
+      setPinOpen(true);
     }
   }
 
@@ -162,6 +164,8 @@ function HomePage() {
       {player.avatar && <ChampionPromptModal playerId={player.id} />}
       <PushAutoPrompt playerId={player.id} />
       <PwaInstallBanner />
+      <GodModePinModal open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={() => { setPinOpen(false); navigate({ to: "/admin" }); }} />
+
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
         <div className="min-w-0 flex-1">
