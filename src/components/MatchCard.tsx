@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, Lock, Check, MessageCircle, Users } from "lucide-react";
+import { Minus, Plus, Lock, Check, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
 import { flagFromCode } from "@/lib/flags";
 import { codeForTeam } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
+import { Avatar } from "@/components/AvatarPicker";
+import type { PredictionPreview } from "@/lib/social";
 
 type Props = {
   match: Match;
@@ -13,10 +15,10 @@ type Props = {
   prediction: Prediction | null;
   onSaved?: (p: Prediction) => void;
   commentCount?: number;
-  predictionCount?: number;
+  predictionPreview?: PredictionPreview;
 };
 
-export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0, predictionCount = 0 }: Props) {
+export function MatchCard({ match, playerId, prediction, onSaved, commentCount = 0, predictionPreview }: Props) {
   const { t, tc, n, lang, dir } = useI18n();
   const kickoff = new Date(match.kickoff_at);
   const now = Date.now();
@@ -155,12 +157,29 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         )}
       </div>
 
-      {(commentCount > 0 || predictionCount > 0) && (
-        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-1.5 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-semibold text-ink-soft shadow-sm">
-          {predictionCount > 0 && (
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              <span className="tabular-nums">{n(predictionCount)}</span>
+      {(commentCount > 0 || (predictionPreview?.count ?? 0) > 0) && (
+        <div className="pointer-events-none absolute bottom-2 right-2 z-[1] flex items-center gap-2 rounded-full bg-bg/90 px-1.5 py-1 text-[12px] font-semibold text-ink-soft shadow-sm ring-1 ring-border">
+          {predictionPreview && predictionPreview.count > 0 && (
+            <span className="flex items-center">
+              <span className="flex items-center">
+                {predictionPreview.avatars.map((p, i) => (
+                  <Avatar
+                    key={p.id}
+                    avatar={p.avatar}
+                    name={p.display_name}
+                    size={32}
+                    className={`rounded-full bg-bg ring-2 ring-border ${i > 0 ? "-ml-2" : ""}`}
+                  />
+                ))}
+              </span>
+              {predictionPreview.count > predictionPreview.avatars.length && (
+                <span
+                  className="-ml-2 grid place-items-center rounded-full bg-primary text-white ring-2 ring-border tabular-nums"
+                  style={{ width: 32, height: 32, fontSize: 12 }}
+                >
+                  +{n(predictionPreview.count - predictionPreview.avatars.length)}
+                </span>
+              )}
             </span>
           )}
           {commentCount > 0 && (

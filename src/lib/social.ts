@@ -223,17 +223,50 @@ export async function fetchMatchCommentCounts(matchIds: string[]) {
 }
 
 /**
- * Fetch how many players have made a prediction for each match.
+ * Fetch how many players have made a prediction for each match,
+ * along with up to 3 random predictor avatars for visualisation.
  */
-export async function fetchMatchPredictionCounts(matchIds: string[]) {
-  const out: Record<string, number> = {};
+export type PredictionPreview = {
+  count: number;
+  avatars: { id: string; avatar: string | null; display_name: string }[];
+};
+
+export async function fetchMatchPredictionPreviews(matchIds: string[]) {
+  const out: Record<string, PredictionPreview> = {};
   if (matchIds.length === 0) return out;
-  const { data } = await supabase
+  const { data: predRows } = await supabase
     .from("predictions")
-    .select("match_id")
+    .select("match_id,player_id")
     .in("match_id", matchIds);
-  ((data as { match_id: string }[] | null) ?? []).forEach((r) => {
-    out[r.match_id] = (out[r.match_id] ?? 0) + 1;
+  const rows = (predRows as { match_id: string; player_id: string }[] | null) ?? [];
+
+  const byMatch: Record<string, string[]> = {};
+  const playerIds = new Set<string>();
+  rows.forEach((r) => {
+    (byMatch[r.match_id] ||= []).push(r.player_id);
+    playerIds.add(r.player_id);
   });
+
+  const players: Record<string, { id: string; avatar: string | null; display_name: string }> = {};
+  if (playerIds.size > 0) {
+    const { data: playerRows } = await supabase
+      .from("players")
+      .select("id,avatar,display_name")
+      .in("id", Array.from(playerIds));
+    ((playerRows as { id: string; avatar: string | null; display_name: string }[] | null) ?? []).forEach((p) => {
+      players[p.id] = p;
+    });
+  }
+
+  for (const mid of matchIds) {
+    const ids = byMatch[mid] ?? [];
+    const shuffled = ids.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const avatars = shuffled.slice(0, 3).map((id) => players[id]).filter(Boolean);
+    out[mid] = { count: ids.length, avatars };
+  }
   return out;
 }
