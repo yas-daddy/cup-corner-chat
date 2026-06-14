@@ -16,6 +16,24 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
   const [teams, setTeams] = useState<{ name: string; code: string }[]>([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!show) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [show]);
+
+  const countdown = useMemo(() => {
+    const ms = Math.max(0, LOCK_AT - now);
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const minutes = Math.floor((s % 3600) / 60);
+    const seconds = s % 60;
+    return { days, hours, minutes, seconds, ms };
+  }, [now]);
+
 
   useEffect(() => {
     if (Date.now() >= LOCK_AT) return;
@@ -89,6 +107,25 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
           <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-1 text-[10px] font-bold text-[color:var(--gold)]">
             +25
           </span>
+        </div>
+        <div className="flex items-center justify-center gap-2 border-b border-border bg-[color:var(--gold)]/5 px-4 py-3" dir={dir}>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+            {t("champion_locks_in") ?? "Locks in"}
+          </span>
+          <div className="flex items-center gap-1 font-mono text-sm font-bold tabular-nums text-[color:var(--gold)]">
+            {countdown.ms === 0 ? (
+              <span>00:00:00</span>
+            ) : (
+              <>
+                {countdown.days > 0 && <span>{countdown.days}d</span>}
+                <span>{String(countdown.hours).padStart(2, "0")}</span>
+                <span>:</span>
+                <span>{String(countdown.minutes).padStart(2, "0")}</span>
+                <span>:</span>
+                <span>{String(countdown.seconds).padStart(2, "0")}</span>
+              </>
+            )}
+          </div>
         </div>
         <div className="px-4 py-3">
           <input
