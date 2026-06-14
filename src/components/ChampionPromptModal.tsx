@@ -16,6 +16,24 @@ export function ChampionPromptModal({ playerId }: { playerId: string }) {
   const [teams, setTeams] = useState<{ name: string; code: string }[]>([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!show) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [show]);
+
+  const countdown = useMemo(() => {
+    const ms = Math.max(0, LOCK_AT - now);
+    const s = Math.floor(ms / 1000);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const minutes = Math.floor((s % 3600) / 60);
+    const seconds = s % 60;
+    return { days, hours, minutes, seconds, ms };
+  }, [now]);
+
 
   useEffect(() => {
     if (Date.now() >= LOCK_AT) return;
