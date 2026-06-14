@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, LogOut, Bell, BellOff } from "lucide-react";
+import { ChevronLeft, LogOut, Bell, BellOff, Sun, Moon, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer, storePlayerId } from "@/lib/identity";
 import { useI18n, type Lang } from "@/lib/i18n";
+import { useTheme, type Theme } from "@/lib/theme";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import {
   isPushSupported,
