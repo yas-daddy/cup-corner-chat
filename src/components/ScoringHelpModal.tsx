@@ -4,10 +4,11 @@ import { useI18n } from "@/lib/i18n";
 export function ScoringHelpModal({ onClose }: { onClose: () => void }) {
   const { t, n, dir } = useI18n();
   const rows: Array<{ label: string; pts: number }> = [
-    { label: t("scoring_row_winner"), pts: 5 },
+    { label: t("scoring_row_winner"), pts: 3 },
     { label: t("scoring_row_home"), pts: 1 },
     { label: t("scoring_row_away"), pts: 1 },
-    { label: t("scoring_row_gd"), pts: 3 },
+    { label: t("scoring_row_gd"), pts: 1 },
+    { label: t("scoring_row_exact_bonus"), pts: 2 },
   ];
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 pb-[env(safe-area-inset-bottom)] sm:items-center sm:p-4 sm:pb-4">
@@ -35,7 +36,7 @@ export function ScoringHelpModal({ onClose }: { onClose: () => void }) {
             <li className="flex items-center justify-between rounded-xl border border-[color:var(--gold)]/40 bg-[color:var(--gold)]/10 px-3 py-2.5">
               <span className="text-sm font-bold">{t("scoring_row_exact")}</span>
               <span className="rounded-full bg-[color:var(--gold)]/20 px-2 py-0.5 text-sm font-extrabold text-[color:var(--gold)] tabular-nums">
-                +{n(10)} ⭐
+                +{n(8)} ⭐
               </span>
             </li>
           </ul>
