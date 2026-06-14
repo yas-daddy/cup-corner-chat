@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
+import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
 import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
 import { Route as ApiPublicHooksEmitPendingPredictionsRouteImport } from './routes/api/public/hooks/emit-pending-predictions'
@@ -67,6 +68,11 @@ const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   path: '/api/public/sync-matches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
+  id: '/api/public/send-push',
+  path: '/api/public/send-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicKarimRoastRoute = ApiPublicKarimRoastRouteImport.update({
   id: '/api/public/karim-roast',
   path: '/api/public/karim-roast',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/send-push'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesByTo: FileRoutesByTo
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/send-push'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   id:
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/send-push'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesById: FileRoutesById
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
+  ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
   ApiPublicHooksEmitPendingPredictionsRoute: typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncMatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/send-push': {
+      id: '/api/public/send-push'
+      path: '/api/public/send-push'
+      fullPath: '/api/public/send-push'
+      preLoaderRoute: typeof ApiPublicSendPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/karim-roast': {
       id: '/api/public/karim-roast'
       path: '/api/public/karim-roast'
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
+  ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
   ApiPublicHooksEmitPendingPredictionsRoute:
     ApiPublicHooksEmitPendingPredictionsRoute,
@@ -294,3 +315,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
