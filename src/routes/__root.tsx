@@ -86,6 +86,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const i18n = useLangBootstrap();
+  usePresenceBeacon();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
