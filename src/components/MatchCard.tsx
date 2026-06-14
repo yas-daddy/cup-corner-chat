@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import type { Match, Prediction } from "@/lib/types";
 import { flagFromCode } from "@/lib/flags";
-import { codeForTeam } from "@/lib/teams";
+import { codeForTeam, resolveTeamCode } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
 import { Avatar } from "@/components/AvatarPicker";
 import type { PredictionPreview } from "@/lib/social";
