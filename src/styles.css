@@ -52,6 +52,22 @@
   --radius: 16px;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0d12;
+    --surface: #15181f;
+    --border: #262a33;
+    --ink: #f1f3f7;
+    --ink-soft: #9aa3b2;
+    --primary: #8b5cf6;
+    --secondary: #2dd4bf;
+    --accent: #ff7a80;
+    --success: #9ed64a;
+    --gold: #f5c542;
+  }
+}
+
+
 html,
 body {
   background: var(--bg);
