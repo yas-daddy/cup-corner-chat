@@ -1,4 +1,4 @@
-import { Share, Plus, X, Smartphone } from "lucide-react";
+import { Share, Plus, Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { isIOS } from "@/lib/push";
 
@@ -47,13 +47,6 @@ export function InstallPwaModal({
           className="mt-4 w-full rounded-2xl bg-primary py-3 font-semibold text-white"
         >
           Got it
-        </button>
-        <button
-          onClick={() => onOpenChange(false)}
-          aria-label="Close"
-          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-ink-soft hover:bg-border/60"
-        >
-          <X className="h-4 w-4" />
         </button>
       </DialogContent>
     </Dialog>
