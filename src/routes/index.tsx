@@ -9,6 +9,7 @@ import { Avatar } from "@/components/AvatarPicker";
 import { AvatarPromptModal } from "@/components/AvatarPromptModal";
 import { ChampionPromptModal } from "@/components/ChampionPromptModal";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { isStandalone } from "@/lib/push";
 
@@ -123,6 +124,7 @@ function HomePage() {
     <div className="px-4 pt-6">
       {!player.avatar && <AvatarPromptModal player={player} onSaved={(p) => setPlayer(p)} />}
       {player.avatar && <ChampionPromptModal playerId={player.id} />}
+      <PushAutoPrompt playerId={player.id} />
       <PwaInstallBanner />
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
