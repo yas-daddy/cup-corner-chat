@@ -12,6 +12,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { NewPicksPill } from "@/components/NewPicksPill";
+import { GodModePinModal } from "@/components/GodModePinModal";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
