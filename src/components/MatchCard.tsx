@@ -224,6 +224,14 @@ function ScoreBox({ value }: { value: string }) {
   );
 }
 
+function SingleScore({ value }: { value: string }) {
+  return (
+    <div className="grid h-8 min-w-8 place-items-center rounded-full bg-white px-3 text-sm font-bold text-black tabular-nums shadow-sm">
+      {value}
+    </div>
+  );
+}
+
 function Badge({ children, tone, icon }: { children: React.ReactNode; tone: "accent" | "success" | "gold"; icon?: React.ReactNode }) {
   const cls =
     tone === "accent"
