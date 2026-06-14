@@ -195,7 +195,7 @@ function MatchDetailPage() {
             <span className="truncate font-semibold">{tc(match.home_team)}</span>
           </div>
           {(finished || (live && match.home_score != null && match.away_score != null)) ? (
-            <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-white tabular-nums">
+            <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">
               {n(match.home_score ?? 0)} - {n(match.away_score ?? 0)}
             </div>
           ) : live ? (
