@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Share, Plus, X } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Avatar } from "@/components/AvatarPicker";
 import { useI18n } from "@/lib/i18n";
 import type { Player } from "@/lib/identity";
-import { isPushSupported, getPermissionState, subscribePush } from "@/lib/push";
+import { isPushSupported, getPermissionState, subscribePush, isIOS, isStandalone } from "@/lib/push";
 
 type Notification = {
   id: string;
@@ -29,6 +30,7 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
   const [open, setOpen] = useState(false);
   const [pushPerm, setPushPerm] = useState<NotificationPermission | "unsupported">("default");
   const [pushBusy, setPushBusy] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
 
   useEffect(() => {
     if (isPushSupported()) setPushPerm(getPermissionState());
@@ -36,6 +38,11 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
   }, []);
 
   async function enablePush() {
+    // If user is in a regular browser (not installed as a PWA), explain they need to install first.
+    if (!isStandalone()) {
+      setInstallModalOpen(true);
+      return;
+    }
     setPushBusy(true);
     await subscribePush(playerId);
     setPushBusy(false);
