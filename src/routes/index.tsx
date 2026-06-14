@@ -9,6 +9,7 @@ import { Avatar } from "@/components/AvatarPicker";
 import { AvatarPromptModal } from "@/components/AvatarPromptModal";
 import { ChampionPromptModal } from "@/components/ChampionPromptModal";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { isStandalone } from "@/lib/push";
 
