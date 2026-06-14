@@ -123,7 +123,7 @@ export function NotificationsBell({ playerId }: { playerId: string }) {
           <SheetTitle>{t("notifications")}</SheetTitle>
         </SheetHeader>
         <div className="max-h-[calc(100dvh-56px)] overflow-y-auto">
-          {pushPerm === "default" && (
+          {pushPerm !== "granted" && pushPerm !== "denied" && (
             <div className="flex items-start gap-3 border-b border-border bg-primary/5 px-4 py-3">
               <Bell className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
