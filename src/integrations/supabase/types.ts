@@ -464,9 +464,29 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_champion: {
+        Args: { _player_id: string }
+        Returns: undefined
+      }
       admin_delete_prediction: {
         Args: { _match_id: string; _player_id: string }
         Returns: undefined
+      }
+      admin_upsert_champion: {
+        Args: { _player_id: string; _team: string; _team_code: string }
+        Returns: {
+          created_at: string
+          player_id: string
+          team: string
+          team_code: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "champion_predictions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_upsert_prediction: {
         Args: {

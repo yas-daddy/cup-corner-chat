@@ -26,8 +26,13 @@ function AdminPage() {
   const [playerId, setPlayerId] = useState<string>("");
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [champion, setChampion] = useState<{ team: string; team_code: string | null } | null>(null);
+  const [championDraft, setChampionDraft] = useState<string>("");
+  const [championSaving, setChampionSaving] = useState(false);
+  const [championSavedAt, setChampionSavedAt] = useState<number>(0);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+
 
   useEffect(() => {
     supabase
@@ -46,6 +51,8 @@ function AdminPage() {
     if (!playerId) {
       setPreds({});
       setDrafts({});
+      setChampion(null);
+      setChampionDraft("");
       return;
     }
     supabase
@@ -62,7 +69,60 @@ function AdminPage() {
         setPreds(map);
         setDrafts(d);
       });
+    supabase
+      .from("champion_predictions")
+      .select("team,team_code")
+      .eq("player_id", playerId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const c = (data as { team: string; team_code: string | null } | null) ?? null;
+        setChampion(c);
+        setChampionDraft(c?.team ?? "");
+      });
   }, [playerId]);
+
+  const teamOptions = useMemo(() => {
+    const set = new Map<string, string>();
+    matches.forEach((m) => {
+      if (m.home_team) set.set(m.home_team, m.home_code || codeForTeam(m.home_team) || "");
+      if (m.away_team) set.set(m.away_team, m.away_code || codeForTeam(m.away_team) || "");
+    });
+    return Array.from(set.entries())
+      .map(([name, code]) => ({ name, code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [matches]);
+
+  async function saveChampion() {
+    if (!playerId || !championDraft) return;
+    setChampionSaving(true);
+    const code = teamOptions.find((t) => t.name === championDraft)?.code ?? "";
+    const { data, error } = await supabase.rpc("admin_upsert_champion", {
+      _player_id: playerId,
+      _team: championDraft,
+      _team_code: code,
+    });
+    setChampionSaving(false);
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    const row = (Array.isArray(data) ? data[0] : data) as { team: string; team_code: string | null } | null;
+    if (row) setChampion({ team: row.team, team_code: row.team_code });
+    setChampionSavedAt(Date.now());
+  }
+
+  async function removeChampion() {
+    if (!playerId) return;
+    if (!confirm("Delete this player's champion pick?")) return;
+    const { error } = await supabase.rpc("admin_delete_champion", { _player_id: playerId });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setChampion(null);
+    setChampionDraft("");
+  }
+
 
   async function runSync() {
     setSyncing(true);
@@ -192,6 +252,49 @@ function AdminPage() {
           ))}
         </select>
       </section>
+
+      {selectedPlayer && (
+        <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">
+            Overall champion pick
+          </div>
+          <div className="mb-2 flex items-center gap-2 text-sm">
+            <span className="text-2xl">{flagFromCode(champion?.team_code || codeForTeam(champion?.team ?? ""))}</span>
+            <span className="font-semibold">{champion?.team ?? "— None —"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={championDraft}
+              onChange={(e) => setChampionDraft(e.target.value)}
+              className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
+            >
+              <option value="">— Choose team —</option>
+              {teamOptions.map((t) => (
+                <option key={t.name} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={saveChampion}
+              disabled={championSaving || !championDraft || championDraft === champion?.team}
+              className="flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {championSaving ? "Saving…" : championSavedAt && Date.now() - championSavedAt < 1500 ? "Saved" : champion ? "Update" : "Create"}
+            </button>
+            {champion && (
+              <button
+                onClick={removeChampion}
+                className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-surface text-accent"
+                aria-label="Delete champion pick"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {selectedPlayer && (
         <section className="space-y-4">
