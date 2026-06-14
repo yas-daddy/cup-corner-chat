@@ -154,8 +154,8 @@ function MatchDetailPage() {
     return <div className="grid min-h-[60vh] place-items-center text-ink-soft">{t("loading")}</div>;
   }
 
-  const hc = match.home_code || codeForTeam(match.home_team);
-  const ac = match.away_code || codeForTeam(match.away_team);
+  const hc = resolveTeamCode(match.home_code, match.home_team) || "";
+  const ac = resolveTeamCode(match.away_code, match.away_team) || "";
   const finished = match.status === "FINISHED";
   const live = match.status === "LIVE";
   const locked = new Date(match.kickoff_at).getTime() <= Date.now() || match.status !== "SCHEDULED";
