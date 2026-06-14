@@ -84,8 +84,8 @@ function AdminPage() {
   const teamOptions = useMemo(() => {
     const set = new Map<string, string>();
     matches.forEach((m) => {
-      if (m.home_team) set.set(m.home_team, m.home_code || codeForTeam(m.home_team) || "");
-      if (m.away_team) set.set(m.away_team, m.away_code || codeForTeam(m.away_team) || "");
+      if (m.home_team) set.set(m.home_team, resolveTeamCode(m.home_code, m.home_team) || "");
+      if (m.away_team) set.set(m.away_team, resolveTeamCode(m.away_code, m.away_team) || "");
     });
     return Array.from(set.entries())
       .map(([name, code]) => ({ name, code }))
