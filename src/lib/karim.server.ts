@@ -55,12 +55,23 @@ export async function roastPrediction(input: {
   return chat(ROAST_SYSTEM, prompt, 80);
 }
 
-const DAILY_SYSTEM = `You are Karim, an AI football pundit writing a daily World Cup recap.
+const DAILY_SYSTEM = `You are Karim, an AI football pundit writing a daily World Cup recap for a private prediction league.
 Rules:
-- 2-4 short sentences, max 60 words total.
-- Mention the top scorer of the day and the current leader by name if given.
-- Confident, witty, mildly roasty. No emojis, no hashtags, no markdown.
-- Don't introduce yourself. Just deliver the recap.`;
+- 3-5 short sentences, max 90 words total.
+- Reference at least one actual match result (teams + score) and name players who nailed exact scores or got embarrassed.
+- Always mention the day's top scorer and the overall leader by name if given.
+- Confident, witty, mildly roasty British football-banter tone. No emojis, no hashtags, no markdown.
+- Don't introduce yourself or sign off. Just deliver the recap.`;
+
+export type MatchResult = {
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  exactWinners: string[]; // display names who got 8 pts
+  zeroCount: number; // how many players got 0 pts on this match
+  totalPicks: number;
+};
 
 export async function writeDailySummary(input: {
   dayLabel: string;
@@ -70,11 +81,25 @@ export async function writeDailySummary(input: {
   newPicks: number;
   leaderName: string | null;
   leaderPts: number;
+  matches: MatchResult[];
+  biggestUpset: MatchResult | null;
 }): Promise<string> {
+  const matchLines = input.matches.map((m) => {
+    const exact = m.exactWinners.length
+      ? `Exact score by: ${m.exactWinners.join(", ")}.`
+      : "Nobody got the exact score.";
+    return `${m.homeTeam} ${m.homeScore}-${m.awayScore} ${m.awayTeam} — ${exact} ${m.zeroCount}/${m.totalPicks} picks got zero.`;
+  });
+
+  const upsetLine = input.biggestUpset
+    ? `Biggest upset of the day: ${input.biggestUpset.homeTeam} ${input.biggestUpset.homeScore}-${input.biggestUpset.awayScore} ${input.biggestUpset.awayTeam} (${input.biggestUpset.zeroCount}/${input.biggestUpset.totalPicks} predictors wrong).`
+    : "";
+
   const parts = [
     `Day: ${input.dayLabel}.`,
-    `Finished matches: ${input.finishedMatches}.`,
-    `New picks logged: ${input.newPicks}.`,
+    `Finished matches: ${input.finishedMatches}. New picks logged: ${input.newPicks}.`,
+    ...matchLines,
+    upsetLine,
     input.topScorerName
       ? `Top scorer of the day: ${input.topScorerName} with ${input.topScorerPts} pts.`
       : "Nobody scored anything today.",
@@ -82,5 +107,6 @@ export async function writeDailySummary(input: {
       ? `Overall leader: ${input.leaderName} on ${input.leaderPts} pts.`
       : "",
   ].filter(Boolean).join(" ");
-  return chat(DAILY_SYSTEM, parts, 180);
+
+  return chat(DAILY_SYSTEM, parts, 280);
 }
