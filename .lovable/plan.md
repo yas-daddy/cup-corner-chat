@@ -1,41 +1,55 @@
-## Live-aware predictions on `/matches/:id`
+## Dark mode — follows device setting
 
-Only the match detail page changes. Behavior is purely visual + sorting; no DB changes, no scoring changes.
+No toggle, no setting. The app picks light or dark from the OS via `prefers-color-scheme`. No JS, no class on `<html>`, no persistence.
 
-### 1. LIVE tag on the match header
+### 1. Dark token set in `src/styles.css`
 
-When `match.status === "LIVE"`, render a `LIVE` chip above the match title, using the same style as the home tab's section heading (uppercase, bold, `text-accent`, small tracking) so it reads identically.
+The app already routes color through semantic tokens (`--bg`, `--surface`, `--border`, `--ink`, `--ink-soft`, `--primary`, `--secondary`, `--accent`, `--success`, `--gold`). Add a `@media (prefers-color-scheme: dark)` block that overrides those CSS variables for dark. Brand hues (`--primary` purple, `--accent` red, `--secondary` teal, `--gold`, `--success`) stay recognizable but get slight lightness bumps so they read on a dark surface.
 
-### 2. Red side of a busted prediction
+Proposed dark values:
 
-For each prediction row, when the match is `LIVE` and has a current `home_score` / `away_score`:
+- `--bg: #0b0d12`
+- `--surface: #15181f`
+- `--border: #262a33`
+- `--ink: #f1f3f7`
+- `--ink-soft: #9aa3b2`
+- `--primary: #8b5cf6` (lifted purple)
+- `--secondary: #2dd4bf`
+- `--accent: #ff7a80`
+- `--success: #9ed64a`
+- `--gold: #f5c542`
 
-- If `live_home > pred_home` → render `pred_home` in red (busted side; that exact half can no longer come in).
-- If `live_away > pred_away` → render `pred_away` in red.
-- If both busted → the whole score chip turns red (exact + result both gone).
-- If neither side is exceeded → no change (still alive for exact and result).
+### 2. Fix the one hardcoded surface: `.tab-bar`
 
-Uses the existing semantic `text-destructive` / `bg-destructive/15` tokens so it works in both themes. No copy change, no badge — just color on the digit(s).
+`.tab-bar` uses `rgba(255, 255, 255, 0.95)`. Replace with `color-mix(in oklab, var(--bg) 92%, transparent)` so the bottom nav blurs over the right background in both modes. Keep the `backdrop-filter` blur.
 
-### 3. Live ranking of predictions
+### 3. Sweep hardcoded color classes
 
-When `LIVE`, sort `rows` by "closest to current live score" instead of insertion order:
+Audit and replace ad-hoc Tailwind colors (`bg-white`, `text-black`, `bg-black`, `text-white` outside of `bg-primary`/`bg-accent` pairings, hardcoded `#fff`/`#000`) in:
 
-1. Exact match to live score first (`pred_home == live_home && pred_away == live_away`).
-2. Then predictions where the result direction still matches the live result (`sign(pred_home - pred_away) == sign(live_home - live_away)`).
-3. Within each bucket, ascending by `|pred_home - live_home| + |pred_away - live_away|` (total goal distance).
-4. Stable tiebreaker on player display name.
+- `src/components/MatchCard.tsx`, `ChampionPickCard.tsx`, `FeedCard.tsx`, `ReactionBar.tsx`, `NotificationsBell.tsx`, `AvatarPicker.tsx`, `AvatarPromptModal.tsx`, `CommentThread.tsx`, `MatchDiscussionThread.tsx`, `SignInScreen.tsx`
+- `src/routes/settings.tsx`, `matches.$matchId.tsx`, `admin.tsx`
 
-Add a small `text-ink-soft` hint above the list, e.g. "Ranked by closeness to live score", only while `LIVE`. `FINISHED` keeps the existing points-desc sort; `SCHEDULED` / locked-pre-kickoff keep the existing order.
+Rules:
+- `bg-white` on cards/sheets → `bg-surface` (or `bg-bg` for full-page panels).
+- `text-black` → `text-ink`. `text-white` stays only where the background is a brand color (`bg-primary`, `bg-accent`) — those pair with white in both modes.
+- Borders → `border-border`.
+- Soft text → `text-ink-soft`.
+
+shadcn primitives (`dialog`, `drawer`, `sheet`, `alert-dialog`, `chart`, `alert`) already read from semantic tokens and the chart/alert files already have `dark:` variants — leave them alone.
+
+### 4. Meta theme color
+
+`__root.tsx` sets `theme-color: #6d28d9` (purple). Split it into two `<meta name="theme-color">` tags with `media` attributes so the iOS/Android status bar matches:
+- light: `#ffffff`
+- dark: `#0b0d12`
+
+### 5. Verification
+
+After edits, load `/`, `/my-picks`, `/leaderboard`, `/feed`, `/matches/:id`, `/settings`, `/players/:id` in the preview with the OS in dark mode and confirm: no white cards on dark bg, bottom nav blurs correctly, primary buttons still read white text, LIVE chip and busted-prediction red still pop.
 
 ### Out of scope
 
-- No change to `prediction_points`, feed activities, or the home tab.
-- No "still possible" math beyond the simple busted-side rule (we don't know minutes remaining).
-- No re-fetch loop on this page — it picks up new scores on the next normal navigation / refresh, same as today.
-
-### Technical notes
-
-- All changes live in `src/routes/matches.$matchId.tsx` and the `PredictionRow` component there.
-- Compute `live = match.status === "LIVE"` and `liveHome` / `liveAway` once in the page; pass into `PredictionRow` so it can color the score chip.
-- Sorting happens in the existing `setRows(...)` LIVE branch (currently the `else` upcoming branch handles LIVE too — split it so LIVE uses the ranking comparator above).
+- No manual light/dark toggle.
+- No persisted preference.
+- No new theme tokens beyond the dark overrides.
