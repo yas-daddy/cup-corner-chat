@@ -19,6 +19,9 @@ export const Route = createFileRoute("/api/public/karim-roast")({
     handlers: {
       POST: async ({ request }) => {
         if (!authorize(request)) return unauthorized();
+        // Karim roasts are disabled — daily wrap still runs via karim-daily.
+        return Response.json({ skipped: "roasts disabled" });
+
 
         const payload = (await request.json().catch(() => ({}))) as {
           activity_id?: string;
