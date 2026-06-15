@@ -264,7 +264,14 @@ async function handler() {
       console.error("new-fixture push dispatch failed", e);
     }
 
-    return Response.json({ ok: true, synced: merged.length, source });
+    return Response.json({
+      ok: true,
+      synced: toUpsert.length,
+      scanned: merged.length,
+      skipped_unchanged: skippedUnchanged,
+      skipped_finished_downgrade: skippedFinished,
+      source,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return Response.json({ ok: false, error: message }, { status: 500 });
