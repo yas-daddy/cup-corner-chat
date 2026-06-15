@@ -146,21 +146,101 @@ async function handler() {
     // that were backfilled with non-upstream ids (e.g. "wc26:*").
     const { data: existing } = await supabaseAdmin
       .from("matches")
-      .select("id,home_team,away_team,kickoff_at");
+      .select(
+        "id,home_team,away_team,home_code,away_code,kickoff_at,stage,group_name,status,home_score,away_score",
+      );
+    type ExistingRow = NonNullable<typeof existing>[number];
     const keyFor = (h: string, a: string, k: string) =>
       `${h.toLowerCase()}|${a.toLowerCase()}|${new Date(k).toISOString().slice(0, 10)}`;
-    const idByKey = new Map<string, string>();
-    (existing ?? []).forEach((m) => idByKey.set(keyFor(m.home_team, m.away_team, m.kickoff_at), m.id));
-
-    const merged = rows.map((r) => {
-      const existingId = idByKey.get(keyFor(r.home_team, r.away_team, r.kickoff_at));
-      return existingId ? { ...r, id: existingId } : r;
+    const byKey = new Map<string, ExistingRow>();
+    const byId = new Map<string, ExistingRow>();
+    (existing ?? []).forEach((m) => {
+      byKey.set(keyFor(m.home_team, m.away_team, m.kickoff_at), m);
+      byId.set(m.id, m);
     });
 
-    const { error } = await supabaseAdmin.from("matches").upsert(merged, { onConflict: "id" });
-    if (error) {
-      return Response.json({ ok: false, error: error.message }, { status: 500 });
+    // Resolve upstream rows against existing ones, applying two guards:
+    //   1) Once a match is FINISHED in our DB, never downgrade its status or
+    //      null-out its scores from upstream. This is the root cause of the
+    //      duplicate-notification flap we saw on Canada–Bosnia.
+    //   2) Only include rows in the upsert payload when at least one tracked
+    //      field actually changed — keeps the matches_emit_finished trigger
+    //      from firing on no-op writes.
+    const tracked = [
+      "home_team",
+      "away_team",
+      "home_code",
+      "away_code",
+      "kickoff_at",
+      "stage",
+      "group_name",
+      "status",
+      "home_score",
+      "away_score",
+    ] as const;
+    type Tracked = (typeof tracked)[number];
+    function sameKickoff(a: string, b: string) {
+      return new Date(a).getTime() === new Date(b).getTime();
     }
+
+    const merged: DbMatch[] = [];
+    const toUpsert: DbMatch[] = [];
+    let skippedFinished = 0;
+    let skippedUnchanged = 0;
+
+    for (const r of rows) {
+      const matchedExisting = byKey.get(keyFor(r.home_team, r.away_team, r.kickoff_at));
+      const resolved: DbMatch = matchedExisting ? { ...r, id: matchedExisting.id } : r;
+      merged.push(resolved);
+
+      const prior = byId.get(resolved.id) ?? matchedExisting ?? null;
+
+      let candidate: DbMatch = resolved;
+      if (
+        prior &&
+        prior.status === "FINISHED" &&
+        prior.home_score !== null &&
+        prior.away_score !== null
+      ) {
+        const downgrade =
+          candidate.status !== "FINISHED" ||
+          candidate.home_score === null ||
+          candidate.away_score === null;
+        if (downgrade) {
+          candidate = {
+            ...candidate,
+            status: "FINISHED",
+            home_score: prior.home_score,
+            away_score: prior.away_score,
+          };
+          skippedFinished++;
+        }
+      }
+
+      if (prior) {
+        const changed = tracked.some((k: Tracked) => {
+          const a = (candidate as unknown as Record<string, unknown>)[k];
+          const b = (prior as unknown as Record<string, unknown>)[k];
+          if (k === "kickoff_at" && typeof a === "string" && typeof b === "string") {
+            return !sameKickoff(a, b);
+          }
+          return a !== b;
+        });
+        if (!changed) {
+          skippedUnchanged++;
+          continue;
+        }
+      }
+      toUpsert.push(candidate);
+    }
+
+    if (toUpsert.length > 0) {
+      const { error } = await supabaseAdmin.from("matches").upsert(toUpsert, { onConflict: "id" });
+      if (error) {
+        return Response.json({ ok: false, error: error.message }, { status: 500 });
+      }
+    }
+
 
     // Detect truly new SCHEDULED matches with a future kickoff and fire
     // "new fixtures" pushes to every subscribed player who hasn't been
@@ -184,7 +264,14 @@ async function handler() {
       console.error("new-fixture push dispatch failed", e);
     }
 
-    return Response.json({ ok: true, synced: merged.length, source });
+    return Response.json({
+      ok: true,
+      synced: toUpsert.length,
+      scanned: merged.length,
+      skipped_unchanged: skippedUnchanged,
+      skipped_finished_downgrade: skippedFinished,
+      source,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return Response.json({ ok: false, error: message }, { status: 500 });
