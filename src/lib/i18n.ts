@@ -23,6 +23,11 @@ const EN: Dict = {
   live: "Live",
   finished: "Finished",
   results: "Results",
+  results_subtitle: "Live World Cup scores & standings",
+  results_fixtures: "Fixtures",
+  results_standings: "Standings",
+  results_bracket: "Bracket",
+  results_bracket_empty: "Available once knockouts begin.",
 
   locked: "Locked",
   saved: "Saved",
@@ -150,6 +155,11 @@ const FA: Dict = {
   live: "زنده",
   finished: "تمام‌شده",
   results: "نتایج",
+  results_subtitle: "نتایج زنده و جدول‌ها",
+  results_fixtures: "بازی‌ها",
+  results_standings: "جدول‌ها",
+  results_bracket: "براکت",
+  results_bracket_empty: "از مرحله حذفی نمایش داده می‌شود.",
 
   locked: "قفل شده",
   saved: "ذخیره شد",

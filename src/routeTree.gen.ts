@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResultsRouteImport } from './routes/results'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -18,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
+import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
 import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
@@ -26,6 +28,11 @@ import { Route as ApiPublicHooksEmitPendingPredictionsRouteImport } from './rout
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRoute = ResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPicksRoute = MyPicksRouteImport.update({
@@ -68,6 +75,11 @@ const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   path: '/api/public/sync-matches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncEspnRoute = ApiPublicSyncEspnRouteImport.update({
+  id: '/api/public/sync-espn',
+  path: '/api/public/sync-espn',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
   id: '/api/public/send-push',
   path: '/api/public/send-push',
@@ -96,12 +108,14 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
+  '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -111,12 +125,14 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
+  '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -127,12 +143,14 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
+  '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -144,12 +162,14 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
+    | '/results'
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/send-push'
+    | '/api/public/sync-espn'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesByTo: FileRoutesByTo
@@ -159,12 +179,14 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
+    | '/results'
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/send-push'
+    | '/api/public/sync-espn'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   id:
@@ -174,12 +196,14 @@ export interface FileRouteTypes {
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
+    | '/results'
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/send-push'
+    | '/api/public/sync-espn'
     | '/api/public/sync-matches'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesById: FileRoutesById
@@ -190,12 +214,14 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
+  ResultsRoute: typeof ResultsRoute
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
   ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
+  ApiPublicSyncEspnRoute: typeof ApiPublicSyncEspnRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
   ApiPublicHooksEmitPendingPredictionsRoute: typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
@@ -207,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-picks': {
@@ -265,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncMatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-espn': {
+      id: '/api/public/sync-espn'
+      path: '/api/public/sync-espn'
+      fullPath: '/api/public/sync-espn'
+      preLoaderRoute: typeof ApiPublicSyncEspnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/send-push': {
       id: '/api/public/send-push'
       path: '/api/public/send-push'
@@ -302,12 +342,14 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
+  ResultsRoute: ResultsRoute,
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
   ApiPublicSendPushRoute: ApiPublicSendPushRoute,
+  ApiPublicSyncEspnRoute: ApiPublicSyncEspnRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
   ApiPublicHooksEmitPendingPredictionsRoute:
     ApiPublicHooksEmitPendingPredictionsRoute,
@@ -315,3 +357,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

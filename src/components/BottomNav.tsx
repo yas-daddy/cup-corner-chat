@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Home, Trophy, ListChecks, Rss } from "lucide-react";
+import { Home, Trophy, ListChecks, Rss, BarChart3 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export function BottomNav() {
@@ -7,6 +7,7 @@ export function BottomNav() {
   const items = [
     { to: "/", label: t("home"), Icon: Home },
     { to: "/feed", label: t("feed"), Icon: Rss },
+    { to: "/results", label: t("results"), Icon: BarChart3 },
     { to: "/leaderboard", label: t("leaderboard"), Icon: Trophy },
     { to: "/my-picks", label: t("my_picks"), Icon: ListChecks },
   ] as const;
