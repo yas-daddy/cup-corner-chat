@@ -8,6 +8,8 @@ import { resolveTeamCode } from "@/lib/teams";
 import { useI18n } from "@/lib/i18n";
 import { Avatar } from "@/components/AvatarPicker";
 import type { PredictionPreview } from "@/lib/social";
+import { useEspnLive } from "@/lib/useEspnLive";
+import { LiveIndicator } from "@/components/LiveIndicator";
 
 type Props = {
   match: Match;
@@ -27,6 +29,14 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
 
   const homeCode = resolveTeamCode(match.home_code, match.home_team);
   const awayCode = resolveTeamCode(match.away_code, match.away_team);
+
+  // Subscribe to ESPN's live row when the game is in or near play. Prefer
+  // ESPN's score + clock over public.matches while in progress.
+  const liveWindow = Math.abs(kickoff.getTime() - now) < 4 * 60 * 60 * 1000;
+  const espnLive = useEspnLive(match.status === "LIVE" || liveWindow ? match.id : null);
+  const isLive = match.status === "LIVE" || espnLive?.state === "in";
+  const liveHome = espnLive?.state === "in" ? espnLive.home_score ?? match.home_score : match.home_score;
+  const liveAway = espnLive?.state === "in" ? espnLive.away_score ?? match.away_score : match.away_score;
 
   const [h, setH] = useState<number>(prediction?.pred_home ?? 0);
   const [a, setA] = useState<number>(prediction?.pred_away ?? 0);
@@ -85,8 +95,9 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         aria-label="View predictions"
         className="absolute inset-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/40"
       />
-      <div className="mb-2 flex items-center justify-start text-xs text-ink-soft">
+      <div className="mb-2 flex items-center justify-between text-xs text-ink-soft">
         <span>{kickoffLabel}</span>
+        {isLive && <LiveIndicator minute={espnLive?.clock_display} />}
       </div>
 
       <div className="flex items-center gap-2" dir={dir}>
@@ -96,9 +107,9 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         </div>
         {finished ? (
           <SingleScore value={n(match.home_score ?? 0)} />
-        ) : match.status === "LIVE" && match.home_score != null && match.away_score != null ? (
-          <SingleScore value={n(match.home_score)} />
-        ) : match.status === "LIVE" ? (
+        ) : isLive && liveHome != null && liveAway != null ? (
+          <SingleScore value={n(liveHome)} />
+        ) : isLive ? (
           <Badge tone="accent">{t("live")}</Badge>
         ) : locked ? (
           prediction ? (
@@ -119,8 +130,8 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         </div>
         {finished ? (
           <SingleScore value={n(match.away_score ?? 0)} />
-        ) : match.status === "LIVE" && match.home_score != null && match.away_score != null ? (
-          <SingleScore value={n(match.away_score)} />
+        ) : isLive && liveHome != null && liveAway != null ? (
+          <SingleScore value={n(liveAway)} />
         ) : locked ? (
           <div className="w-[88px]" />
         ) : (

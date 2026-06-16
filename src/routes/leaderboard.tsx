@@ -52,18 +52,22 @@ function LeaderboardPage() {
 
       {helpOpen && <ScoringHelpModal onClose={() => setHelpOpen(false)} />}
 
-      <div className="mb-4 inline-flex rounded-full border border-border bg-surface p-1 text-sm font-semibold">
+      <div className="mb-4 flex gap-1 rounded-2xl border border-border bg-surface p-1 text-sm font-medium">
         <button
           type="button"
           onClick={() => setView("list")}
-          className={`rounded-full px-4 py-1.5 transition ${view === "list" ? "bg-primary text-white" : "text-ink-soft"}`}
+          className={`flex-1 rounded-xl px-3 py-2 transition ${
+            view === "list" ? "bg-bg text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+          }`}
         >
           {t("leaderboard")}
         </button>
         <button
           type="button"
           onClick={() => setView("chart")}
-          className={`rounded-full px-4 py-1.5 transition ${view === "chart" ? "bg-primary text-white" : "text-ink-soft"}`}
+          className={`flex-1 rounded-xl px-3 py-2 transition ${
+            view === "chart" ? "bg-bg text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+          }`}
         >
           {t("chart")}
         </button>

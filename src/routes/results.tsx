@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
+import { resolveBracket, type ResolvedMatch, type ResolvedSlot, type Round } from "@/lib/bracket";
 
 type EspnMatch = {
   id: string;
@@ -19,17 +20,7 @@ type EspnMatch = {
   clock_display: string | null;
   status_detail: string | null;
   group_label: string | null;
-};
-
-type EspnEvent = {
-  match_id: string;
-  idx: number;
-  type_text: string;
-  clock_display: string | null;
-  team_code: string | null;
-  athlete_name: string | null;
-  is_scoring_play: boolean;
-  is_own_goal: boolean;
+  linked_match_id: string | null;
 };
 
 type Standing = {
@@ -69,7 +60,6 @@ function ResultsPage() {
   const { t, lang } = useI18n();
   const [tab, setTab] = useState<SubTab>("fixtures");
   const [matches, setMatches] = useState<EspnMatch[]>([]);
-  const [events, setEvents] = useState<EspnEvent[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,29 +81,8 @@ function ResultsPage() {
     };
   }, []);
 
-  // Load events only for matches that are live or post (saves payload).
-  useEffect(() => {
-    const ids = matches.filter((m) => m.state !== "pre").map((m) => m.id);
-    if (!ids.length) {
-      setEvents([]);
-      return;
-    }
-    let active = true;
-    (async () => {
-      const { data } = await sb
-        .from("espn_match_events")
-        .select("*")
-        .in("match_id", ids)
-        .order("idx", { ascending: true });
-      if (!active) return;
-      setEvents((data as EspnEvent[]) ?? []);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [matches]);
-
-  // Realtime: patch matches/events/standings in place.
+  // Realtime: patch matches/standings in place. Per-match events are loaded
+  // on the match detail page (which the cards link into), not here.
   useEffect(() => {
     const ch = sb
       .channel("results_stream")
@@ -129,12 +98,6 @@ function ResultsPage() {
           next[idx] = row;
           return next;
         });
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "espn_match_events" }, (payload: any) => {
-        const row = payload.new as EspnEvent;
-        setEvents((prev) =>
-          prev.some((e) => e.match_id === row.match_id && e.idx === row.idx) ? prev : [...prev, row],
-        );
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "espn_standings" }, (payload: any) => {
         const row = payload.new as Standing | null;
@@ -155,16 +118,6 @@ function ResultsPage() {
       void sb.removeChannel(ch);
     };
   }, []);
-
-  const eventsByMatch = useMemo(() => {
-    const map = new Map<string, EspnEvent[]>();
-    for (const e of events) {
-      const arr = map.get(e.match_id) ?? [];
-      arr.push(e);
-      map.set(e.match_id, arr);
-    }
-    return map;
-  }, [events]);
 
   return (
     <div className="px-4 pt-6 pb-24">
@@ -187,20 +140,9 @@ function ResultsPage() {
 
       {loading && <div className="grid min-h-[40vh] place-items-center text-ink-soft">{t("loading")}</div>}
 
-      {!loading && tab === "fixtures" && (
-        <FixturesView matches={matches} eventsByMatch={eventsByMatch} lang={lang} />
-      )}
+      {!loading && tab === "fixtures" && <FixturesView matches={matches} lang={lang} />}
       {!loading && tab === "standings" && <StandingsView rows={standings} />}
-      {!loading && tab === "bracket" && (
-        <div className="grid min-h-[40vh] place-items-center rounded-2xl border border-dashed border-border bg-surface px-6 py-12 text-center text-ink-soft">
-          <div>
-            <div className="text-4xl">🏆</div>
-            <p className="mt-3 text-sm">
-              {t("results_bracket_empty") ?? "Available once knockouts begin."}
-            </p>
-          </div>
-        </div>
-      )}
+      {!loading && tab === "bracket" && <BracketView standings={standings} matches={matches} />}
     </div>
   );
 }
@@ -226,66 +168,40 @@ function SubTabBtn({
   );
 }
 
-function FixturesView({
-  matches,
-  eventsByMatch,
-  lang,
-}: {
-  matches: EspnMatch[];
-  eventsByMatch: Map<string, EspnEvent[]>;
-  lang: string;
-}) {
-  const grouped = useMemo(() => {
-    const live: EspnMatch[] = [];
+function FixturesView({ matches, lang }: { matches: EspnMatch[]; lang: string }) {
+  // Finished matches only, grouped by day, newest day first and newest-within-day first.
+  const days = useMemo(() => {
     const past: Map<string, EspnMatch[]> = new Map();
-    const upcoming: Map<string, EspnMatch[]> = new Map();
     for (const m of matches) {
-      if (m.state === "in") {
-        live.push(m);
-        continue;
-      }
+      if (m.state !== "post") continue;
       const day = new Date(m.kickoff_at).toLocaleDateString(lang === "fa" ? "fa-IR" : undefined, {
         weekday: "long",
         day: "numeric",
         month: "long",
       });
-      const target = m.state === "post" ? past : upcoming;
-      if (!target.has(day)) target.set(day, []);
-      target.get(day)!.push(m);
+      if (!past.has(day)) past.set(day, []);
+      past.get(day)!.push(m);
     }
-    return { live, past, upcoming };
+    for (const list of past.values()) {
+      list.sort((a, b) => +new Date(b.kickoff_at) - +new Date(a.kickoff_at));
+    }
+    return Array.from(past.entries()).reverse();
   }, [matches, lang]);
 
-  if (!matches.length) {
+  if (!days.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
-        No fixtures yet.
+        No finished matches yet.
       </div>
     );
   }
 
   return (
     <div>
-      {grouped.live.length > 0 && (
-        <Section title="LIVE" accent>
-          {grouped.live.map((m) => (
-            <FixtureRow key={m.id} m={m} events={eventsByMatch.get(m.id) ?? []} />
-          ))}
-        </Section>
-      )}
-      {Array.from(grouped.past.entries())
-        .reverse()
-        .map(([day, list]) => (
-          <Section key={`p-${day}`} title={day}>
-            {list.map((m) => (
-              <FixtureRow key={m.id} m={m} events={eventsByMatch.get(m.id) ?? []} />
-            ))}
-          </Section>
-        ))}
-      {Array.from(grouped.upcoming.entries()).map(([day, list]) => (
-        <Section key={`u-${day}`} title={day}>
+      {days.map(([day, list]) => (
+        <Section key={day} title={day}>
           {list.map((m) => (
-            <FixtureRow key={m.id} m={m} events={eventsByMatch.get(m.id) ?? []} />
+            <FixtureRow key={m.id} m={m} />
           ))}
         </Section>
       ))}
@@ -316,9 +232,7 @@ function Section({
   );
 }
 
-function FixtureRow({ m, events }: { m: EspnMatch; events: EspnEvent[] }) {
-  const [open, setOpen] = useState(false);
-  const hasEvents = events.length > 0;
+function FixtureRow({ m }: { m: EspnMatch }) {
   const homeCode = resolveTeamCode(m.home_code, m.home_team);
   const awayCode = resolveTeamCode(m.away_code, m.away_team);
   const time = new Date(m.kickoff_at).toLocaleTimeString(undefined, {
@@ -326,72 +240,49 @@ function FixtureRow({ m, events }: { m: EspnMatch; events: EspnEvent[] }) {
     minute: "2-digit",
   });
   const statusLabel =
-    m.state === "in"
-      ? m.clock_display || "LIVE"
-      : m.state === "post"
-        ? "FT"
-        : time;
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-3">
-      <button
-        type="button"
-        onClick={() => hasEvents && setOpen((v) => !v)}
-        className="block w-full text-left"
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wider text-ink-soft">
-            {m.group_label ?? m.status_detail ?? ""}
-          </span>
-          <span
-            className={`text-xs font-semibold ${
-              m.state === "in" ? "text-accent" : "text-ink-soft"
-            }`}
-          >
-            {statusLabel}
-          </span>
-        </div>
-        <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-2xl">{flagFromCode(homeCode)}</span>
-            <span className="truncate font-semibold">{m.home_team}</span>
-          </div>
-          <div className="px-2 text-center text-lg font-extrabold tabular-nums">
-            {m.state === "pre" ? "—" : `${m.home_score ?? 0} : ${m.away_score ?? 0}`}
-          </div>
-          <div className="flex items-center justify-end gap-2 min-w-0">
-            <span className="truncate text-end font-semibold">{m.away_team}</span>
-            <span className="text-2xl">{flagFromCode(awayCode)}</span>
-          </div>
-        </div>
-      </button>
-      {open && hasEvents && (
-        <ul className="mt-3 space-y-1 border-t border-border pt-2 text-xs">
-          {events.map((e) => (
-            <li
-              key={`${e.match_id}-${e.idx}`}
-              className="flex items-center gap-2 text-ink-soft"
-            >
-              <span className="w-10 shrink-0 font-mono tabular-nums">{e.clock_display ?? ""}</span>
-              <span className="w-5 text-center">{iconForEvent(e)}</span>
-              <span className="truncate">
-                {e.athlete_name ?? ""}
-                {e.is_own_goal ? " (OG)" : ""}
-                {e.team_code ? ` — ${e.team_code}` : ""}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
+    m.state === "in" ? m.clock_display || "LIVE" : m.state === "post" ? "FT" : time;
 
-function iconForEvent(e: EspnEvent) {
-  const t = (e.type_text || "").toLowerCase();
-  if (t.includes("yellow")) return "🟨";
-  if (t.includes("red")) return "🟥";
-  if (t.includes("goal") || e.is_scoring_play) return "⚽";
-  return "•";
+  const inner = (
+    <>
+      <div className="flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wider text-ink-soft">
+          {m.group_label ?? m.status_detail ?? ""}
+        </span>
+        <span
+          className={`text-xs font-semibold ${
+            m.state === "in" ? "text-accent" : "text-ink-soft"
+          }`}
+        >
+          {statusLabel}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-2xl">{flagFromCode(homeCode)}</span>
+          <span className="truncate font-semibold">{m.home_team}</span>
+        </div>
+        <div className="px-2 text-center text-lg font-extrabold tabular-nums">
+          {m.state === "pre" ? "—" : `${m.home_score ?? 0} : ${m.away_score ?? 0}`}
+        </div>
+        <div className="flex items-center justify-end gap-2 min-w-0">
+          <span className="truncate text-end font-semibold">{m.away_team}</span>
+          <span className="text-2xl">{flagFromCode(awayCode)}</span>
+        </div>
+      </div>
+    </>
+  );
+
+  const className =
+    "block rounded-2xl border border-border bg-surface p-3 transition active:opacity-80";
+
+  if (m.linked_match_id) {
+    return (
+      <Link to="/matches/$matchId" params={{ matchId: m.linked_match_id }} className={className}>
+        {inner}
+      </Link>
+    );
+  }
+  return <div className={className}>{inner}</div>;
 }
 
 function StandingsView({ rows }: { rows: Standing[] }) {
@@ -456,6 +347,97 @@ function StandingsView({ rows }: { rows: Standing[] }) {
           </div>
         </section>
       ))}
+    </div>
+  );
+}
+
+const BRACKET_COLUMNS: { round: Round; title: string }[] = [
+  { round: "R32", title: "Round of 32" },
+  { round: "R16", title: "Round of 16" },
+  { round: "QF", title: "Quarter-finals" },
+  { round: "SF", title: "Semi-finals" },
+  { round: "F", title: "Final" },
+  { round: "3P", title: "3rd Place" },
+];
+
+function BracketView({ standings, matches }: { standings: Standing[]; matches: EspnMatch[] }) {
+  const resolved = useMemo(
+    () =>
+      resolveBracket(
+        standings.map((s) => ({
+          group_label: s.group_label,
+          team_code: s.team_code,
+          team_name: s.team_name,
+          rank: s.rank,
+          pts: s.pts,
+          gd: s.gd,
+          gf: s.gf,
+          gp: s.gp,
+        })),
+        matches.map((m) => ({
+          state: m.state,
+          home_code: m.home_code,
+          away_code: m.away_code,
+          home_score: m.home_score,
+          away_score: m.away_score,
+        })),
+      ),
+    [standings, matches],
+  );
+
+  const byRound = useMemo(() => {
+    const map = new Map<Round, ResolvedMatch[]>();
+    for (const r of resolved) {
+      const arr = map.get(r.round) ?? [];
+      arr.push(r);
+      map.set(r.round, arr);
+    }
+    return map;
+  }, [resolved]);
+
+  return (
+    <div className="-mx-4 overflow-x-auto px-4 pb-2">
+      <div className="flex min-w-max gap-3">
+        {BRACKET_COLUMNS.map((col) => (
+          <div key={col.round} className="w-44 shrink-0">
+            <h3 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              {col.title}
+            </h3>
+            <div className="space-y-2">
+              {(byRound.get(col.round) ?? []).map((m) => (
+                <BracketMatchCard key={m.id} m={m} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BracketMatchCard({ m }: { m: ResolvedMatch }) {
+  const topWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.top.team_code;
+  const bottomWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.bottom.team_code;
+  return (
+    <div className="rounded-xl border border-border bg-surface p-2 text-xs">
+      <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-soft">{m.label}</div>
+      <SlotRow s={m.top} won={topWon} dimmed={!!m.winner && !topWon} />
+      <div className="my-1 h-px bg-border/60" />
+      <SlotRow s={m.bottom} won={bottomWon} dimmed={!!m.winner && !bottomWon} />
+    </div>
+  );
+}
+
+function SlotRow({ s, won, dimmed }: { s: ResolvedSlot; won: boolean; dimmed: boolean }) {
+  const concrete = !!s.team_name;
+  return (
+    <div
+      className={`flex items-center gap-2 ${
+        won ? "font-semibold text-ink" : concrete ? (dimmed ? "text-ink-soft" : "text-ink") : "italic text-ink-soft"
+      }`}
+    >
+      <span className="text-base leading-none">{s.team_code ? flagFromCode(s.team_code) : "🏳️"}</span>
+      <span className="truncate">{s.team_name ?? s.placeholder}</span>
     </div>
   );
 }

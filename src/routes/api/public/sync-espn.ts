@@ -13,13 +13,11 @@ function authorize(request: Request) {
   return !!expected && got === expected;
 }
 
-// Window: yesterday → +14 days, ESPN format YYYYMMDD
+// Full WC2026 tournament window (opening match 11 Jun 2026 → final 19 Jul 2026,
+// padded a day each side). ESPN handles `limit=200` comfortably for the 104
+// scheduled matches, so we just fetch the whole thing every poll.
 function dateWindow() {
-  const fmt = (d: Date) =>
-    `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, "0")}${String(d.getUTCDate()).padStart(2, "0")}`;
-  const from = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const to = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-  return { from: fmt(from), to: fmt(to) };
+  return { from: "20260610", to: "20260720" };
 }
 
 export const Route = createFileRoute("/api/public/sync-espn")({

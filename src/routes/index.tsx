@@ -90,16 +90,13 @@ function HomePage() {
   const grouped = useMemo(() => {
     const now = Date.now();
     const horizon = now + 1000 * 60 * 60 * 48;
-    const pastWindow = now - 1000 * 60 * 60 * 24;
     const live: Match[] = [];
-    const results: Match[] = [];
     const upcoming: Map<string, Match[]> = new Map();
     (matches ?? []).forEach((m) => {
       const k = new Date(m.kickoff_at).getTime();
-      if (m.status === "LIVE") live.push(m);
-      else if (m.status === "FINISHED") {
-        if (k >= pastWindow) results.push(m);
-      } else if (k > now - 1000 * 60 * 60 * 2 && k <= horizon) {
+      if (m.status === "LIVE") {
+        live.push(m);
+      } else if (m.status !== "FINISHED" && k > now - 1000 * 60 * 60 * 2 && k <= horizon) {
         const day = new Date(m.kickoff_at).toLocaleDateString(lang === "fa" ? "fa-IR" : undefined, {
           weekday: "long",
           day: "numeric",
@@ -109,8 +106,7 @@ function HomePage() {
         upcoming.get(day)!.push(m);
       }
     });
-    results.sort((a, b) => new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime());
-    return { live, results, upcoming };
+    return { live, upcoming };
   }, [matches, lang]);
 
   const unpredictedUpcomingIds = useMemo(() => {
@@ -188,14 +184,6 @@ function HomePage() {
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("no_matches")}
         </div>
-      )}
-
-      {grouped.results.length > 0 && (
-        <Section title={t("results") ?? "Results"}>
-          {grouped.results.map((m) => (
-            <MatchCard key={m.id} match={m} playerId={player.id} prediction={preds[m.id] ?? null} commentCount={commentCounts[m.id] ?? 0} predictionPreview={predictionPreviews[m.id]} />
-          ))}
-        </Section>
       )}
 
       {grouped.live.length > 0 && (

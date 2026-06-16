@@ -10,6 +10,9 @@ import { useCurrentPlayer } from "@/lib/identity";
 import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
 import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
+import { MatchEventsPanel } from "@/components/MatchEventsPanel";
+import { LiveIndicator } from "@/components/LiveIndicator";
+import { useEspnLive } from "@/lib/useEspnLive";
 import { predictionTargetId, useComments } from "@/lib/social";
 import type { Match, Prediction, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
@@ -35,6 +38,7 @@ function MatchDetailPage() {
   const [match, setMatch] = useState<Match | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const espnLive = useEspnLive(matchId);
 
   useEffect(() => {
     let active = true;
@@ -157,7 +161,9 @@ function MatchDetailPage() {
   const hc = resolveTeamCode(match.home_code, match.home_team) || "";
   const ac = resolveTeamCode(match.away_code, match.away_team) || "";
   const finished = match.status === "FINISHED";
-  const live = match.status === "LIVE";
+  const live = match.status === "LIVE" || espnLive?.state === "in";
+  const displayHome = espnLive?.state === "in" ? espnLive.home_score ?? match.home_score : match.home_score;
+  const displayAway = espnLive?.state === "in" ? espnLive.away_score ?? match.away_score : match.away_score;
   const locked = new Date(match.kickoff_at).getTime() <= Date.now() || match.status !== "SCHEDULED";
   const kickoffLabel = new Date(match.kickoff_at).toLocaleString(undefined, {
     weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
@@ -166,7 +172,7 @@ function MatchDetailPage() {
   return (
     <div className="px-4 pt-6 pb-10">
       <header className="mb-4 flex items-center gap-3">
-        <Link to="/" className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
+        <Link to={finished ? "/results" : "/"} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0">
@@ -187,16 +193,16 @@ function MatchDetailPage() {
             {match.stage ? match.stage : ""}
             {match.group_name ? ` · ${t("group")} ${match.group_name}` : ""}
           </span>
-          <span>{kickoffLabel}</span>
+          {live ? <LiveIndicator minute={espnLive?.clock_display} /> : <span>{kickoffLabel}</span>}
         </div>
         <div className="flex items-center justify-between" dir={dir}>
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="text-2xl">{flagFromCode(hc)}</span>
             <span className="truncate font-semibold">{tc(match.home_team)}</span>
           </div>
-          {(finished || (live && match.home_score != null && match.away_score != null)) ? (
+          {(finished || (live && displayHome != null && displayAway != null)) ? (
             <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">
-              {n(match.home_score ?? 0)} - {n(match.away_score ?? 0)}
+              {n(displayHome ?? 0)} - {n(displayAway ?? 0)}
             </div>
           ) : live ? (
             <span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-bold text-accent">{t("live")}</span>
@@ -212,6 +218,7 @@ function MatchDetailPage() {
             <span className="text-2xl">{flagFromCode(ac)}</span>
           </div>
         </div>
+        <MatchEventsPanel matchId={matchId} />
       </div>
 
       <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
