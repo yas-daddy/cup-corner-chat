@@ -41,10 +41,8 @@ async function handler({ request }: { request: Request }) {
     const { matches, events } = await fetchScoreboard(dateWindow());
     if (matches.length) {
       const nowIso = new Date().toISOString();
-      const rows = matches.map((m) => ({ ...m, last_synced_at: nowIso }));
 
-      // Try to link each ESPN row to an existing matches.id by (home, away, date).
-      // Best-effort — no FK requirement.
+      // Link each ESPN row to an existing matches.id by (home, away, date).
       const { data: existingMatches } = await sb
         .from("matches")
         .select("id, home_team, away_team, kickoff_at");
@@ -54,16 +52,74 @@ async function handler({ request }: { request: Request }) {
       for (const m of (existingMatches as Array<{ id: string; home_team: string; away_team: string; kickoff_at: string }> | null) ?? []) {
         linkMap.set(linkKey(m.home_team, m.away_team, m.kickoff_at), m.id);
       }
-      const linkedRows = rows.map((r) => ({
-        ...r,
-        linked_match_id: linkMap.get(linkKey(r.home_team, r.away_team, r.kickoff_at)) ?? null,
-      }));
 
-      const { error: upsertErr } = await sb
+      // Pull current espn_matches rows to diff against. Only matches whose
+      // tracked fields actually changed get re-upserted — historical FINISHED
+      // games are no-ops on every subsequent poll.
+      const ids = matches.map((m) => m.id);
+      const { data: existingEspn } = await sb
         .from("espn_matches")
-        .upsert(linkedRows, { onConflict: "id" });
-      if (upsertErr) throw new Error(`espn_matches upsert: ${upsertErr.message}`);
-      result.matches_synced = linkedRows.length;
+        .select(
+          "id,state,completed,home_score,away_score,clock_display,status_detail,group_label,kickoff_at,linked_match_id",
+        )
+        .in("id", ids);
+      type Existing = {
+        id: string;
+        state: string;
+        completed: boolean;
+        home_score: number | null;
+        away_score: number | null;
+        clock_display: string | null;
+        status_detail: string | null;
+        group_label: string | null;
+        kickoff_at: string;
+        linked_match_id: string | null;
+      };
+      const existingMap = new Map<string, Existing>();
+      for (const r of (existingEspn as Existing[] | null) ?? []) existingMap.set(r.id, r);
+
+      const tracked: (keyof Existing)[] = [
+        "state",
+        "completed",
+        "home_score",
+        "away_score",
+        "clock_display",
+        "status_detail",
+        "group_label",
+        "kickoff_at",
+        "linked_match_id",
+      ];
+
+      let skippedUnchanged = 0;
+      const toUpsert: Array<Record<string, unknown>> = [];
+      for (const r of matches) {
+        const linked_match_id =
+          linkMap.get(linkKey(r.home_team, r.away_team, r.kickoff_at)) ?? null;
+        const candidate = { ...r, linked_match_id, last_synced_at: nowIso };
+        const prior = existingMap.get(r.id);
+        if (prior) {
+          const changed = tracked.some((k) => {
+            if (k === "kickoff_at") {
+              return new Date(prior.kickoff_at).getTime() !== new Date(r.kickoff_at).getTime();
+            }
+            return (prior as unknown as Record<string, unknown>)[k] !== (candidate as unknown as Record<string, unknown>)[k];
+          });
+          if (!changed) {
+            skippedUnchanged++;
+            continue;
+          }
+        }
+        toUpsert.push(candidate);
+      }
+
+      if (toUpsert.length) {
+        const { error: upsertErr } = await sb
+          .from("espn_matches")
+          .upsert(toUpsert, { onConflict: "id" });
+        if (upsertErr) throw new Error(`espn_matches upsert: ${upsertErr.message}`);
+      }
+      result.matches_synced = toUpsert.length;
+      result.matches_skipped_unchanged = skippedUnchanged;
     }
 
     // Diff events: only insert new (match_id, idx) pairs.
