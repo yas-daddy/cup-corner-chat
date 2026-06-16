@@ -8,6 +8,7 @@ import { KARIM_ID } from "@/lib/bot";
 import type { LeaderRow } from "@/lib/types";
 import { Avatar } from "@/components/AvatarPicker";
 import { ScoringHelpModal } from "@/components/ScoringHelpModal";
+import { LeaderboardChart } from "@/components/LeaderboardChart";
 
 
 export const Route = createFileRoute("/leaderboard")({
@@ -22,6 +23,7 @@ function LeaderboardPage() {
   const { player } = useCurrentPlayer();
   const [rows, setRows] = useState<LeaderRow[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [view, setView] = useState<"list" | "chart">("list");
 
   useEffect(() => {
     supabase
@@ -50,8 +52,26 @@ function LeaderboardPage() {
 
       {helpOpen && <ScoringHelpModal onClose={() => setHelpOpen(false)} />}
 
+      <div className="mb-4 inline-flex rounded-full border border-border bg-surface p-1 text-sm font-semibold">
+        <button
+          type="button"
+          onClick={() => setView("list")}
+          className={`rounded-full px-4 py-1.5 transition ${view === "list" ? "bg-primary text-white" : "text-ink-soft"}`}
+        >
+          {t("leaderboard")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("chart")}
+          className={`rounded-full px-4 py-1.5 transition ${view === "chart" ? "bg-primary text-white" : "text-ink-soft"}`}
+        >
+          {t("chart")}
+        </button>
+      </div>
 
-      {rows.length === 0 ? (
+      {view === "chart" ? (
+        <LeaderboardChart players={rows} />
+      ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("empty_leaderboard")}
         </div>

@@ -50,6 +50,14 @@
   --success: #7cb518;
   --gold: #e8b100;
   --radius: 16px;
+  --chart-1: #ef4444;
+  --chart-2: #f97316;
+  --chart-3: #eab308;
+  --chart-4: #22c55e;
+  --chart-5: #06b6d4;
+  --chart-6: #3b82f6;
+  --chart-7: #a855f7;
+  --chart-8: #ec4899;
 }
 
 @media (prefers-color-scheme: dark) {
