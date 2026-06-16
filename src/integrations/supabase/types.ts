@@ -80,6 +80,162 @@ export type Database = {
           },
         ]
       }
+      espn_match_events: {
+        Row: {
+          athlete_name: string | null
+          clock_display: string | null
+          created_at: string
+          idx: number
+          is_own_goal: boolean
+          is_penalty: boolean
+          is_scoring_play: boolean
+          match_id: string
+          payload: Json | null
+          team_code: string | null
+          type_text: string
+        }
+        Insert: {
+          athlete_name?: string | null
+          clock_display?: string | null
+          created_at?: string
+          idx: number
+          is_own_goal?: boolean
+          is_penalty?: boolean
+          is_scoring_play?: boolean
+          match_id: string
+          payload?: Json | null
+          team_code?: string | null
+          type_text: string
+        }
+        Update: {
+          athlete_name?: string | null
+          clock_display?: string | null
+          created_at?: string
+          idx?: number
+          is_own_goal?: boolean
+          is_penalty?: boolean
+          is_scoring_play?: boolean
+          match_id?: string
+          payload?: Json | null
+          team_code?: string | null
+          type_text?: string
+        }
+        Relationships: []
+      }
+      espn_matches: {
+        Row: {
+          away_code: string | null
+          away_logo: string | null
+          away_score: number | null
+          away_team: string
+          clock_display: string | null
+          completed: boolean
+          group_label: string | null
+          home_code: string | null
+          home_logo: string | null
+          home_score: number | null
+          home_team: string
+          id: string
+          kickoff_at: string
+          last_synced_at: string
+          linked_match_id: string | null
+          stage: string | null
+          state: string
+          status_detail: string | null
+        }
+        Insert: {
+          away_code?: string | null
+          away_logo?: string | null
+          away_score?: number | null
+          away_team: string
+          clock_display?: string | null
+          completed?: boolean
+          group_label?: string | null
+          home_code?: string | null
+          home_logo?: string | null
+          home_score?: number | null
+          home_team: string
+          id: string
+          kickoff_at: string
+          last_synced_at?: string
+          linked_match_id?: string | null
+          stage?: string | null
+          state: string
+          status_detail?: string | null
+        }
+        Update: {
+          away_code?: string | null
+          away_logo?: string | null
+          away_score?: number | null
+          away_team?: string
+          clock_display?: string | null
+          completed?: boolean
+          group_label?: string | null
+          home_code?: string | null
+          home_logo?: string | null
+          home_score?: number | null
+          home_team?: string
+          id?: string
+          kickoff_at?: string
+          last_synced_at?: string
+          linked_match_id?: string | null
+          stage?: string | null
+          state?: string
+          status_detail?: string | null
+        }
+        Relationships: []
+      }
+      espn_standings: {
+        Row: {
+          d: number
+          ga: number
+          gd: number
+          gf: number
+          gp: number
+          group_label: string
+          l: number
+          last_synced_at: string
+          pts: number
+          rank: number | null
+          team_code: string
+          team_logo: string | null
+          team_name: string
+          w: number
+        }
+        Insert: {
+          d?: number
+          ga?: number
+          gd?: number
+          gf?: number
+          gp?: number
+          group_label: string
+          l?: number
+          last_synced_at?: string
+          pts?: number
+          rank?: number | null
+          team_code: string
+          team_logo?: string | null
+          team_name: string
+          w?: number
+        }
+        Update: {
+          d?: number
+          ga?: number
+          gd?: number
+          gf?: number
+          gp?: number
+          group_label?: string
+          l?: number
+          last_synced_at?: string
+          pts?: number
+          rank?: number | null
+          team_code?: string
+          team_logo?: string | null
+          team_name?: string
+          w?: number
+        }
+        Relationships: []
+      }
       feed_activities: {
         Row: {
           actor_id: string
