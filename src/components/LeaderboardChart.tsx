@@ -120,7 +120,7 @@ export function LeaderboardChart({ players }: { players: LeaderRow[] }) {
       className="relative rounded-2xl border border-border bg-surface p-3"
       onClick={() => setActiveId(null)}
     >
-      <div style={{ width: "100%", height: 320 }}>
+      <div style={{ width: "100%", height: 400 }}>
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 16, right: 40, left: 0, bottom: 8 }}>
             <XAxis
