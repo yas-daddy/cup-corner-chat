@@ -10,7 +10,6 @@ import { Minus, Plus, Check } from "lucide-react";
 import {
   MAX_STAKE_PCT,
   potentialPayout,
-  potentialProfit,
   type Selection,
 } from "@/lib/bet-config";
 import { formatDecimal } from "@/lib/odds";
@@ -379,8 +378,17 @@ function BetForm({
         headers: { "Content-Type": "application/json", apikey: PUBLISHABLE_KEY },
         body: JSON.stringify({ player_id: playerId, match_id: match.id, selection, stake }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.ok) setError(json.error ?? `Request failed (${res.status})`);
+      const text = await res.text();
+      let json: { ok?: boolean; error?: string } | null = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        /* server returned non-JSON (likely an HTML error page) */
+      }
+      if (!res.ok || !json?.ok) {
+        const snippet = !json ? text.replace(/<[^>]+>/g, " ").trim().slice(0, 120) : "";
+        setError(json?.error ?? `Server error ${res.status}${snippet ? ` — ${snippet}` : ""}`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -417,7 +425,7 @@ function BetForm({
             <span className="text-xs uppercase tracking-wider text-ink-soft">
               {t("stake") ?? "Stake"}
             </span>
-            <div className="flex items-center gap-2 rounded-full border border-border bg-bg p-1">
+            <div className="flex items-center gap-1 rounded-full border border-border bg-bg p-1">
               <button
                 type="button"
                 onClick={() => setStake((s) => Math.max(1, s - 1))}
@@ -426,7 +434,28 @@ function BetForm({
               >
                 <Minus className="h-3 w-3" />
               </button>
-              <span className="w-10 text-center font-bold tabular-nums">${stake}</span>
+              <div className="flex items-center font-bold">
+                <span className="text-ink-soft">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={stake}
+                  aria-label="Stake"
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => {
+                    const v = e.currentTarget.value.replace(/[^\d]/g, "");
+                    if (v === "") {
+                      setStake(0);
+                      return;
+                    }
+                    const n = Math.min(maxStake, Math.max(0, parseInt(v, 10)));
+                    setStake(n);
+                  }}
+                  onBlur={() => setStake((s) => Math.max(1, Math.min(maxStake, s || 1)))}
+                  className="w-14 bg-transparent text-center tabular-nums outline-none"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setStake((s) => Math.min(maxStake, s + 1))}
@@ -438,12 +467,10 @@ function BetForm({
             </div>
           </div>
           <p className="mt-2 text-xs text-ink-soft">
-            {t("to_win") ?? "To win"}{" "}
+            {t("payout") ?? "Payout"}{" "}
             <span className="font-semibold text-[color:var(--gold)] tabular-nums">
-              ${potentialProfit(stake, odd)}
-            </span>{" "}
-            ({t("payout") ?? "payout"}{" "}
-            <span className="tabular-nums">${potentialPayout(stake, odd)}</span>)
+              ${potentialPayout(stake, odd)}
+            </span>
           </p>
           <p className="mt-1 text-[10px] text-ink-soft">
             {t("bet_final_hint") ?? "Bets are final — no edits, no cancels."}
@@ -482,9 +509,9 @@ function PlacedSummary({ bet, match }: { bet: Bet; match: Match }) {
       </div>
       <p className="mt-1 text-xs text-ink-soft">
         <span className="font-semibold text-ink">{sideLabel}</span>{" "}
-        · ${bet.stake} {t("to_win") ?? "to win"}{" "}
+        · ${bet.stake} → {t("payout") ?? "payout"}{" "}
         <span className="font-semibold text-[color:var(--gold)]">
-          ${potentialProfit(bet.stake, bet.decimal_odds)}
+          ${potentialPayout(bet.stake, bet.decimal_odds)}
         </span>
       </p>
     </div>
