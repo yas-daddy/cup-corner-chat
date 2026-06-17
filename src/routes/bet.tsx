@@ -6,7 +6,7 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
-import { Minus, Plus, X, Pencil } from "lucide-react";
+import { Minus, Plus, Check } from "lucide-react";
 import {
   MAX_STAKE_PCT,
   potentialPayout,
@@ -313,75 +313,6 @@ function PlaceMatchCard({
     hour: "2-digit",
     minute: "2-digit",
   });
-  const balance = useBalance(playerId);
-  const [selection, setSelection] = useState<Selection | null>(
-    existingBet?.selection ?? null,
-  );
-  const [stake, setStake] = useState<number>(existingBet?.stake ?? 5);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (existingBet) {
-      setSelection(existingBet.selection);
-      setStake(existingBet.stake);
-    }
-  }, [existingBet?.id, existingBet?.selection, existingBet?.stake]);
-
-  const odd =
-    selection === "home"
-      ? odds.odds_home_decimal
-      : selection === "draw"
-        ? odds.odds_draw_decimal
-        : selection === "away"
-          ? odds.odds_away_decimal
-          : null;
-
-  const effectiveBalance = balance + (existingBet?.stake ?? 0);
-  const maxStake = Math.max(1, Math.floor(effectiveBalance * MAX_STAKE_PCT));
-
-  async function submit() {
-    if (!selection || !odd) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/public/place-bet", {
-        method: existingBet ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json", apikey: PUBLISHABLE_KEY },
-        body: JSON.stringify(
-          existingBet
-            ? { bet_id: existingBet.id, selection, stake }
-            : { player_id: playerId, match_id: match.id, selection, stake },
-        ),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setError(json.error ?? `Request failed (${res.status})`);
-        return;
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function cancel() {
-    if (!existingBet) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/public/place-bet", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", apikey: PUBLISHABLE_KEY },
-        body: JSON.stringify({ bet_id: existingBet.id }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) setError(json.error ?? `Request failed (${res.status})`);
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-3">
@@ -402,6 +333,63 @@ function PlaceMatchCard({
         </div>
       </div>
 
+      {existingBet ? (
+        <PlacedSummary bet={existingBet} match={match} />
+      ) : (
+        <BetForm match={match} odds={odds} playerId={playerId} />
+      )}
+    </div>
+  );
+}
+
+function BetForm({
+  match,
+  odds,
+  playerId,
+}: {
+  match: Match;
+  odds: EspnOdds;
+  playerId: string;
+}) {
+  const { t } = useI18n();
+  const balance = useBalance(playerId);
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [stake, setStake] = useState<number>(5);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const odd =
+    selection === "home"
+      ? odds.odds_home_decimal
+      : selection === "draw"
+        ? odds.odds_draw_decimal
+        : selection === "away"
+          ? odds.odds_away_decimal
+          : null;
+
+  const maxStake = Math.max(1, Math.floor(balance * MAX_STAKE_PCT));
+
+  async function submit() {
+    if (!selection || !odd) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/public/place-bet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: PUBLISHABLE_KEY },
+        body: JSON.stringify({ player_id: playerId, match_id: match.id, selection, stake }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) setError(json.error ?? `Request failed (${res.status})`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
       <div className="grid grid-cols-3 gap-2">
         <OddsBtn
           label={t("bet_home") ?? "Home"}
@@ -457,34 +445,48 @@ function PlaceMatchCard({
             ({t("payout") ?? "payout"}{" "}
             <span className="tabular-nums">${potentialPayout(stake, odd)}</span>)
           </p>
+          <p className="mt-1 text-[10px] text-ink-soft">
+            {t("bet_final_hint") ?? "Bets are final — no edits, no cancels."}
+          </p>
           {error && <p className="mt-2 text-xs font-semibold text-accent">{error}</p>}
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={submit}
-              disabled={busy || stake < 1}
-              className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {busy
-                ? "…"
-                : existingBet
-                  ? (t("update_bet") ?? "Update bet")
-                  : (t("place_bet") ?? "Place bet")}
-            </button>
-            {existingBet && (
-              <button
-                type="button"
-                onClick={cancel}
-                disabled={busy}
-                className="rounded-full border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink-soft disabled:opacity-50"
-                aria-label="Cancel bet"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={busy || stake < 1}
+            className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {busy ? "…" : (t("place_bet") ?? "Place bet")}
+          </button>
         </div>
       )}
+    </>
+  );
+}
+
+function PlacedSummary({ bet, match }: { bet: Bet; match: Match }) {
+  const { t } = useI18n();
+  const sideLabel =
+    bet.selection === "home"
+      ? match.home_team
+      : bet.selection === "away"
+        ? match.away_team
+        : (t("bet_draw") ?? "Draw");
+  return (
+    <div className="rounded-xl border border-success/40 bg-success/5 px-3 py-2 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-success">
+          <Check className="h-4 w-4" />
+          <span className="font-semibold">{t("bet_placed") ?? "Bet placed"}</span>
+        </span>
+        <span className="text-ink-soft text-xs">@ {formatDecimal(bet.decimal_odds)}</span>
+      </div>
+      <p className="mt-1 text-xs text-ink-soft">
+        <span className="font-semibold text-ink">{sideLabel}</span>{" "}
+        · ${bet.stake} {t("to_win") ?? "to win"}{" "}
+        <span className="font-semibold text-[color:var(--gold)]">
+          ${potentialProfit(bet.stake, bet.decimal_odds)}
+        </span>
+      </p>
     </div>
   );
 }
