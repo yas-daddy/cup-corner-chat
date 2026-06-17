@@ -218,9 +218,12 @@ function parseOdds(comp: Record<string, unknown>): {
   const sideAmerican = (side: "home" | "away" | "draw"): number | string | null | undefined => {
     const ml = asObj(first.moneyline);
     const node = asObj(ml[side]);
-    const current = asObj(node.current);
-    const fromNew = current.odds;
-    if (fromNew !== undefined && fromNew !== null) return fromNew as number | string;
+    // Prefer live (current), fall back to close → open for matches that
+    // aren't actively trading yet (ESPN nulls `current` until kickoff day).
+    for (const bucket of ["current", "close", "open"] as const) {
+      const v = asObj(node[bucket]).odds;
+      if (v !== undefined && v !== null) return v as number | string;
+    }
     const mlOld = asObj(first.moneyLine);
     const oldNode = asObj(mlOld[side]);
     const fromOld = oldNode.odds ?? oldNode.moneyLine;
