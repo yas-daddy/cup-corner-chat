@@ -211,18 +211,28 @@ function parseOdds(comp: Record<string, unknown>): {
   if (!oddsArr.length) return { provider: null, home: null, draw: null, away: null };
   const first = asObj(oddsArr[0]);
   const provider = asStr(asObj(first.provider).name);
-  const moneyLine = asObj(first.moneyLine);
-  const homeAmerican = asObj(moneyLine.home).odds ?? asObj(moneyLine.home).moneyLine;
-  const awayAmerican = asObj(moneyLine.away).odds ?? asObj(moneyLine.away).moneyLine;
-  const drawAmerican =
-    asObj(moneyLine.draw).odds ??
-    asObj(moneyLine.draw).moneyLine ??
-    asObj(first.drawOdds).moneyLine;
+  // ESPN ships 1X2 odds under two different shapes depending on the endpoint:
+  //   - scoreboard: odds[0].moneyline.{home,away,draw}.current.odds  (American as string)
+  //   - older/legacy: odds[0].moneyLine.{home,away}.{odds|moneyLine} + drawOdds.moneyLine
+  // Read both so the parser keeps working if ESPN flips it back.
+  const sideAmerican = (side: "home" | "away" | "draw"): number | string | null | undefined => {
+    const ml = asObj(first.moneyline);
+    const node = asObj(ml[side]);
+    const current = asObj(node.current);
+    const fromNew = current.odds;
+    if (fromNew !== undefined && fromNew !== null) return fromNew as number | string;
+    const mlOld = asObj(first.moneyLine);
+    const oldNode = asObj(mlOld[side]);
+    const fromOld = oldNode.odds ?? oldNode.moneyLine;
+    if (fromOld !== undefined && fromOld !== null) return fromOld as number | string;
+    if (side === "draw") return asObj(first.drawOdds).moneyLine as number | string | null;
+    return null;
+  };
   return {
     provider,
-    home: americanToDecimal(homeAmerican as number | string | null | undefined),
-    draw: americanToDecimal(drawAmerican as number | string | null | undefined),
-    away: americanToDecimal(awayAmerican as number | string | null | undefined),
+    home: americanToDecimal(sideAmerican("home")),
+    draw: americanToDecimal(sideAmerican("draw")),
+    away: americanToDecimal(sideAmerican("away")),
   };
 }
 
