@@ -14,6 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
+      bet_transactions: {
+        Row: {
+          amount: number
+          bet_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          player_id: string
+        }
+        Insert: {
+          amount: number
+          bet_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          player_id: string
+        }
+        Update: {
+          amount?: number
+          bet_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_transactions_bet_id_fkey"
+            columns: ["bet_id"]
+            isOneToOne: false
+            referencedRelation: "bets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bets: {
+        Row: {
+          decimal_odds: number
+          id: string
+          match_id: string
+          payout: number | null
+          placed_at: string
+          player_id: string
+          selection: string
+          settled_at: string | null
+          stake: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          decimal_odds: number
+          id?: string
+          match_id: string
+          payout?: number | null
+          placed_at?: string
+          player_id: string
+          selection: string
+          settled_at?: string | null
+          stake: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          decimal_odds?: number
+          id?: string
+          match_id?: string
+          payout?: number | null
+          placed_at?: string
+          player_id?: string
+          selection?: string
+          settled_at?: string | null
+          stake?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bets_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bets_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bets_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bets_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       champion_predictions: {
         Row: {
           created_at: string
@@ -64,6 +194,13 @@ export type Database = {
           target_type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "comments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
           {
             foreignKeyName: "comments_player_id_fkey"
             columns: ["player_id"]
@@ -139,6 +276,11 @@ export type Database = {
           kickoff_at: string
           last_synced_at: string
           linked_match_id: string | null
+          odds_away_decimal: number | null
+          odds_draw_decimal: number | null
+          odds_home_decimal: number | null
+          odds_provider: string | null
+          odds_updated_at: string | null
           stage: string | null
           state: string
           status_detail: string | null
@@ -159,6 +301,11 @@ export type Database = {
           kickoff_at: string
           last_synced_at?: string
           linked_match_id?: string | null
+          odds_away_decimal?: number | null
+          odds_draw_decimal?: number | null
+          odds_home_decimal?: number | null
+          odds_provider?: string | null
+          odds_updated_at?: string | null
           stage?: string | null
           state: string
           status_detail?: string | null
@@ -179,6 +326,11 @@ export type Database = {
           kickoff_at?: string
           last_synced_at?: string
           linked_match_id?: string | null
+          odds_away_decimal?: number | null
+          odds_draw_decimal?: number | null
+          odds_home_decimal?: number | null
+          odds_provider?: string | null
+          odds_updated_at?: string | null
           stage?: string | null
           state?: string
           status_detail?: string | null
@@ -283,6 +435,13 @@ export type Database = {
           pred_home?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "feed_activities_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
           {
             foreignKeyName: "feed_activities_actor_id_fkey"
             columns: ["actor_id"]
@@ -469,6 +628,13 @@ export type Database = {
             foreignKeyName: "predictions_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "predictions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
             referencedRelation: "leaderboard"
             referencedColumns: ["player_id"]
           },
@@ -562,6 +728,13 @@ export type Database = {
             foreignKeyName: "reactions_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "reactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
             referencedRelation: "leaderboard"
             referencedColumns: ["player_id"]
           },
@@ -576,6 +749,48 @@ export type Database = {
       }
     }
     Views: {
+      bank_balances: {
+        Row: {
+          balance: number | null
+          player_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_leaderboard: {
+        Row: {
+          avatar: string | null
+          balance: number | null
+          biggest_win: number | null
+          display_name: string | null
+          losses: number | null
+          player_id: string | null
+          settled_count: number | null
+          wins: number | null
+        }
+        Relationships: []
+      }
       leaderboard: {
         Row: {
           avatar: string | null
@@ -610,6 +825,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
           },
           {
             foreignKeyName: "predictions_player_id_fkey"
