@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Smartphone, X } from "lucide-react";
+import { Smartphone, X, Rss } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -173,6 +173,13 @@ function HomePage() {
             {t("home")}
           </h1>
         </div>
+        <Link
+          to="/feed"
+          aria-label="Feed"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-ink-soft active:opacity-80"
+        >
+          <Rss className="h-4 w-4" />
+        </Link>
         <NotificationsBell playerId={player.id} />
       </header>
 

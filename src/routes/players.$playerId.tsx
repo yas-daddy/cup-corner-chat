@@ -27,6 +27,7 @@ function PlayerProfilePage() {
   const [matches, setMatches] = useState<Record<string, Match>>({});
   const [summary, setSummary] = useState({ total: 0, correct: 0, exact: 0 });
   const [champion, setChampion] = useState<ChampionPick | null>(null);
+  const [bank, setBank] = useState<{ balance: number; wins: number; losses: number } | null>(null);
 
 
   useEffect(() => {
@@ -39,6 +40,14 @@ function PlayerProfilePage() {
         return;
       }
       setPlayer(p as Player);
+      void (supabase as unknown as { from: (t: string) => any })
+        .from("bank_leaderboard")
+        .select("balance, wins, losses")
+        .eq("player_id", playerId)
+        .maybeSingle()
+        .then(({ data }: { data: { balance: number; wins: number; losses: number } | null }) => {
+          if (active && data) setBank(data);
+        });
       void supabase
         .from("champion_predictions")
         .select("team,team_code")
@@ -104,6 +113,16 @@ function PlayerProfilePage() {
           <h1 className="truncate text-xl font-extrabold">{player.display_name}</h1>
         </div>
       </header>
+
+      {bank && (
+        <div className="mb-4 rounded-2xl border border-border bg-surface px-4 py-3">
+          <p className="text-xs uppercase tracking-wider text-ink-soft">{t("balance") ?? "Balance"}</p>
+          <p className="text-3xl font-extrabold tabular-nums text-[color:var(--gold)]">${n(bank.balance)}</p>
+          <p className="mt-1 text-xs text-ink-soft tabular-nums">
+            {n(bank.wins)}W · {n(bank.losses)}L
+          </p>
+        </div>
+      )}
 
       <div className="mb-4 grid grid-cols-3 gap-2">
         <Stat label={t("total_points")} value={n(summary.total)} tone="gold" />

@@ -60,7 +60,7 @@ async function handler({ request }: { request: Request }) {
       const { data: existingEspn } = await sb
         .from("espn_matches")
         .select(
-          "id,state,completed,home_score,away_score,clock_display,status_detail,group_label,kickoff_at,linked_match_id",
+          "id,state,completed,home_score,away_score,clock_display,status_detail,group_label,kickoff_at,linked_match_id,odds_provider,odds_home_decimal,odds_draw_decimal,odds_away_decimal",
         )
         .in("id", ids);
       type Existing = {
@@ -74,6 +74,10 @@ async function handler({ request }: { request: Request }) {
         group_label: string | null;
         kickoff_at: string;
         linked_match_id: string | null;
+        odds_provider: string | null;
+        odds_home_decimal: number | null;
+        odds_draw_decimal: number | null;
+        odds_away_decimal: number | null;
       };
       const existingMap = new Map<string, Existing>();
       for (const r of (existingEspn as Existing[] | null) ?? []) existingMap.set(r.id, r);
@@ -88,6 +92,10 @@ async function handler({ request }: { request: Request }) {
         "group_label",
         "kickoff_at",
         "linked_match_id",
+        "odds_provider",
+        "odds_home_decimal",
+        "odds_draw_decimal",
+        "odds_away_decimal",
       ];
 
       let skippedUnchanged = 0;

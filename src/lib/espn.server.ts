@@ -7,6 +7,7 @@
 //   standings:  apis/v2/sports/soccer/fifa.world/standings  (note: NOT site/v2)
 
 import { codeForTeam } from "@/lib/teams";
+import { americanToDecimal } from "@/lib/odds";
 
 const SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 const STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings";
@@ -30,6 +31,11 @@ export type EspnMatchRow = {
   status_detail: string | null;
   group_label: string | null;
   stage: string | null;
+  odds_provider: string | null;
+  odds_home_decimal: number | null;
+  odds_draw_decimal: number | null;
+  odds_away_decimal: number | null;
+  odds_updated_at: string | null;
 };
 
 export type EspnEventRow = {
@@ -128,6 +134,8 @@ export async function fetchScoreboard(dateRange?: { from: string; to: string }):
     const state: EspnMatchRow["state"] =
       stateRaw === "in" ? "in" : stateRaw === "post" ? "post" : "pre";
 
+    const odds = parseOdds(comp);
+
     const row: EspnMatchRow = {
       id,
       home_team,
@@ -145,6 +153,13 @@ export async function fetchScoreboard(dateRange?: { from: string; to: string }):
       status_detail: asStr(status.shortDetail) ?? asStr(status.detail),
       group_label: tidyGroup(asStr(comp.altGameNote) ?? asStr(comp.notes)),
       stage: asStr(asObj(e.season).slug) ?? null,
+      odds_provider: odds.provider,
+      odds_home_decimal: odds.home,
+      odds_draw_decimal: odds.draw,
+      odds_away_decimal: odds.away,
+      odds_updated_at: odds.home !== null || odds.draw !== null || odds.away !== null
+        ? new Date().toISOString()
+        : null,
     };
     matches.push(row);
 
@@ -181,6 +196,34 @@ export async function fetchScoreboard(dateRange?: { from: string; to: string }):
   }
 
   return { matches, events: allEvents };
+}
+
+// ESPN exposes 1X2 odds under competitions[].odds[0] with American prices in
+// moneyLine.{home,away,draw}.odds. Draw is sometimes mirrored at
+// drawOdds.moneyLine. Many matches return [] until a few days before kickoff.
+function parseOdds(comp: Record<string, unknown>): {
+  provider: string | null;
+  home: number | null;
+  draw: number | null;
+  away: number | null;
+} {
+  const oddsArr = asArr(comp.odds);
+  if (!oddsArr.length) return { provider: null, home: null, draw: null, away: null };
+  const first = asObj(oddsArr[0]);
+  const provider = asStr(asObj(first.provider).name);
+  const moneyLine = asObj(first.moneyLine);
+  const homeAmerican = asObj(moneyLine.home).odds ?? asObj(moneyLine.home).moneyLine;
+  const awayAmerican = asObj(moneyLine.away).odds ?? asObj(moneyLine.away).moneyLine;
+  const drawAmerican =
+    asObj(moneyLine.draw).odds ??
+    asObj(moneyLine.draw).moneyLine ??
+    asObj(first.drawOdds).moneyLine;
+  return {
+    provider,
+    home: americanToDecimal(homeAmerican as number | string | null | undefined),
+    draw: americanToDecimal(drawAmerican as number | string | null | undefined),
+    away: americanToDecimal(awayAmerican as number | string | null | undefined),
+  };
 }
 
 export async function fetchStandings(): Promise<EspnStandingRow[]> {

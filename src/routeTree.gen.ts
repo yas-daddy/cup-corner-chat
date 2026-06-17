@@ -14,6 +14,7 @@ import { Route as ResultsRouteImport } from './routes/results'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as BetRouteImport } from './routes/bet'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
@@ -21,8 +22,10 @@ import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
+import { Route as ApiPublicPlaceBetRouteImport } from './routes/api/public/place-bet'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
 import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
+import { Route as ApiPublicGrantStipendRouteImport } from './routes/api/public/grant-stipend'
 import { Route as ApiPublicHooksEmitPendingPredictionsRouteImport } from './routes/api/public/hooks/emit-pending-predictions'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -48,6 +51,11 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BetRoute = BetRouteImport.update({
+  id: '/bet',
+  path: '/bet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -85,6 +93,11 @@ const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
   path: '/api/public/send-push',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPlaceBetRoute = ApiPublicPlaceBetRouteImport.update({
+  id: '/api/public/place-bet',
+  path: '/api/public/place-bet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicKarimRoastRoute = ApiPublicKarimRoastRouteImport.update({
   id: '/api/public/karim-roast',
   path: '/api/public/karim-roast',
@@ -93,6 +106,11 @@ const ApiPublicKarimRoastRoute = ApiPublicKarimRoastRouteImport.update({
 const ApiPublicKarimDailyRoute = ApiPublicKarimDailyRouteImport.update({
   id: '/api/public/karim-daily',
   path: '/api/public/karim-daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGrantStipendRoute = ApiPublicGrantStipendRouteImport.update({
+  id: '/api/public/grant-stipend',
+  path: '/api/public/grant-stipend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksEmitPendingPredictionsRoute =
@@ -105,6 +123,7 @@ const ApiPublicHooksEmitPendingPredictionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
@@ -112,8 +131,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -122,6 +143,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
@@ -129,8 +151,10 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -140,6 +164,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
@@ -147,8 +172,10 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
+  '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -159,6 +186,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
@@ -166,8 +194,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/place-bet'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -176,6 +206,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
@@ -183,8 +214,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/place-bet'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -193,6 +226,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
@@ -200,8 +234,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
+    | '/api/public/place-bet'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -211,6 +247,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  BetRoute: typeof BetRoute
   FeedRoute: typeof FeedRoute
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
@@ -218,8 +255,10 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
+  ApiPublicGrantStipendRoute: typeof ApiPublicGrantStipendRoute
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
+  ApiPublicPlaceBetRoute: typeof ApiPublicPlaceBetRoute
   ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   ApiPublicSyncEspnRoute: typeof ApiPublicSyncEspnRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
@@ -261,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bet': {
+      id: '/bet'
+      path: '/bet'
+      fullPath: '/bet'
+      preLoaderRoute: typeof BetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -312,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSendPushRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/place-bet': {
+      id: '/api/public/place-bet'
+      path: '/api/public/place-bet'
+      fullPath: '/api/public/place-bet'
+      preLoaderRoute: typeof ApiPublicPlaceBetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/karim-roast': {
       id: '/api/public/karim-roast'
       path: '/api/public/karim-roast'
@@ -324,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/karim-daily'
       fullPath: '/api/public/karim-daily'
       preLoaderRoute: typeof ApiPublicKarimDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/grant-stipend': {
+      id: '/api/public/grant-stipend'
+      path: '/api/public/grant-stipend'
+      fullPath: '/api/public/grant-stipend'
+      preLoaderRoute: typeof ApiPublicGrantStipendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/emit-pending-predictions': {
@@ -339,6 +399,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  BetRoute: BetRoute,
   FeedRoute: FeedRoute,
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
@@ -346,8 +407,10 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
+  ApiPublicGrantStipendRoute: ApiPublicGrantStipendRoute,
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
+  ApiPublicPlaceBetRoute: ApiPublicPlaceBetRoute,
   ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   ApiPublicSyncEspnRoute: ApiPublicSyncEspnRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
