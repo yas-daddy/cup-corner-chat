@@ -614,22 +614,20 @@ function BetCard({ bet }: { bet: BetRow }) {
   const homeCode = m ? resolveTeamCode(m.home_code, m.home_team) : null;
   const awayCode = m ? resolveTeamCode(m.away_code, m.away_team) : null;
   const sideLabel = bet.selection === "home" ? m?.home_team : bet.selection === "away" ? m?.away_team : t("bet_draw") ?? "Draw";
+  // No badge for active (pending) bets — the bottom row already shows the
+  // projected payout. Only show a result chip once the bet has settled.
   const statusTone =
     bet.status === "won"
       ? "text-success"
-      : bet.status === "lost"
-        ? "text-ink-soft"
-        : bet.status === "void"
-          ? "text-ink-soft"
-          : "text-accent";
+      : "text-ink-soft";
   const statusLabel =
-    bet.status === "pending"
-      ? (t("bet_pending") ?? "Pending")
-      : bet.status === "won"
-        ? `+$${bet.payout ?? 0}`
-        : bet.status === "lost"
-          ? `−$${bet.stake}`
-          : (t("bet_void") ?? "Void");
+    bet.status === "won"
+      ? `+$${bet.payout ?? 0}`
+      : bet.status === "lost"
+        ? `−$${bet.stake}`
+        : bet.status === "void"
+          ? (t("bet_refunded") ?? "Refunded")
+          : "";
 
   return (
     <li className="rounded-2xl border border-border bg-surface p-3">
