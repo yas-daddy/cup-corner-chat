@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
 import { useI18n } from "@/lib/i18n";
-import { Brain, ChevronRight } from "lucide-react";
+import { Brain, ChevronRight, DollarSign } from "lucide-react";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 const PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
