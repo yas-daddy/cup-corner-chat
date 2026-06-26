@@ -17,6 +17,7 @@ import { Route as GamesRouteImport } from './routes/games'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GamesIndexRouteImport } from './routes/games.index'
 import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
@@ -72,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const GamesIndexRoute = GamesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GamesRoute,
 } as any)
 const TeamsTeamCodeRoute = TeamsTeamCodeRouteImport.update({
   id: '/teams/$teamCode',
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
+  '/games/': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -179,7 +186,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/feed': typeof FeedRoute
-  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
@@ -189,6 +195,7 @@ export interface FileRoutesByTo {
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
+  '/games': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -215,6 +222,7 @@ export interface FileRoutesById {
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
+  '/games/': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -242,6 +250,7 @@ export interface FileRouteTypes {
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
+    | '/games/'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -257,7 +266,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/feed'
-    | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
@@ -267,6 +275,7 @@ export interface FileRouteTypes {
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
+    | '/games'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
+    | '/games/'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -385,6 +395,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/games/': {
+      id: '/games/'
+      path: '/'
+      fullPath: '/games/'
+      preLoaderRoute: typeof GamesIndexRouteImport
+      parentRoute: typeof GamesRoute
     }
     '/teams/$teamCode': {
       id: '/teams/$teamCode'
@@ -497,11 +514,13 @@ declare module '@tanstack/react-router' {
 interface GamesRouteChildren {
   GamesBetRoute: typeof GamesBetRoute
   GamesQuizRoute: typeof GamesQuizRoute
+  GamesIndexRoute: typeof GamesIndexRoute
 }
 
 const GamesRouteChildren: GamesRouteChildren = {
   GamesBetRoute: GamesBetRoute,
   GamesQuizRoute: GamesQuizRoute,
+  GamesIndexRoute: GamesIndexRoute,
 }
 
 const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
