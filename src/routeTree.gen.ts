@@ -15,13 +15,13 @@ import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as FeedRouteImport } from './routes/feed'
-import { Route as BetRouteImport } from './routes/bet'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as GamesQuizRouteImport } from './routes/games.quiz'
+import { Route as GamesBetRouteImport } from './routes/games.bet'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
@@ -63,11 +63,6 @@ const FeedRoute = FeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BetRoute = BetRouteImport.update({
-  id: '/bet',
-  path: '/bet',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -96,6 +91,11 @@ const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
 const GamesQuizRoute = GamesQuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
+  getParentRoute: () => GamesRoute,
+} as any)
+const GamesBetRoute = GamesBetRouteImport.update({
+  id: '/bet',
+  path: '/bet',
   getParentRoute: () => GamesRoute,
 } as any)
 const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
@@ -153,13 +153,13 @@ const ApiPublicHooksEmitPendingPredictionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/bet': typeof GamesBetRoute
   '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -178,13 +178,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/bet': typeof GamesBetRoute
   '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -204,13 +204,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/bet': typeof GamesBetRoute
   '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
@@ -231,13 +231,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/bet'
     | '/feed'
     | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/bet'
     | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
@@ -256,13 +256,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
-    | '/bet'
     | '/feed'
     | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/bet'
     | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
@@ -281,13 +281,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
-    | '/bet'
     | '/feed'
     | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/bet'
     | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
@@ -307,7 +307,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  BetRoute: typeof BetRoute
   FeedRoute: typeof FeedRoute
   GamesRoute: typeof GamesRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
@@ -373,13 +372,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/bet': {
-      id: '/bet'
-      path: '/bet'
-      fullPath: '/bet'
-      preLoaderRoute: typeof BetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -420,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/quiz'
       fullPath: '/games/quiz'
       preLoaderRoute: typeof GamesQuizRouteImport
+      parentRoute: typeof GamesRoute
+    }
+    '/games/bet': {
+      id: '/games/bet'
+      path: '/bet'
+      fullPath: '/games/bet'
+      preLoaderRoute: typeof GamesBetRouteImport
       parentRoute: typeof GamesRoute
     }
     '/api/public/sync-matches': {
@@ -496,10 +495,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface GamesRouteChildren {
+  GamesBetRoute: typeof GamesBetRoute
   GamesQuizRoute: typeof GamesQuizRoute
 }
 
 const GamesRouteChildren: GamesRouteChildren = {
+  GamesBetRoute: GamesBetRoute,
   GamesQuizRoute: GamesQuizRoute,
 }
 
@@ -508,7 +509,6 @@ const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  BetRoute: BetRoute,
   FeedRoute: FeedRoute,
   GamesRoute: GamesRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
