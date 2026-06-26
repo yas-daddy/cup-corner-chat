@@ -71,6 +71,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
         ]
       }
       bets: {
@@ -141,6 +148,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bets_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
           },
         ]
       }
@@ -214,6 +228,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
           },
         ]
       }
@@ -457,6 +478,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "feed_activities_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
             foreignKeyName: "feed_activities_match_id_fkey"
             columns: ["match_id"]
             isOneToOne: false
@@ -645,6 +673,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "predictions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
         ]
       }
       push_seen_matches: {
@@ -698,6 +733,99 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_answers: {
+        Row: {
+          answered_at: string
+          choice_index: number
+          player_id: string
+          points: number
+          question_id: string
+        }
+        Insert: {
+          answered_at?: string
+          choice_index: number
+          player_id: string
+          points: number
+          question_id: string
+        }
+        Update: {
+          answered_at?: string
+          choice_index?: number
+          player_id?: string
+          points?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_answers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "bank_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "quiz_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          category: string
+          choices: Json
+          correct_index: number
+          explanation: string | null
+          id: string
+          order_index: number
+          text: string
+          unlock_date: string
+        }
+        Insert: {
+          category: string
+          choices: Json
+          correct_index: number
+          explanation?: string | null
+          id?: string
+          order_index: number
+          text: string
+          unlock_date: string
+        }
+        Update: {
+          category?: string
+          choices?: Json
+          correct_index?: number
+          explanation?: string | null
+          id?: string
+          order_index?: number
+          text?: string
+          unlock_date?: string
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string
@@ -745,6 +873,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
         ]
       }
     }
@@ -775,6 +910,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bet_transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
           },
         ]
       }
@@ -847,7 +989,25 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "predictions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_leaderboard"
+            referencedColumns: ["player_id"]
+          },
         ]
+      }
+      quiz_leaderboard: {
+        Row: {
+          answered: number | null
+          avatar: string | null
+          correct: number | null
+          display_name: string | null
+          player_id: string | null
+          total_points: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
