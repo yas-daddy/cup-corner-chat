@@ -72,25 +72,45 @@ function GamesPage() {
         <p className="text-sm text-ink-soft">{t("games_subtitle") ?? "Daily World Cup trivia"}</p>
       </header>
 
-      <Link
-        to="/games/quiz"
-        className="block rounded-2xl border border-border bg-surface p-4 transition active:opacity-80"
-      >
-        <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/15 text-primary">
-            <Brain className="h-6 w-6" />
+      <div className="space-y-3">
+        <Link
+          to="/games/quiz"
+          className="block rounded-2xl border border-border bg-surface p-4 transition active:opacity-80"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/15 text-primary">
+              <Brain className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold">{t("quiz_title") ?? "Daily Quiz"}</p>
+              <p className="text-xs text-ink-soft">
+                {todayStats
+                  ? `${todayStats.answered}/${todayStats.total} ${t("quiz_today_done") ?? "answered today"}`
+                  : t("quiz_loading_status") ?? "Today's questions are loading…"}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-ink-soft" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-base font-bold">{t("quiz_title") ?? "Daily Quiz"}</p>
-            <p className="text-xs text-ink-soft">
-              {todayStats
-                ? `${todayStats.answered}/${todayStats.total} ${t("quiz_today_done") ?? "answered today"}`
-                : t("quiz_loading_status") ?? "Today's questions are loading…"}
-            </p>
+        </Link>
+
+        <Link
+          to="/games/bet"
+          className="block rounded-2xl border border-border bg-surface p-4 transition active:opacity-80"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[color:var(--gold)]/15 text-[color:var(--gold)]">
+              <DollarSign className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold">{t("bet") ?? "Bet"}</p>
+              <p className="text-xs text-ink-soft">
+                {t("bet_subtitle") ?? "Place dollar-bets on matches"}
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-ink-soft" />
           </div>
-          <ChevronRight className="h-5 w-5 text-ink-soft" />
-        </div>
-      </Link>
+        </Link>
+      </div>
     </div>
   );
 }
