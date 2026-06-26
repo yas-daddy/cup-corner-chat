@@ -131,8 +131,10 @@ function PickRow({
   const finished = m.status === "FINISHED";
   return (
     <li>
-      <div
-        className={`block rounded-2xl border bg-surface px-4 py-3 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
+      <Link
+        to="/matches/$matchId"
+        params={{ matchId: r.match_id }}
+        className={`block rounded-2xl border bg-surface px-4 py-3 transition active:opacity-80 ${r.is_exact ? "border-[color:var(--gold)] ring-2 ring-[color:var(--gold)]/20" : r.is_correct_result ? "border-success/50" : "border-border"}`}
       >
         <div className="flex items-center justify-between text-xs text-ink-soft" dir={dir}>
           <span className="truncate">
@@ -164,7 +166,7 @@ function PickRow({
             )}
           </span>
         </div>
-      </div>
+      </Link>
     </li>
   );
 }
