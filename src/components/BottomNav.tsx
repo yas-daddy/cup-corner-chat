@@ -26,7 +26,7 @@ export function BottomNav() {
 
   const items = [
     { to: "/", label: t("home"), Icon: Home, badge: false },
-    { to: "/bet", label: t("bet"), Icon: DollarSign, badge: false },
+    { to: "/games", label: t("games") ?? "Games", Icon: Gamepad2, badge: gamesNew },
     { to: "/games", label: t("games") ?? "Games", Icon: Gamepad2, badge: gamesNew },
     { to: "/results", label: t("results"), Icon: Goal, badge: false },
     { to: "/leaderboard", label: t("leaderboard"), Icon: Trophy, badge: false },
