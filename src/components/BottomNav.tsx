@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Home, Trophy, ListChecks, Goal, DollarSign, Gamepad2 } from "lucide-react";
+import { Home, Trophy, ListChecks, Goal, Gamepad2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export function BottomNav() {
