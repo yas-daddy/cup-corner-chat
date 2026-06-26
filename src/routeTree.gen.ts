@@ -13,6 +13,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as BetRouteImport } from './routes/bet'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -20,9 +21,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
+import { Route as GamesQuizRouteImport } from './routes/games.quiz'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
+import { Route as ApiPublicQuizTodayRouteImport } from './routes/api/public/quiz-today'
+import { Route as ApiPublicQuizAnswerRouteImport } from './routes/api/public/quiz-answer'
 import { Route as ApiPublicPlaceBetRouteImport } from './routes/api/public/place-bet'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
 import { Route as ApiPublicKarimDailyRouteImport } from './routes/api/public/karim-daily'
@@ -47,6 +51,11 @@ const MyPicksRoute = MyPicksRouteImport.update({
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -84,6 +93,11 @@ const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   path: '/matches/$matchId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GamesQuizRoute = GamesQuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => GamesRoute,
+} as any)
 const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   id: '/api/public/sync-matches',
   path: '/api/public/sync-matches',
@@ -97,6 +111,16 @@ const ApiPublicSyncEspnRoute = ApiPublicSyncEspnRouteImport.update({
 const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
   id: '/api/public/send-push',
   path: '/api/public/send-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicQuizTodayRoute = ApiPublicQuizTodayRouteImport.update({
+  id: '/api/public/quiz-today',
+  path: '/api/public/quiz-today',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicQuizAnswerRoute = ApiPublicQuizAnswerRouteImport.update({
+  id: '/api/public/quiz-answer',
+  path: '/api/public/quiz-answer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPlaceBetRoute = ApiPublicPlaceBetRouteImport.update({
@@ -131,10 +155,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
+  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
@@ -142,6 +168,8 @@ export interface FileRoutesByFullPath {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
+  '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -152,10 +180,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
+  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
@@ -163,6 +193,8 @@ export interface FileRoutesByTo {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
+  '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -174,10 +206,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
+  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
+  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
@@ -185,6 +219,8 @@ export interface FileRoutesById {
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
+  '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
@@ -197,10 +233,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet'
     | '/feed'
+    | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
@@ -208,6 +246,8 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
+    | '/api/public/quiz-answer'
+    | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -218,10 +258,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet'
     | '/feed'
+    | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
@@ -229,6 +271,8 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
+    | '/api/public/quiz-answer'
+    | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -239,10 +283,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bet'
     | '/feed'
+    | '/games'
     | '/leaderboard'
     | '/my-picks'
     | '/results'
     | '/settings'
+    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
@@ -250,6 +296,8 @@ export interface FileRouteTypes {
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
+    | '/api/public/quiz-answer'
+    | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
@@ -261,6 +309,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   BetRoute: typeof BetRoute
   FeedRoute: typeof FeedRoute
+  GamesRoute: typeof GamesRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
   ResultsRoute: typeof ResultsRoute
@@ -272,6 +321,8 @@ export interface RootRouteChildren {
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
   ApiPublicPlaceBetRoute: typeof ApiPublicPlaceBetRoute
+  ApiPublicQuizAnswerRoute: typeof ApiPublicQuizAnswerRoute
+  ApiPublicQuizTodayRoute: typeof ApiPublicQuizTodayRoute
   ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   ApiPublicSyncEspnRoute: typeof ApiPublicSyncEspnRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
@@ -306,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/leaderboard'
       preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -357,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesMatchIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/games/quiz': {
+      id: '/games/quiz'
+      path: '/quiz'
+      fullPath: '/games/quiz'
+      preLoaderRoute: typeof GamesQuizRouteImport
+      parentRoute: typeof GamesRoute
+    }
     '/api/public/sync-matches': {
       id: '/api/public/sync-matches'
       path: '/api/public/sync-matches'
@@ -376,6 +441,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/send-push'
       fullPath: '/api/public/send-push'
       preLoaderRoute: typeof ApiPublicSendPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/quiz-today': {
+      id: '/api/public/quiz-today'
+      path: '/api/public/quiz-today'
+      fullPath: '/api/public/quiz-today'
+      preLoaderRoute: typeof ApiPublicQuizTodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/quiz-answer': {
+      id: '/api/public/quiz-answer'
+      path: '/api/public/quiz-answer'
+      fullPath: '/api/public/quiz-answer'
+      preLoaderRoute: typeof ApiPublicQuizAnswerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/place-bet': {
@@ -416,11 +495,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface GamesRouteChildren {
+  GamesQuizRoute: typeof GamesQuizRoute
+}
+
+const GamesRouteChildren: GamesRouteChildren = {
+  GamesQuizRoute: GamesQuizRoute,
+}
+
+const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   BetRoute: BetRoute,
   FeedRoute: FeedRoute,
+  GamesRoute: GamesRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
   ResultsRoute: ResultsRoute,
@@ -432,6 +522,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
   ApiPublicPlaceBetRoute: ApiPublicPlaceBetRoute,
+  ApiPublicQuizAnswerRoute: ApiPublicQuizAnswerRoute,
+  ApiPublicQuizTodayRoute: ApiPublicQuizTodayRoute,
   ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   ApiPublicSyncEspnRoute: ApiPublicSyncEspnRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,

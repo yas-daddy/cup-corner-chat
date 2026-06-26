@@ -24,7 +24,7 @@ type Standing = {
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
-type Tab = "upcoming" | "past" | "standing";
+type Tab = "matches" | "standing";
 
 export const Route = createFileRoute("/teams/$teamCode")({
   head: ({ params }) => ({
@@ -95,24 +95,17 @@ function TeamPage() {
     };
   }, [code]);
 
-  const { upcoming, past } = useMemo(() => {
-    const now = Date.now();
-    const upcoming: Match[] = [];
-    const past: Match[] = [];
-    for (const m of matches) {
-      const kicked = new Date(m.kickoff_at).getTime() <= now;
-      if (m.status === "FINISHED" || (kicked && m.status !== "SCHEDULED")) past.push(m);
-      else upcoming.push(m);
-    }
-    past.reverse(); // newest first
-    return { upcoming, past };
-  }, [matches]);
+  // All matches in chronological order (oldest first → upcoming last).
+  const sortedMatches = useMemo(
+    () => matches.slice().sort((a, b) => +new Date(a.kickoff_at) - +new Date(b.kickoff_at)),
+    [matches],
+  );
 
   // Pick the default tab once data is available.
   useEffect(() => {
     if (tab !== null || loading) return;
-    setTab(upcoming.length ? "upcoming" : past.length ? "past" : "standing");
-  }, [tab, loading, upcoming.length, past.length]);
+    setTab(sortedMatches.length ? "matches" : "standing");
+  }, [tab, loading, sortedMatches.length]);
 
   const displayName = teamName ?? code;
 
@@ -133,11 +126,8 @@ function TeamPage() {
       </header>
 
       <div className="mb-4 flex gap-1 rounded-2xl border border-border bg-surface p-1 text-sm font-medium">
-        <SubTabBtn active={tab === "upcoming"} onClick={() => setTab("upcoming")}>
-          {t("team_upcoming_matches") ?? "Upcoming"}
-        </SubTabBtn>
-        <SubTabBtn active={tab === "past"} onClick={() => setTab("past")}>
-          {t("team_past_matches") ?? "Past"}
+        <SubTabBtn active={tab === "matches"} onClick={() => setTab("matches")}>
+          {t("team_matches") ?? "Matches"}
         </SubTabBtn>
         <SubTabBtn active={tab === "standing"} onClick={() => setTab("standing")}>
           {t("team_standing") ?? "Standing"}
@@ -148,11 +138,8 @@ function TeamPage() {
         <div className="grid min-h-[30vh] place-items-center text-ink-soft">{t("loading")}</div>
       )}
 
-      {!loading && tab === "upcoming" && (
-        <MatchList matches={upcoming} code={code} emptyLabel={t("no_upcoming_matches") ?? "No upcoming matches."} />
-      )}
-      {!loading && tab === "past" && (
-        <MatchList matches={past} code={code} emptyLabel={t("no_past_matches") ?? "No past matches yet."} />
+      {!loading && tab === "matches" && (
+        <MatchList matches={sortedMatches} code={code} emptyLabel={t("no_matches_yet") ?? "No matches yet."} />
       )}
       {!loading && tab === "standing" && (
         <StandingView rows={groupRows} highlightCode={code} n={n} t={t} />

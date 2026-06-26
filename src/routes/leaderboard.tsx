@@ -20,6 +20,15 @@ type BankRow = {
   biggest_win: number;
 };
 
+type QuizRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string | null;
+  total_points: number;
+  answered: number;
+  correct: number;
+};
+
 const sb = supabase as unknown as { from: (t: string) => any };
 
 
@@ -35,8 +44,9 @@ function LeaderboardPage() {
   const { player } = useCurrentPlayer();
   const [rows, setRows] = useState<LeaderRow[]>([]);
   const [bankRows, setBankRows] = useState<BankRow[]>([]);
+  const [quizRows, setQuizRows] = useState<QuizRow[]>([]);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [view, setView] = useState<"list" | "bank">("list");
+  const [view, setView] = useState<"list" | "bank" | "quiz">("list");
 
   useEffect(() => {
     supabase
@@ -50,6 +60,13 @@ function LeaderboardPage() {
       .order("balance", { ascending: false })
       .then(({ data }: { data: BankRow[] | null }) =>
         setBankRows((data ?? []).filter((r) => r != null && r.player_id !== KARIM_ID)),
+      );
+    sb
+      .from("quiz_leaderboard")
+      .select("*")
+      .order("total_points", { ascending: false })
+      .then(({ data }: { data: QuizRow[] | null }) =>
+        setQuizRows((data ?? []).filter((r) => r != null && r.player_id !== KARIM_ID)),
       );
   }, []);
 
@@ -91,10 +108,21 @@ function LeaderboardPage() {
         >
           {t("bank") ?? "Bank"}
         </button>
+        <button
+          type="button"
+          onClick={() => setView("quiz")}
+          className={`flex-1 rounded-xl px-3 py-2 transition ${
+            view === "quiz" ? "bg-bg text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+          }`}
+        >
+          {t("quiz_leaderboard") ?? "Quiz"}
+        </button>
       </div>
 
       {view === "bank" ? (
         <BankList rows={bankRows} currentPlayerId={player?.id ?? null} />
+      ) : view === "quiz" ? (
+        <QuizList rows={quizRows} currentPlayerId={player?.id ?? null} />
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
           {t("empty_leaderboard")}
@@ -188,6 +216,61 @@ function BankList({
                 <p className="text-[10px] uppercase tracking-wider text-ink-soft">
                   {t("balance") ?? "balance"}
                 </p>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function QuizList({
+  rows,
+  currentPlayerId,
+}: {
+  rows: QuizRow[];
+  currentPlayerId: string | null;
+}) {
+  const { t, n } = useI18n();
+  if (rows.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center text-ink-soft">
+        {t("empty_leaderboard")}
+      </div>
+    );
+  }
+  return (
+    <ol className="space-y-2">
+      {rows.map((r, i) => {
+        const isMe = currentPlayerId === r.player_id;
+        const rank = i + 1;
+        const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+        return (
+          <li key={r.player_id}>
+            <Link
+              to="/players/$playerId"
+              params={{ playerId: r.player_id }}
+              className={`flex items-center gap-3 rounded-2xl border bg-surface px-3 py-3 transition active:opacity-80 ${
+                isMe ? "border-primary ring-2 ring-primary/20" : "border-border"
+              }`}
+            >
+              <div className="grid w-6 shrink-0 place-items-center text-sm font-bold text-ink-soft tabular-nums">
+                {medal ?? n(rank)}
+              </div>
+              <Avatar avatar={r.avatar} name={r.display_name} size={40} className="border border-border text-2xl" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{r.display_name}</p>
+                <p className="text-xs text-ink-soft">
+                  {n(r.correct)}/{n(r.answered)} {t("quiz_correct") ?? "correct"}
+                </p>
+              </div>
+              <div className="text-end">
+                <p className="text-xl font-extrabold text-[color:var(--gold)] tabular-nums">
+                  {r.total_points >= 0 ? "+" : ""}
+                  {n(r.total_points)}
+                </p>
+                <p className="text-[10px] uppercase tracking-wider text-ink-soft">{t("pts")}</p>
               </div>
             </Link>
           </li>

@@ -347,7 +347,106 @@ function StandingsView({ rows }: { rows: Standing[] }) {
           </div>
         </section>
       ))}
+      <BestThirdsTable groups={groups} />
     </div>
+  );
+}
+
+function BestThirdsTable({ groups }: { groups: Array<[string, Standing[]]> }) {
+  // Pick each group's 3rd-placed row (rank=3, or sorted index 2 if rank null).
+  const thirds = useMemo(() => {
+    const out: Array<Standing & { groupShort: string }> = [];
+    for (const [name, list] of groups) {
+      if (list.length < 3) continue;
+      const sorted = list
+        .slice()
+        .sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99) || b.pts - a.pts || b.gd - a.gd);
+      const third = sorted[2];
+      if (!third) continue;
+      const m = name.match(/Group\s+([A-Z0-9]+)/i);
+      out.push({ ...third, groupShort: m ? m[1].toUpperCase() : name });
+    }
+    out.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+    return out;
+  }, [groups]);
+
+  if (thirds.length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
+        Best 3rd-Placed Teams
+      </h2>
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs uppercase text-ink-soft">
+              <th className="py-2 pl-3 text-left font-medium">Team</th>
+              <th className="px-1 text-center font-medium">Grp</th>
+              <th className="px-1 text-center font-medium">P</th>
+              <th className="px-1 text-center font-medium">W</th>
+              <th className="px-1 text-center font-medium">D</th>
+              <th className="px-1 text-center font-medium">L</th>
+              <th className="px-1 text-center font-medium">GD</th>
+              <th className="px-2 text-right font-medium">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {thirds.map((r, i) => {
+              const cutoffRow = i === 7;
+              const advances = i < 8;
+              return (
+                <FragmentRow
+                  key={r.team_code + r.groupShort}
+                  r={r}
+                  advances={advances}
+                  cutoffBelow={cutoffRow}
+                />
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function FragmentRow({
+  r,
+  advances,
+  cutoffBelow,
+}: {
+  r: Standing & { groupShort: string };
+  advances: boolean;
+  cutoffBelow: boolean;
+}) {
+  return (
+    <>
+      <tr
+        className={`border-t border-border/70 ${
+          advances ? "" : "text-ink-soft opacity-70"
+        }`}
+      >
+        <td className="py-2 pl-3">
+          <span className="mr-2 align-middle text-lg">{flagFromCode(r.team_code)}</span>
+          <span className="align-middle font-medium">{r.team_name}</span>
+        </td>
+        <td className="px-1 text-center text-xs font-semibold tracking-wider">{r.groupShort}</td>
+        <td className="px-1 text-center tabular-nums">{r.gp}</td>
+        <td className="px-1 text-center tabular-nums">{r.w}</td>
+        <td className="px-1 text-center tabular-nums">{r.d}</td>
+        <td className="px-1 text-center tabular-nums">{r.l}</td>
+        <td className="px-1 text-center tabular-nums">{r.gd > 0 ? `+${r.gd}` : r.gd}</td>
+        <td className="px-2 text-right font-bold tabular-nums">{r.pts}</td>
+      </tr>
+      {cutoffBelow && (
+        <tr>
+          <td colSpan={8} className="border-y-2 border-dashed border-success/60 bg-success/5 px-3 py-1 text-center text-[10px] font-semibold uppercase tracking-wider text-success">
+            ── Qualifies for R32 above this line ──
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
