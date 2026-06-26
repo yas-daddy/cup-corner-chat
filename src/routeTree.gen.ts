@@ -17,6 +17,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as BetRouteImport } from './routes/bet'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
@@ -66,6 +67,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamsTeamCodeRoute = TeamsTeamCodeRouteImport.update({
+  id: '/teams/$teamCode',
+  path: '/teams/$teamCode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/teams/$teamCode': typeof TeamsTeamCodeRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/teams/$teamCode': typeof TeamsTeamCodeRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/teams/$teamCode': typeof TeamsTeamCodeRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/teams/$teamCode'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/teams/$teamCode'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/matches/$matchId'
     | '/players/$playerId'
+    | '/teams/$teamCode'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -255,6 +267,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
+  TeamsTeamCodeRoute: typeof TeamsTeamCodeRoute
   ApiPublicGrantStipendRoute: typeof ApiPublicGrantStipendRoute
   ApiPublicKarimDailyRoute: typeof ApiPublicKarimDailyRoute
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams/$teamCode': {
+      id: '/teams/$teamCode'
+      path: '/teams/$teamCode'
+      fullPath: '/teams/$teamCode'
+      preLoaderRoute: typeof TeamsTeamCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/players/$playerId': {
@@ -407,6 +427,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
+  TeamsTeamCodeRoute: TeamsTeamCodeRoute,
   ApiPublicGrantStipendRoute: ApiPublicGrantStipendRoute,
   ApiPublicKarimDailyRoute: ApiPublicKarimDailyRoute,
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
@@ -420,3 +441,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

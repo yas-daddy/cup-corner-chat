@@ -196,10 +196,21 @@ function MatchDetailPage() {
           {live ? <LiveIndicator minute={espnLive?.clock_display} /> : <span>{kickoffLabel}</span>}
         </div>
         <div className="flex items-center justify-between" dir={dir}>
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="text-2xl">{flagFromCode(hc)}</span>
-            <span className="truncate font-semibold">{tc(match.home_team)}</span>
-          </div>
+          {hc ? (
+            <Link
+              to="/teams/$teamCode"
+              params={{ teamCode: hc }}
+              className="flex min-w-0 flex-1 items-center gap-2 transition active:opacity-80"
+            >
+              <span className="text-2xl">{flagFromCode(hc)}</span>
+              <span className="truncate font-semibold">{tc(match.home_team)}</span>
+            </Link>
+          ) : (
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="text-2xl">{flagFromCode(hc)}</span>
+              <span className="truncate font-semibold">{tc(match.home_team)}</span>
+            </div>
+          )}
           {(finished || (live && displayHome != null && displayAway != null)) ? (
             <div className="rounded-full bg-ink px-3 py-1 text-sm font-bold text-bg tabular-nums">
               {n(displayHome ?? 0)} - {n(displayAway ?? 0)}
@@ -213,10 +224,21 @@ function MatchDetailPage() {
           ) : (
             <span className="rounded-full bg-surface px-3 py-1 text-xs text-ink-soft">{t("upcoming")}</span>
           )}
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-            <span className="truncate font-semibold">{tc(match.away_team)}</span>
-            <span className="text-2xl">{flagFromCode(ac)}</span>
-          </div>
+          {ac ? (
+            <Link
+              to="/teams/$teamCode"
+              params={{ teamCode: ac }}
+              className="flex min-w-0 flex-1 items-center justify-end gap-2 transition active:opacity-80"
+            >
+              <span className="truncate font-semibold">{tc(match.away_team)}</span>
+              <span className="text-2xl">{flagFromCode(ac)}</span>
+            </Link>
+          ) : (
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+              <span className="truncate font-semibold">{tc(match.away_team)}</span>
+              <span className="text-2xl">{flagFromCode(ac)}</span>
+            </div>
+          )}
         </div>
         <MatchEventsPanel matchId={matchId} />
       </div>
