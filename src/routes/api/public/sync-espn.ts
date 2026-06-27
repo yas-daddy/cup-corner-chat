@@ -60,7 +60,7 @@ async function handler({ request }: { request: Request }) {
       const { data: existingEspn } = await sb
         .from("espn_matches")
         .select(
-          "id,state,completed,home_score,away_score,clock_display,status_detail,group_label,kickoff_at,linked_match_id,odds_provider,odds_home_decimal,odds_draw_decimal,odds_away_decimal",
+          "id,state,completed,home_score,away_score,clock_display,status_detail,group_label,kickoff_at,linked_match_id,odds_provider,odds_home_decimal,odds_draw_decimal,odds_away_decimal,is_knockout,advanced_side",
         )
         .in("id", ids);
       type Existing = {
@@ -78,6 +78,8 @@ async function handler({ request }: { request: Request }) {
         odds_home_decimal: number | null;
         odds_draw_decimal: number | null;
         odds_away_decimal: number | null;
+        is_knockout: boolean | null;
+        advanced_side: "home" | "away" | null;
       };
       const existingMap = new Map<string, Existing>();
       for (const r of (existingEspn as Existing[] | null) ?? []) existingMap.set(r.id, r);
@@ -96,6 +98,8 @@ async function handler({ request }: { request: Request }) {
         "odds_home_decimal",
         "odds_draw_decimal",
         "odds_away_decimal",
+        "is_knockout",
+        "advanced_side",
       ];
 
       let skippedUnchanged = 0;
@@ -125,6 +129,24 @@ async function handler({ request }: { request: Request }) {
           .from("espn_matches")
           .upsert(toUpsert, { onConflict: "id" });
         if (upsertErr) throw new Error(`espn_matches upsert: ${upsertErr.message}`);
+
+        // Propagate is_knockout + advanced_side onto public.matches so the
+        // prediction_points view (which reads from public.matches) sees them.
+        // Only rows that have a linked_match_id participate.
+        const propagated = toUpsert.filter(
+          (r) => typeof r.linked_match_id === "string" && r.linked_match_id,
+        );
+        await Promise.all(
+          propagated.map((r) =>
+            sb
+              .from("matches")
+              .update({
+                is_knockout: r.is_knockout ?? false,
+                advanced_side: r.advanced_side ?? null,
+              })
+              .eq("id", r.linked_match_id),
+          ),
+        );
       }
       result.matches_synced = toUpsert.length;
       result.matches_skipped_unchanged = skippedUnchanged;

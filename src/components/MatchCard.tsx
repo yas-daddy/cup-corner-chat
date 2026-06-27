@@ -40,6 +40,9 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
 
   const [h, setH] = useState<number>(prediction?.pred_home ?? 0);
   const [a, setA] = useState<number>(prediction?.pred_away ?? 0);
+  const [advancePick, setAdvancePick] = useState<"home" | "away" | null>(
+    prediction?.advance_pick ?? null,
+  );
   const [hasPick, setHasPick] = useState<boolean>(!!prediction);
   const [savedAt, setSavedAt] = useState<number>(0);
   const timer = useRef<number | null>(null);
@@ -48,13 +51,18 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
     if (prediction) {
       setH(prediction.pred_home);
       setA(prediction.pred_away);
+      setAdvancePick(prediction.advance_pick ?? null);
       setHasPick(true);
     }
   }, [prediction]);
 
-  function scheduleSave(nh: number, na: number) {
+  function scheduleSave(nh: number, na: number, nAdvance: "home" | "away" | null) {
     if (locked) return;
     if (timer.current) window.clearTimeout(timer.current);
+    // Only persist advance_pick when the prediction is a draw on a knockout
+    // match. Anywhere else it's noise — keep the column null.
+    const eligible = !!match.is_knockout && nh === na;
+    const advancePayload = eligible ? nAdvance : null;
     timer.current = window.setTimeout(async () => {
       const { data, error } = await supabase
         .from("predictions")
@@ -64,6 +72,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
             match_id: match.id,
             pred_home: nh,
             pred_away: na,
+            advance_pick: advancePayload,
           },
           { onConflict: "player_id,match_id" },
         )
@@ -118,7 +127,7 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
             <Badge tone="accent" icon={<Lock className="h-3 w-3" />}>{t("locked")}</Badge>
           )
         ) : (
-          <Stepper value={h} onChange={(v) => { setH(v); scheduleSave(v, a); }} />
+          <Stepper value={h} onChange={(v) => { setH(v); scheduleSave(v, a, advancePick); }} />
         )}
 
       </div>
@@ -135,10 +144,41 @@ export function MatchCard({ match, playerId, prediction, onSaved, commentCount =
         ) : locked ? (
           <div className="w-[88px]" />
         ) : (
-          <Stepper value={a} onChange={(v) => { setA(v); scheduleSave(h, v); }} />
+          <Stepper value={a} onChange={(v) => { setA(v); scheduleSave(h, v, advancePick); }} />
         )}
 
       </div>
+
+      {match.is_knockout && h === a && !locked && (
+        <div className="relative z-10 mt-3 rounded-2xl border border-border bg-bg/60 p-2">
+          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
+            {t("advance_pick_title") ?? "Who advances?"}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <AdvanceBtn
+              active={advancePick === "home"}
+              onClick={() => {
+                setAdvancePick("home");
+                scheduleSave(h, a, "home");
+              }}
+              flag={flagFromCode(homeCode)}
+              label={tc(match.home_team)}
+            />
+            <AdvanceBtn
+              active={advancePick === "away"}
+              onClick={() => {
+                setAdvancePick("away");
+                scheduleSave(h, a, "away");
+              }}
+              flag={flagFromCode(awayCode)}
+              label={tc(match.away_team)}
+            />
+          </div>
+          <p className="mt-1 px-1 text-[10px] text-ink-soft">
+            {t("advance_pick_hint") ?? "+4 bonus if you pick the team that advances"}
+          </p>
+        </div>
+      )}
 
       <div className="absolute bottom-2 left-4 right-2 z-[1] flex items-center justify-between text-xs">
         <div className="flex min-w-0 items-center gap-2">
@@ -255,5 +295,32 @@ function Badge({ children, tone, icon }: { children: React.ReactNode; tone: "acc
       {icon}
       {children}
     </span>
+  );
+}
+
+function AdvanceBtn({
+  active,
+  onClick,
+  flag,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  flag: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition active:opacity-80 ${
+        active
+          ? "border-primary bg-primary/15 text-ink"
+          : "border-border bg-surface text-ink-soft hover:text-ink"
+      }`}
+    >
+      <span className="text-lg leading-none">{flag}</span>
+      <span className="truncate text-sm font-semibold">{label}</span>
+    </button>
   );
 }

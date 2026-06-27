@@ -36,6 +36,8 @@ export type EspnMatchRow = {
   odds_draw_decimal: number | null;
   odds_away_decimal: number | null;
   odds_updated_at: string | null;
+  is_knockout: boolean;
+  advanced_side: "home" | "away" | null;
 };
 
 export type EspnEventRow = {
@@ -101,6 +103,27 @@ function tidyGroup(note: string | null): string | null {
   return m ? m[0] : note;
 }
 
+// Knockout detection: no "Group X" altGameNote AND the season/competition
+// label doesn't look like the group stage. We're conservative — anything we
+// can't tell is treated as group-stage so existing scoring keeps applying.
+function detectKnockout(
+  comp: Record<string, unknown>,
+  ev: Record<string, unknown>,
+  seasonSlug: string | null,
+): boolean {
+  const note = asStr(comp.altGameNote) ?? asStr(comp.notes) ?? "";
+  if (/Group\s+[A-Z0-9]/i.test(note)) return false;
+  const labels = [
+    note,
+    asStr(asObj(ev.season).slug) ?? "",
+    seasonSlug ?? "",
+    asStr(asObj(asObj(comp.status).type).description) ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  return /(round of|knockout|final|quarter|semi|playoff)/.test(labels);
+}
+
 export async function fetchScoreboard(dateRange?: { from: string; to: string }): Promise<{
   matches: EspnMatchRow[];
   events: EspnEventRow[];
@@ -160,6 +183,15 @@ export async function fetchScoreboard(dateRange?: { from: string; to: string }):
       odds_updated_at: odds.home !== null || odds.draw !== null || odds.away !== null
         ? new Date().toISOString()
         : null,
+      is_knockout: detectKnockout(comp, e, asStr(asObj(e.season).slug)),
+      advanced_side:
+        state === "post"
+          ? (asObj(homeC).winner === true
+              ? "home"
+              : asObj(awayC).winner === true
+                ? "away"
+                : null)
+          : null,
     };
     matches.push(row);
 

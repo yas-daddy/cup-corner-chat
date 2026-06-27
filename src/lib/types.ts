@@ -10,6 +10,8 @@ export type Match = {
   status: "SCHEDULED" | "LIVE" | "FINISHED" | string;
   home_score: number | null;
   away_score: number | null;
+  is_knockout?: boolean;
+  advanced_side?: "home" | "away" | null;
 };
 
 export type Prediction = {
@@ -18,6 +20,7 @@ export type Prediction = {
   match_id: string;
   pred_home: number;
   pred_away: number;
+  advance_pick?: "home" | "away" | null;
 };
 
 export type LeaderRow = {
