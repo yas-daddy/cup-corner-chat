@@ -301,7 +301,7 @@ function Section({ title, accent, children }: { title: string; accent?: boolean;
 const QUIZ_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
 
 function QuizCard({ playerId }: { playerId: string }) {
-  const { t } = useI18n();
+  const { t, n, dir } = useI18n();
   const [todayStats, setTodayStats] = useState<{ total: number; answered: number } | null>(null);
 
   useEffect(() => {
@@ -334,29 +334,77 @@ function QuizCard({ playerId }: { playerId: string }) {
     };
   }, [playerId]);
 
-  const done = todayStats ? todayStats.answered === todayStats.total : false;
-  const remaining = todayStats ? todayStats.total - todayStats.answered : null;
-  const status = !todayStats
-    ? (t("quiz_loading_status") ?? "Today's questions are loading…")
-    : done
-      ? (t("quiz_done_today") ?? "Done — back tomorrow")
-      : remaining === todayStats.total
-        ? (t("quiz_play_today") ?? "Play today's 3 questions")
-        : `${todayStats.answered}/${todayStats.total} ${t("quiz_today_done") ?? "answered today"}`;
+  const done = todayStats ? todayStats.answered === todayStats.total && todayStats.total > 0 : false;
+  const hasQuestions = todayStats ? todayStats.total > 0 : null;
+  const remaining = todayStats ? todayStats.total - todayStats.answered : 0;
+
+  let variant: "loading" | "empty" | "available" | "done" = "loading";
+  if (!todayStats) variant = "loading";
+  else if (!hasQuestions) variant = "empty";
+  else if (done) variant = "done";
+  else variant = "available";
+
+  const cardStyles = {
+    loading:
+      "mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition active:opacity-80",
+    empty:
+      "mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition active:opacity-80",
+    available:
+      "mb-4 flex items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-surface to-surface p-4 shadow-sm transition active:opacity-80",
+    done:
+      "mb-4 flex items-center gap-3 rounded-2xl border border-success/30 bg-gradient-to-br from-success/10 via-surface to-surface p-4 shadow-sm transition active:opacity-80",
+  };
+
+  const iconStyles = {
+    loading: "grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary",
+    empty: "grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink/10 text-ink-soft",
+    available: "grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/20 text-primary",
+    done: "grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-success/20 text-success",
+  };
+
+  const title = t("quiz_title");
+  const status =
+    variant === "loading"
+      ? t("quiz_loading_status")
+      : variant === "empty"
+        ? t("quiz_no_questions")
+        : variant === "done"
+          ? t("quiz_card_done")
+          : remaining === todayStats?.total
+            ? t("quiz_play_today")
+            : `${n(remaining)} ${t("quiz_card_left")}`;
 
   return (
-    <Link
-      to="/quiz"
-      className="mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition active:opacity-80"
-    >
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
-        <Brain className="h-5 w-5" />
+    <Link to="/quiz" className={cardStyles[variant]} dir={dir}>
+      <div className={iconStyles[variant]}>
+        {variant === "done" ? (
+          <CheckCircle2 className="h-5 w-5" />
+        ) : variant === "available" ? (
+          <Sparkles className="h-5 w-5" />
+        ) : (
+          <Brain className="h-5 w-5" />
+        )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold leading-tight">{t("quiz_title") ?? "Daily Quiz"}</p>
+        <p className="text-sm font-bold leading-tight">{title}</p>
         <p className="text-xs text-ink-soft truncate">{status}</p>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-ink-soft" />
+      {variant === "done" && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-xs font-bold text-success">
+          <CheckCircle2 className="h-3.5 w-3.5" /> {t("quiz_card_answered")}
+        </span>
+      )}
+      {variant === "available" && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
+          {todayStats?.total === remaining ? t("quiz_card_badge_new") : `${n(remaining)} ${t("quiz_card_left")}`}
+        </span>
+      )}
+      {(variant === "loading" || variant === "empty") && (
+        <ChevronRight className="h-5 w-5 shrink-0 text-ink-soft" />
+      )}
+      {(variant === "available" || variant === "done") && (
+        <ChevronRight className="h-5 w-5 shrink-0 text-ink-soft" />
+      )}
     </Link>
   );
 }
