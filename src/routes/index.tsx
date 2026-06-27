@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Smartphone, X, Rss, Brain, ChevronRight } from "lucide-react";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -75,6 +76,24 @@ function HomePage() {
       setCommentCounts(counts);
       setPredictionPreviews(previews);
     }
+  }
+
+  async function refreshAll() {
+    const tasks: Promise<unknown>[] = [loadMatches()];
+    if (player) {
+      tasks.push(
+        (async () => {
+          const { data } = await supabase
+            .from("predictions")
+            .select("*")
+            .eq("player_id", player.id);
+          const map: Record<string, Prediction> = {};
+          (data as Prediction[] | null)?.forEach((p) => (map[p.match_id] = p));
+          setPreds(map);
+        })(),
+      );
+    }
+    await Promise.all(tasks);
   }
 
   function handleTitleTap() {
@@ -155,6 +174,7 @@ function HomePage() {
   }
 
   return (
+    <PullToRefresh onRefresh={refreshAll}>
     <div className="px-4 pt-6">
       {!player.avatar && <AvatarPromptModal player={player} onSaved={(p) => setPlayer(p)} />}
       {player.avatar && <ChampionPromptModal playerId={player.id} />}
@@ -217,6 +237,7 @@ function HomePage() {
 
 
     </div>
+    </PullToRefresh>
   );
 }
 

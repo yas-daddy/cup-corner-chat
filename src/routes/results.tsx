@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import { resolveBracket, type ResolvedMatch, type ResolvedSlot, type Round } from "@/lib/bracket";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 type EspnMatch = {
   id: string;
@@ -63,22 +64,19 @@ function ResultsPage() {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [loading, setLoading] = useState(true);
 
+  async function loadAll() {
+    const [m, s] = await Promise.all([
+      sb.from("espn_matches").select("*").order("kickoff_at", { ascending: true }),
+      sb.from("espn_standings").select("*").order("group_label", { ascending: true }).order("rank", { ascending: true }),
+    ]);
+    setMatches((m.data as EspnMatch[]) ?? []);
+    setStandings((s.data as Standing[]) ?? []);
+    setLoading(false);
+  }
+
   // Initial load
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const [m, s] = await Promise.all([
-        sb.from("espn_matches").select("*").order("kickoff_at", { ascending: true }),
-        sb.from("espn_standings").select("*").order("group_label", { ascending: true }).order("rank", { ascending: true }),
-      ]);
-      if (!active) return;
-      setMatches((m.data as EspnMatch[]) ?? []);
-      setStandings((s.data as Standing[]) ?? []);
-      setLoading(false);
-    })();
-    return () => {
-      active = false;
-    };
+    void loadAll();
   }, []);
 
   // Realtime: patch matches/standings in place. Per-match events are loaded
@@ -120,6 +118,7 @@ function ResultsPage() {
   }, []);
 
   return (
+    <PullToRefresh onRefresh={loadAll}>
     <div className="px-4 pt-6 pb-24">
       <header className="mb-4">
         <h1 className="text-2xl font-extrabold">{t("results") ?? "Results"}</h1>
@@ -144,6 +143,7 @@ function ResultsPage() {
       {!loading && tab === "standings" && <StandingsView rows={standings} />}
       {!loading && tab === "bracket" && <BracketView standings={standings} matches={matches} />}
     </div>
+    </PullToRefresh>
   );
 }
 

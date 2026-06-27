@@ -13,6 +13,7 @@ import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
 import { MatchEventsPanel } from "@/components/MatchEventsPanel";
 import { LiveIndicator } from "@/components/LiveIndicator";
 import { useEspnLive } from "@/lib/useEspnLive";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import { predictionTargetId, useComments } from "@/lib/social";
 import type { Match, Prediction, PredictionPointRow } from "@/lib/types";
 import type { Player } from "@/lib/identity";
@@ -38,7 +39,16 @@ function MatchDetailPage() {
   const [match, setMatch] = useState<Match | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const espnLive = useEspnLive(matchId);
+
+  async function refreshMatch() {
+    // Bump reloadKey to re-run the data effect.
+    setReloadKey((k) => k + 1);
+    // Give the effect's awaits a chance to complete so the PTR spinner stays
+    // up long enough to feel responsive.
+    await new Promise((r) => setTimeout(r, 250));
+  }
 
   useEffect(() => {
     let active = true;
@@ -149,7 +159,7 @@ function MatchDetailPage() {
       }
     })();
     return () => { active = false; };
-  }, [matchId, me?.id]);
+  }, [matchId, me?.id, reloadKey]);
 
   if (notFound) {
     return <div className="grid min-h-[60vh] place-items-center text-ink-soft">Match not found.</div>;
@@ -170,6 +180,7 @@ function MatchDetailPage() {
   });
 
   return (
+    <PullToRefresh onRefresh={refreshMatch}>
     <div className="px-4 pt-6 pb-10">
       <header className="mb-4 flex items-center gap-3">
         <Link to={finished ? "/results" : "/"} className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface">
@@ -282,6 +293,7 @@ function MatchDetailPage() {
         </div>
       </section>
     </div>
+    </PullToRefresh>
   );
 }
 
