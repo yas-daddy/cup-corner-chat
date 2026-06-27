@@ -54,7 +54,7 @@ const sb = supabase as unknown as {
 const PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
 
-export const Route = createFileRoute("/games/bet")({
+export const Route = createFileRoute("/bet")({
   head: () => ({
     meta: [
       { title: "WC26 — Bet" },

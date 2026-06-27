@@ -11,18 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
-import { Route as GamesRouteImport } from './routes/games'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as BetRouteImport } from './routes/bet'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as GamesIndexRouteImport } from './routes/games.index'
 import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
-import { Route as GamesQuizRouteImport } from './routes/games.quiz'
-import { Route as GamesBetRouteImport } from './routes/games.bet'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
@@ -44,6 +42,11 @@ const ResultsRoute = ResultsRouteImport.update({
   path: '/results',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizRoute = QuizRouteImport.update({
+  id: '/quiz',
+  path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyPicksRoute = MyPicksRouteImport.update({
   id: '/my-picks',
   path: '/my-picks',
@@ -54,14 +57,14 @@ const LeaderboardRoute = LeaderboardRouteImport.update({
   path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GamesRoute = GamesRouteImport.update({
-  id: '/games',
-  path: '/games',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BetRoute = BetRouteImport.update({
+  id: '/bet',
+  path: '/bet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -73,11 +76,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const GamesIndexRoute = GamesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GamesRoute,
 } as any)
 const TeamsTeamCodeRoute = TeamsTeamCodeRouteImport.update({
   id: '/teams/$teamCode',
@@ -93,16 +91,6 @@ const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   id: '/matches/$matchId',
   path: '/matches/$matchId',
   getParentRoute: () => rootRouteImport,
-} as any)
-const GamesQuizRoute = GamesQuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => GamesRoute,
-} as any)
-const GamesBetRoute = GamesBetRouteImport.update({
-  id: '/bet',
-  path: '/bet',
-  getParentRoute: () => GamesRoute,
 } as any)
 const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
   id: '/api/public/sync-matches',
@@ -159,18 +147,16 @@ const ApiPublicHooksEmitPendingPredictionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
-  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
-  '/games/bet': typeof GamesBetRoute
-  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
-  '/games/': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -185,17 +171,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
-  '/games/bet': typeof GamesBetRoute
-  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
-  '/games': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -211,18 +196,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/bet': typeof BetRoute
   '/feed': typeof FeedRoute
-  '/games': typeof GamesRouteWithChildren
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
+  '/quiz': typeof QuizRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
-  '/games/bet': typeof GamesBetRoute
-  '/games/quiz': typeof GamesQuizRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/teams/$teamCode': typeof TeamsTeamCodeRoute
-  '/games/': typeof GamesIndexRoute
   '/api/public/grant-stipend': typeof ApiPublicGrantStipendRoute
   '/api/public/karim-daily': typeof ApiPublicKarimDailyRoute
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
@@ -239,18 +222,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
-    | '/games'
     | '/leaderboard'
     | '/my-picks'
+    | '/quiz'
     | '/results'
     | '/settings'
-    | '/games/bet'
-    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
-    | '/games/'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -265,17 +246,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
     | '/leaderboard'
     | '/my-picks'
+    | '/quiz'
     | '/results'
     | '/settings'
-    | '/games/bet'
-    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
-    | '/games'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -290,18 +270,16 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/bet'
     | '/feed'
-    | '/games'
     | '/leaderboard'
     | '/my-picks'
+    | '/quiz'
     | '/results'
     | '/settings'
-    | '/games/bet'
-    | '/games/quiz'
     | '/matches/$matchId'
     | '/players/$playerId'
     | '/teams/$teamCode'
-    | '/games/'
     | '/api/public/grant-stipend'
     | '/api/public/karim-daily'
     | '/api/public/karim-roast'
@@ -317,10 +295,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  BetRoute: typeof BetRoute
   FeedRoute: typeof FeedRoute
-  GamesRoute: typeof GamesRouteWithChildren
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
+  QuizRoute: typeof QuizRoute
   ResultsRoute: typeof ResultsRoute
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
@@ -354,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResultsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz': {
+      id: '/quiz'
+      path: '/quiz'
+      fullPath: '/quiz'
+      preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-picks': {
       id: '/my-picks'
       path: '/my-picks'
@@ -368,18 +354,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/games': {
-      id: '/games'
-      path: '/games'
-      fullPath: '/games'
-      preLoaderRoute: typeof GamesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/feed': {
       id: '/feed'
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bet': {
+      id: '/bet'
+      path: '/bet'
+      fullPath: '/bet'
+      preLoaderRoute: typeof BetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -395,13 +381,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/games/': {
-      id: '/games/'
-      path: '/'
-      fullPath: '/games/'
-      preLoaderRoute: typeof GamesIndexRouteImport
-      parentRoute: typeof GamesRoute
     }
     '/teams/$teamCode': {
       id: '/teams/$teamCode'
@@ -423,20 +402,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/matches/$matchId'
       preLoaderRoute: typeof MatchesMatchIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/games/quiz': {
-      id: '/games/quiz'
-      path: '/quiz'
-      fullPath: '/games/quiz'
-      preLoaderRoute: typeof GamesQuizRouteImport
-      parentRoute: typeof GamesRoute
-    }
-    '/games/bet': {
-      id: '/games/bet'
-      path: '/bet'
-      fullPath: '/games/bet'
-      preLoaderRoute: typeof GamesBetRouteImport
-      parentRoute: typeof GamesRoute
     }
     '/api/public/sync-matches': {
       id: '/api/public/sync-matches'
@@ -511,27 +476,14 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface GamesRouteChildren {
-  GamesBetRoute: typeof GamesBetRoute
-  GamesQuizRoute: typeof GamesQuizRoute
-  GamesIndexRoute: typeof GamesIndexRoute
-}
-
-const GamesRouteChildren: GamesRouteChildren = {
-  GamesBetRoute: GamesBetRoute,
-  GamesQuizRoute: GamesQuizRoute,
-  GamesIndexRoute: GamesIndexRoute,
-}
-
-const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  BetRoute: BetRoute,
   FeedRoute: FeedRoute,
-  GamesRoute: GamesRouteWithChildren,
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
+  QuizRoute: QuizRoute,
   ResultsRoute: ResultsRoute,
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
@@ -552,3 +504,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

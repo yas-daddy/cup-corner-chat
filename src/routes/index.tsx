@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Smartphone, X, Rss } from "lucide-react";
+import { Smartphone, X, Rss, Brain, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
@@ -183,6 +183,8 @@ function HomePage() {
         <NotificationsBell playerId={player.id} />
       </header>
 
+      <QuizCard playerId={player.id} />
+
       {!firstVisible && (
         <NewPicksPill count={unpredictedUpcomingIds.length} onTap={scrollToFirstUnpredicted} />
       )}
@@ -272,5 +274,68 @@ function Section({ title, accent, children }: { title: string; accent?: boolean;
       </h2>
       <div className="space-y-3">{children}</div>
     </section>
+  );
+}
+
+const QUIZ_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+function QuizCard({ playerId }: { playerId: string }) {
+  const { t } = useI18n();
+  const [todayStats, setTodayStats] = useState<{ total: number; answered: number } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/public/quiz-today", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: QUIZ_PUBLISHABLE_KEY },
+          body: JSON.stringify({ player_id: playerId }),
+        });
+        const text = await res.text();
+        let json: { questions?: unknown[]; answered?: Record<string, unknown> } | null = null;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          /* server returned non-JSON — leave stats null */
+        }
+        if (!active || !json?.questions) return;
+        setTodayStats({
+          total: json.questions.length,
+          answered: Object.keys(json.answered ?? {}).length,
+        });
+      } catch {
+        /* offline / network — silent */
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [playerId]);
+
+  const done = todayStats ? todayStats.answered === todayStats.total : false;
+  const remaining = todayStats ? todayStats.total - todayStats.answered : null;
+  const status = !todayStats
+    ? (t("quiz_loading_status") ?? "Today's questions are loading…")
+    : done
+      ? (t("quiz_done_today") ?? "Done — back tomorrow")
+      : remaining === todayStats.total
+        ? (t("quiz_play_today") ?? "Play today's 3 questions")
+        : `${todayStats.answered}/${todayStats.total} ${t("quiz_today_done") ?? "answered today"}`;
+
+  return (
+    <Link
+      to="/quiz"
+      className="mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition active:opacity-80"
+    >
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
+        <Brain className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold leading-tight">{t("quiz_title") ?? "Daily Quiz"}</p>
+        <p className="text-xs text-ink-soft truncate">{status}</p>
+      </div>
+      <ChevronRight className="h-5 w-5 shrink-0 text-ink-soft" />
+    </Link>
   );
 }

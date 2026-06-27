@@ -27,7 +27,7 @@ type TodayResponse = {
   answered: Answered;
 };
 
-export const Route = createFileRoute("/games/quiz")({
+export const Route = createFileRoute("/quiz")({
   head: () => ({
     meta: [
       { title: "WC26 — Daily Quiz" },
@@ -352,10 +352,10 @@ function Summary({
       </ul>
 
       <Link
-        to="/games"
+        to="/"
         className="mt-4 block rounded-full bg-primary px-4 py-2 text-center text-sm font-semibold text-white"
       >
-        {t("quiz_back_to_games") ?? "Back to Games"}
+        {t("quiz_back_to_picks") ?? "Back to Picks"}
       </Link>
     </section>
   );
@@ -370,7 +370,7 @@ function Header({ progress, score }: { progress?: string; score?: number }) {
   return (
     <header className="mb-4 flex items-center gap-3">
       <Link
-        to="/games"
+        to="/"
         className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-ink-soft"
       >
         <ChevronLeft className="h-5 w-5" />
