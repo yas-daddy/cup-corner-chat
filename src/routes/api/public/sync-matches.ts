@@ -216,7 +216,20 @@ async function handler() {
 
     for (const r of rows) {
       const matchedExisting = byKey.get(keyFor(r.home_team, r.away_team, r.kickoff_at));
-      const resolved: DbMatch = matchedExisting ? { ...r, id: matchedExisting.id } : r;
+      let resolved: DbMatch = matchedExisting ? { ...r, id: matchedExisting.id } : r;
+
+      // Override with ESPN final score if available — ESPN is authoritative.
+      const espnScore =
+        espnByLinkedId.get(resolved.id) ??
+        espnByKey.get(keyFor(resolved.home_team, resolved.away_team, resolved.kickoff_at));
+      if (espnScore) {
+        resolved = {
+          ...resolved,
+          status: "FINISHED",
+          home_score: espnScore.home,
+          away_score: espnScore.away,
+        };
+      }
       merged.push(resolved);
 
       const prior = byId.get(resolved.id) ?? matchedExisting ?? null;
