@@ -159,6 +159,32 @@ async function handler() {
       byId.set(m.id, m);
     });
 
+    // ESPN is the source of truth for final scores. football-data.org has
+    // shipped incorrect finals (e.g. Iran-Egypt 1-1 reported as 2-1). For
+    // any match ESPN reports as completed, override the upstream score with
+    // ESPN's. Keyed by linked_match_id AND (home, away, date) tuple so it
+    // works even when the ESPN row hasn't been linked yet.
+    const { data: espnFinals } = await supabaseAdmin
+      .from("espn_matches")
+      .select("home_team,away_team,home_score,away_score,kickoff_at,completed,linked_match_id")
+      .eq("completed", true);
+    const espnByLinkedId = new Map<string, { home: number; away: number }>();
+    const espnByKey = new Map<string, { home: number; away: number }>();
+    for (const e of (espnFinals as Array<{
+      home_team: string;
+      away_team: string;
+      home_score: number | null;
+      away_score: number | null;
+      kickoff_at: string;
+      completed: boolean;
+      linked_match_id: string | null;
+    }> | null) ?? []) {
+      if (e.home_score === null || e.away_score === null) continue;
+      const score = { home: e.home_score, away: e.away_score };
+      if (e.linked_match_id) espnByLinkedId.set(e.linked_match_id, score);
+      espnByKey.set(keyFor(e.home_team, e.away_team, e.kickoff_at), score);
+    }
+
     // Resolve upstream rows against existing ones, applying two guards:
     //   1) Once a match is FINISHED in our DB, never downgrade its status or
     //      null-out its scores from upstream. This is the root cause of the
@@ -190,7 +216,20 @@ async function handler() {
 
     for (const r of rows) {
       const matchedExisting = byKey.get(keyFor(r.home_team, r.away_team, r.kickoff_at));
-      const resolved: DbMatch = matchedExisting ? { ...r, id: matchedExisting.id } : r;
+      let resolved: DbMatch = matchedExisting ? { ...r, id: matchedExisting.id } : r;
+
+      // Override with ESPN final score if available — ESPN is authoritative.
+      const espnScore =
+        espnByLinkedId.get(resolved.id) ??
+        espnByKey.get(keyFor(resolved.home_team, resolved.away_team, resolved.kickoff_at));
+      if (espnScore) {
+        resolved = {
+          ...resolved,
+          status: "FINISHED",
+          home_score: espnScore.home,
+          away_score: espnScore.away,
+        };
+      }
       merged.push(resolved);
 
       const prior = byId.get(resolved.id) ?? matchedExisting ?? null;
