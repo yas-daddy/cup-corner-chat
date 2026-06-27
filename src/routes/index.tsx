@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Smartphone, X, Rss, Brain, ChevronRight } from "lucide-react";
+import { Smartphone, X, Rss, Brain, ChevronRight, CheckCircle2, Sparkles } from "lucide-react";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentPlayer } from "@/lib/identity";
