@@ -1,27 +1,43 @@
-## Leaderboard → add "Chart" tab with historical score lines
+## Plan: Redesign the home Daily Quiz card
 
-### UX
-- On `/leaderboard`, add a segmented toggle at the top: **Leaderboard** | **Chart** (styled like the existing rounded pill buttons; persist choice in component state, not URL).
-- Chart view shows one line per player (top 8 by current total points, Karim excluded), colored distinctly.
-- X axis: tournament days that had ≥1 finished match (label e.g. "Jun 12"). Y axis: cumulative total points at end of that day.
-- Each line ends with the player's avatar rendered as a small round image (24px) with a 2px ring in the line's color, positioned at the line's last point on the right edge.
-- No legend. Tapping/clicking a line (or its end avatar) highlights it and shows a small floating label with the player's name + current points; tapping elsewhere dismisses.
-- Empty state if no finished matches yet: "Chart will appear after the first match finishes."
+### Context
+The `QuizCard` on `/` is currently a plain bordered row: surface background, primary/15 icon, title, status line, and a chevron. It does not visibly communicate whether today is "ready to play" or "already done". The nearby `ChampionPickCard` uses a richer gradient-card style that the quiz card can align with.
 
-### Data
-Compute client-side from existing tables — no schema changes:
-1. Fetch `leaderboard` (already used) → take top 8 non-Karim by `total_points`.
-2. For those 8 player ids, fetch `feed_activities` where `kind='points_awarded'` and `actor_id IN (...)`, joined/lookup with `matches.kickoff_at` to get the match day. `feed_activities.points` already holds the awarded points per player per match.
-3. Group by day (UTC date of `kickoff_at`, formatted in user's locale via existing `i18n`), accumulate per player to produce a running total series. Only include days with ≥1 finished match.
-4. Ensure every player has a value for every included day (carry forward previous total if no points that day) so lines stay continuous.
+### Goal
+Make the quiz card the most eye-catching home action when questions are available, and make the "done" state immediately reassuring with a ✅.
 
 ### Implementation
-- New component `src/components/LeaderboardChart.tsx` using **Recharts** (already common; install if missing via `bun add recharts`). Use `<LineChart>` with `<Line dot={false}>` per player and a custom right-edge avatar overlay rendered as absolutely-positioned divs computed from the chart's last-point coordinates (via Recharts' `<Customized>` or by reading the last `<Line>`'s computed points through a ref-less approach using `ResponsiveContainer` + a `Customized` component that receives `xAxisMap`/`yAxisMap`).
-- Colors: a fixed palette of 8 distinct, theme-aware hues defined in `src/styles.css` as CSS vars (`--chart-1` … `--chart-8`) so they work in light + dark.
-- Tap-to-reveal: track `activePlayerId` state; dim other lines (`strokeOpacity: 0.25`) and show a small floating chip near the avatar with name + total. Tap background to clear.
-- Modify `src/routes/leaderboard.tsx` to host the toggle and conditionally render the list or `<LeaderboardChart players={top8} />`.
+1. **State-driven styling in `src/routes/index.tsx` (`QuizCard`)**
+   - `done` (answered === total): success-themed card.
+     - Background: subtle success gradient or `bg-success/10` to `surface`.
+     - Icon circle: `bg-success/20` with `CheckCircle2` in `success`.
+     - Right badge: green pill with a ✅.
+     - Copy: "Done — back tomorrow".
+   - `available` (questions loaded and not done): primary-purple CTA card.
+     - Background: primary gradient/tint (`from-primary/10 via-surface to-surface` with primary/20 border tint).
+     - Icon circle: `bg-primary/20` with `Brain` or `Sparkles` in primary.
+     - Right badge: primary pill showing remaining count, e.g. "3 to play" or "1 left".
+     - Chevron stays, but more prominent.
+   - `loading` / `no questions`: keep a neutral, low-contrast variant (surface, muted text) so it doesn't compete for attention.
+
+2. **Add visual treats**
+   - Increase icon container size slightly (40px → 44px) to match the champion card.
+   - Add a subtle progress indicator: "{answered}/{total} answered" in the done state, or "{remaining} left" in the available state.
+   - Use `bg-gradient-to-br` and a tinted border (`border-primary/30` / `border-success/30`) to lift the card off the page.
+
+3. **i18n updates**
+   - Add/confirm keys:
+     - `quiz_card_done` — "Done — back tomorrow"
+     - `quiz_card_play` — "Play today's {n} questions"
+     - `quiz_card_left` — "{n} left"
+     - `quiz_card_answered` — "{n}/{total} answered"
+   - Provide Persian equivalents in `src/lib/i18n.ts`.
+
+4. **RTL / theming**
+   - Keep `dir={dir}` on the card contents.
+   - Use semantic tokens (`primary`, `success`, `surface`, `ink`) so both light and the deep-black dark theme look correct.
 
 ### Out of scope
-- No new DB tables, triggers, or migrations.
-- No changes to scoring logic, Karim, notifications, or sync.
-- Karim stays hidden from chart (same filter as list).
+- No changes to the quiz game page itself (`/games/quiz` or `/quiz`).
+- No schema or backend changes; the existing `/api/public/quiz-today` response is enough.
+- No new dependencies.
