@@ -14,6 +14,7 @@ import { PushAutoPrompt } from "@/components/PushAutoPrompt";
 import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { NewPicksPill } from "@/components/NewPicksPill";
 import { GodModePinModal } from "@/components/GodModePinModal";
+import { KnockoutRulesModal } from "@/components/KnockoutRulesModal";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
@@ -41,6 +42,28 @@ function HomePage() {
   const [predictionPreviews, setPredictionPreviews] = useState<Record<string, PredictionPreview>>({});
   const tapTimes = useRef<number[]>([]);
   const [pinOpen, setPinOpen] = useState(false);
+  const [knockoutModalOpen, setKnockoutModalOpen] = useState(false);
+
+  // One-shot welcome to the new knockout-stage scoring. Read on mount so we
+  // don't flash the modal during SSR / before client hydration.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("wc26.knockout_rules_seen") !== "1") {
+        setKnockoutModalOpen(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function closeKnockoutModal() {
+    try {
+      localStorage.setItem("wc26.knockout_rules_seen", "1");
+    } catch {
+      /* ignore */
+    }
+    setKnockoutModalOpen(false);
+  }
 
 
   useEffect(() => {
@@ -181,6 +204,7 @@ function HomePage() {
       <PushAutoPrompt playerId={player.id} />
       <PwaInstallBanner />
       <GodModePinModal open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={() => { setPinOpen(false); navigate({ to: "/admin" }); }} />
+      {knockoutModalOpen && player.avatar && <KnockoutRulesModal onClose={closeKnockoutModal} />}
 
       <header className="mb-4 flex items-center gap-3">
         <Avatar avatar={player.avatar} name={player.display_name} size={44} className="border border-border text-2xl" />
