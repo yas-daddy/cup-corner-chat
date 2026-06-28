@@ -282,6 +282,7 @@ export type Database = {
       }
       espn_matches: {
         Row: {
+          advanced_side: string | null
           away_code: string | null
           away_logo: string | null
           away_score: number | null
@@ -294,6 +295,7 @@ export type Database = {
           home_score: number | null
           home_team: string
           id: string
+          is_knockout: boolean
           kickoff_at: string
           last_synced_at: string
           linked_match_id: string | null
@@ -307,6 +309,7 @@ export type Database = {
           status_detail: string | null
         }
         Insert: {
+          advanced_side?: string | null
           away_code?: string | null
           away_logo?: string | null
           away_score?: number | null
@@ -319,6 +322,7 @@ export type Database = {
           home_score?: number | null
           home_team: string
           id: string
+          is_knockout?: boolean
           kickoff_at: string
           last_synced_at?: string
           linked_match_id?: string | null
@@ -332,6 +336,7 @@ export type Database = {
           status_detail?: string | null
         }
         Update: {
+          advanced_side?: string | null
           away_code?: string | null
           away_logo?: string | null
           away_score?: number | null
@@ -344,6 +349,7 @@ export type Database = {
           home_score?: number | null
           home_team?: string
           id?: string
+          is_knockout?: boolean
           kickoff_at?: string
           last_synced_at?: string
           linked_match_id?: string | null
@@ -495,6 +501,7 @@ export type Database = {
       }
       matches: {
         Row: {
+          advanced_side: string | null
           away_code: string | null
           away_score: number | null
           away_team: string
@@ -503,12 +510,14 @@ export type Database = {
           home_score: number | null
           home_team: string
           id: string
+          is_knockout: boolean
           kickoff_at: string
           last_synced_at: string
           stage: string | null
           status: string
         }
         Insert: {
+          advanced_side?: string | null
           away_code?: string | null
           away_score?: number | null
           away_team: string
@@ -517,12 +526,14 @@ export type Database = {
           home_score?: number | null
           home_team: string
           id: string
+          is_knockout?: boolean
           kickoff_at: string
           last_synced_at?: string
           stage?: string | null
           status?: string
         }
         Update: {
+          advanced_side?: string | null
           away_code?: string | null
           away_score?: number | null
           away_team?: string
@@ -531,6 +542,7 @@ export type Database = {
           home_score?: number | null
           home_team?: string
           id?: string
+          is_knockout?: boolean
           kickoff_at?: string
           last_synced_at?: string
           stage?: string | null
@@ -609,6 +621,7 @@ export type Database = {
       }
       predictions: {
         Row: {
+          advance_pick: string | null
           created_at: string
           id: string
           last_emitted_at: string | null
@@ -621,6 +634,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          advance_pick?: string | null
           created_at?: string
           id?: string
           last_emitted_at?: string | null
@@ -633,6 +647,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          advance_pick?: string | null
           created_at?: string
           id?: string
           last_emitted_at?: string | null
@@ -948,11 +963,14 @@ export type Database = {
       }
       prediction_points: {
         Row: {
+          advance_pick: string | null
+          advanced_side: string | null
           away_score: number | null
           home_score: number | null
           id: string | null
           is_correct_result: boolean | null
           is_exact: boolean | null
+          is_knockout: boolean | null
           match_id: string | null
           player_id: string | null
           points: number | null
@@ -1043,6 +1061,7 @@ export type Database = {
           _player_id: string
         }
         Returns: {
+          advance_pick: string | null
           created_at: string
           id: string
           last_emitted_at: string | null
