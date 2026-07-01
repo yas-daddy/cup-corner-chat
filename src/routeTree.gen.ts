@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as QuizHistoryRouteImport } from './routes/quiz-history'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as MyPicksRouteImport } from './routes/my-picks'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
@@ -25,6 +26,7 @@ import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sy
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
 import { Route as ApiPublicQuizTodayRouteImport } from './routes/api/public/quiz-today'
+import { Route as ApiPublicQuizHistoryRouteImport } from './routes/api/public/quiz-history'
 import { Route as ApiPublicQuizAnswerRouteImport } from './routes/api/public/quiz-answer'
 import { Route as ApiPublicPlaceBetRouteImport } from './routes/api/public/place-bet'
 import { Route as ApiPublicKarimRoastRouteImport } from './routes/api/public/karim-roast'
@@ -40,6 +42,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizHistoryRoute = QuizHistoryRouteImport.update({
+  id: '/quiz-history',
+  path: '/quiz-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizRoute = QuizRouteImport.update({
@@ -112,6 +119,11 @@ const ApiPublicQuizTodayRoute = ApiPublicQuizTodayRouteImport.update({
   path: '/api/public/quiz-today',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicQuizHistoryRoute = ApiPublicQuizHistoryRouteImport.update({
+  id: '/api/public/quiz-history',
+  path: '/api/public/quiz-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicQuizAnswerRoute = ApiPublicQuizAnswerRouteImport.update({
   id: '/api/public/quiz-answer',
   path: '/api/public/quiz-answer',
@@ -152,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/quiz': typeof QuizRoute
+  '/quiz-history': typeof QuizHistoryRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
@@ -162,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-history': typeof ApiPublicQuizHistoryRoute
   '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
@@ -176,6 +190,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/quiz': typeof QuizRoute
+  '/quiz-history': typeof QuizHistoryRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
@@ -186,6 +201,7 @@ export interface FileRoutesByTo {
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-history': typeof ApiPublicQuizHistoryRoute
   '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
@@ -201,6 +217,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/my-picks': typeof MyPicksRoute
   '/quiz': typeof QuizRoute
+  '/quiz-history': typeof QuizHistoryRoute
   '/results': typeof ResultsRoute
   '/settings': typeof SettingsRoute
   '/matches/$matchId': typeof MatchesMatchIdRoute
@@ -211,6 +228,7 @@ export interface FileRoutesById {
   '/api/public/karim-roast': typeof ApiPublicKarimRoastRoute
   '/api/public/place-bet': typeof ApiPublicPlaceBetRoute
   '/api/public/quiz-answer': typeof ApiPublicQuizAnswerRoute
+  '/api/public/quiz-history': typeof ApiPublicQuizHistoryRoute
   '/api/public/quiz-today': typeof ApiPublicQuizTodayRoute
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
@@ -227,6 +245,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/quiz'
+    | '/quiz-history'
     | '/results'
     | '/settings'
     | '/matches/$matchId'
@@ -237,6 +256,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
     | '/api/public/quiz-answer'
+    | '/api/public/quiz-history'
     | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
@@ -251,6 +271,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/quiz'
+    | '/quiz-history'
     | '/results'
     | '/settings'
     | '/matches/$matchId'
@@ -261,6 +282,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
     | '/api/public/quiz-answer'
+    | '/api/public/quiz-history'
     | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
@@ -275,6 +297,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/my-picks'
     | '/quiz'
+    | '/quiz-history'
     | '/results'
     | '/settings'
     | '/matches/$matchId'
@@ -285,6 +308,7 @@ export interface FileRouteTypes {
     | '/api/public/karim-roast'
     | '/api/public/place-bet'
     | '/api/public/quiz-answer'
+    | '/api/public/quiz-history'
     | '/api/public/quiz-today'
     | '/api/public/send-push'
     | '/api/public/sync-espn'
@@ -300,6 +324,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   MyPicksRoute: typeof MyPicksRoute
   QuizRoute: typeof QuizRoute
+  QuizHistoryRoute: typeof QuizHistoryRoute
   ResultsRoute: typeof ResultsRoute
   SettingsRoute: typeof SettingsRoute
   MatchesMatchIdRoute: typeof MatchesMatchIdRoute
@@ -310,6 +335,7 @@ export interface RootRouteChildren {
   ApiPublicKarimRoastRoute: typeof ApiPublicKarimRoastRoute
   ApiPublicPlaceBetRoute: typeof ApiPublicPlaceBetRoute
   ApiPublicQuizAnswerRoute: typeof ApiPublicQuizAnswerRoute
+  ApiPublicQuizHistoryRoute: typeof ApiPublicQuizHistoryRoute
   ApiPublicQuizTodayRoute: typeof ApiPublicQuizTodayRoute
   ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   ApiPublicSyncEspnRoute: typeof ApiPublicSyncEspnRoute
@@ -331,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz-history': {
+      id: '/quiz-history'
+      path: '/quiz-history'
+      fullPath: '/quiz-history'
+      preLoaderRoute: typeof QuizHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz': {
@@ -431,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicQuizTodayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/quiz-history': {
+      id: '/api/public/quiz-history'
+      path: '/api/public/quiz-history'
+      fullPath: '/api/public/quiz-history'
+      preLoaderRoute: typeof ApiPublicQuizHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/quiz-answer': {
       id: '/api/public/quiz-answer'
       path: '/api/public/quiz-answer'
@@ -484,6 +524,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   MyPicksRoute: MyPicksRoute,
   QuizRoute: QuizRoute,
+  QuizHistoryRoute: QuizHistoryRoute,
   ResultsRoute: ResultsRoute,
   SettingsRoute: SettingsRoute,
   MatchesMatchIdRoute: MatchesMatchIdRoute,
@@ -494,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicKarimRoastRoute: ApiPublicKarimRoastRoute,
   ApiPublicPlaceBetRoute: ApiPublicPlaceBetRoute,
   ApiPublicQuizAnswerRoute: ApiPublicQuizAnswerRoute,
+  ApiPublicQuizHistoryRoute: ApiPublicQuizHistoryRoute,
   ApiPublicQuizTodayRoute: ApiPublicQuizTodayRoute,
   ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   ApiPublicSyncEspnRoute: ApiPublicSyncEspnRoute,
@@ -504,3 +546,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

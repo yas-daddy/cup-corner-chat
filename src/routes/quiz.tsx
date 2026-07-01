@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Check, X as XIcon, Clock } from "lucide-react";
+import { ChevronLeft, Check, X as XIcon, Clock, History } from "lucide-react";
 import { useCurrentPlayer } from "@/lib/identity";
 import { SignInScreen } from "@/components/SignInScreen";
 import { useI18n } from "@/lib/i18n";
@@ -389,6 +389,13 @@ function Header({ progress, score }: { progress?: string; score?: number }) {
           {score}
         </span>
       )}
+      <Link
+        to="/quiz-history"
+        aria-label={t("quiz_history_title") ?? "History"}
+        className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-ink-soft active:opacity-80"
+      >
+        <History className="h-4 w-4" />
+      </Link>
     </header>
   );
 }
