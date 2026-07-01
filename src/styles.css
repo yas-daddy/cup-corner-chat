@@ -111,13 +111,24 @@ html[dir="rtl"] body {
   }
 }
 
-/* Mobile-first app shell */
+/* Mobile-first app shell — widens on tablet+ so iPad doesn't render as a
+   narrow strip in the middle of the screen. */
 .app-shell {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100dvh;
   padding-bottom: 88px;
   position: relative;
+}
+@media (min-width: 768px) {
+  .app-shell {
+    max-width: 640px;
+  }
+}
+@media (min-width: 1024px) {
+  .app-shell {
+    max-width: 720px;
+  }
 }
 
 .tab-bar {
@@ -133,6 +144,19 @@ html[dir="rtl"] body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .tab-bar {
+    max-width: 640px;
+    border-radius: 24px 24px 0 0;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+}
+@media (min-width: 1024px) {
+  .tab-bar {
+    max-width: 720px;
+  }
 }
 
 @keyframes pop {
