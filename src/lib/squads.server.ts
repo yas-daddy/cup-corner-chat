@@ -29,18 +29,31 @@ export type SquadPlayerRow = {
 };
 
 async function fetchWikitext(page: string): Promise<string> {
-  const url = `${WIKI_API}?action=parse&page=${encodeURIComponent(page)}&prop=wikitext&format=json&formatversion=2&origin=*`;
+  // Use the `action=raw` endpoint which returns wikitext directly and is
+  // more tolerant of edge-network requests than the JSON action API (the
+  // action=parse endpoint returns 403 for Cloudflare Workers traffic even
+  // with a valid User-Agent).
+  const url = `https://en.wikipedia.org/wiki/${encodeURIComponent(page)}?action=raw`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { accept: "application/json" } });
-    if (!res.ok) throw new Error(`Wikipedia ${res.status} for ${page}`);
-    const json = (await res.json()) as { parse?: { wikitext?: string } };
-    return json.parse?.wikitext ?? "";
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        accept: "text/plain, */*",
+        "user-agent": "WC26PredictorBot/1.0 (https://wc26.kerad.me; contact@kerad.me)",
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Wikipedia ${res.status} for ${page}: ${body.slice(0, 300)}`);
+    }
+    return await res.text();
   } finally {
     clearTimeout(t);
   }
 }
+
 
 // Split the master article into per-team sections keyed by canonical
 // team name. The article uses "=== TeamName ===" headers.
