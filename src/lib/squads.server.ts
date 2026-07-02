@@ -44,7 +44,10 @@ async function fetchWikitext(page: string): Promise<string> {
         "user-agent": "WC26PredictorBot/1.0 (https://wc26.kerad.me; contact@kerad.me)",
       },
     });
-    if (!res.ok) throw new Error(`Wikipedia ${res.status} for ${page}`);
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Wikipedia ${res.status} for ${page}: ${body.slice(0, 300)}`);
+    }
     return await res.text();
   } finally {
     clearTimeout(t);
