@@ -6,6 +6,8 @@ import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import type { Match } from "@/lib/types";
+import { SquadList } from "@/components/SquadList";
+import type { SquadPlayer } from "@/components/PlayerRow";
 
 type Standing = {
   group_label: string;
@@ -24,7 +26,7 @@ type Standing = {
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
-type Tab = "matches" | "standing";
+type Tab = "matches" | "standing" | "squad";
 
 export const Route = createFileRoute("/teams/$teamCode")({
   head: ({ params }) => ({
@@ -44,8 +46,25 @@ function TeamPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [groupRows, setGroupRows] = useState<Standing[]>([]);
   const [teamName, setTeamName] = useState<string | null>(null);
+  const [squad, setSquad] = useState<SquadPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab | null>(null);
+
+  // Squad for this team.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await sb
+        .from("squad_players")
+        .select("id, team_code, full_name, display_name, jersey_number, position, club, club_country_code, image_url, captain")
+        .eq("team_code", code);
+      if (!active) return;
+      setSquad((data as SquadPlayer[] | null) ?? []);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [code]);
 
   // Matches involving this team.
   useEffect(() => {
@@ -132,6 +151,9 @@ function TeamPage() {
         <SubTabBtn active={tab === "standing"} onClick={() => setTab("standing")}>
           {t("team_standing") ?? "Standing"}
         </SubTabBtn>
+        <SubTabBtn active={tab === "squad"} onClick={() => setTab("squad")}>
+          {t("team_squad") ?? "Squad"}
+        </SubTabBtn>
       </div>
 
       {loading && (
@@ -141,6 +163,7 @@ function TeamPage() {
       {!loading && tab === "matches" && (
         <MatchList matches={sortedMatches} code={code} emptyLabel={t("no_matches_yet") ?? "No matches yet."} />
       )}
+      {!loading && tab === "squad" && <SquadList players={squad} />}
       {!loading && tab === "standing" && (
         <StandingView rows={groupRows} highlightCode={code} n={n} t={t} />
       )}

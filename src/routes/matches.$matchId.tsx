@@ -11,6 +11,7 @@ import { ReactionBar } from "@/components/ReactionBar";
 import { CommentThread } from "@/components/CommentThread";
 import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
 import { MatchEventsPanel } from "@/components/MatchEventsPanel";
+import { MatchSquadsPanel } from "@/components/MatchSquadsPanel";
 import { LiveIndicator } from "@/components/LiveIndicator";
 import { useEspnLive } from "@/lib/useEspnLive";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -280,6 +281,13 @@ function MatchDetailPage() {
           ))}
         </ul>
       )}
+
+      <MatchSquadsPanel
+        homeCode={hc}
+        awayCode={ac}
+        homeTeam={match.home_team}
+        awayTeam={match.away_team}
+      />
 
       <section className="mt-8">
         <h2 className="mb-2 px-1 text-sm font-bold uppercase tracking-wide text-ink-soft">
