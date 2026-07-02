@@ -117,8 +117,12 @@ export type MatchLite = {
   state: "pre" | "in" | "post";
   home_code: string | null;
   away_code: string | null;
+  home_team: string | null;
+  away_team: string | null;
   home_score: number | null;
   away_score: number | null;
+  is_knockout: boolean;
+  advanced_side: "home" | "away" | null;
 };
 
 export type ResolvedSlot = {
@@ -151,8 +155,37 @@ function resolveMatch(
   const cached = cache.get(m.id);
   if (cached) return cached;
 
-  const top = resolveSlot(m.top, standings, matches, cache);
-  const bottom = resolveSlot(m.bottom, standings, matches, cache);
+  let top = resolveSlot(m.top, standings, matches, cache);
+  let bottom = resolveSlot(m.bottom, standings, matches, cache);
+
+  // R32 backfill: once ESPN has scheduled the actual knockout fixtures the
+  // FIFA "3rd of A/B/C/D/F" lookup becomes irrelevant — the fixture data is
+  // the truth. If one side of an R32 slot is known (e.g. group-stage winner
+  // resolved) and there's an ESPN knockout match involving that team, use
+  // the ESPN opponent as the other side.
+  if (m.round === "R32") {
+    const backfill = (known: ResolvedSlot, keepPlaceholder: string): ResolvedSlot | null => {
+      if (!known.team_code) return null;
+      const em = matches.find(
+        (x) =>
+          x.is_knockout &&
+          (x.home_code === known.team_code || x.away_code === known.team_code),
+      );
+      if (!em) return null;
+      const knownIsHome = em.home_code === known.team_code;
+      const opponentCode = knownIsHome ? em.away_code : em.home_code;
+      const opponentName = knownIsHome ? em.away_team : em.home_team;
+      if (!opponentCode || !opponentName) return null;
+      return { team_code: opponentCode, team_name: opponentName, placeholder: keepPlaceholder };
+    };
+    if (top.team_code && !bottom.team_code) {
+      const filled = backfill(top, bottom.placeholder);
+      if (filled) bottom = filled;
+    } else if (!top.team_code && bottom.team_code) {
+      const filled = backfill(bottom, top.placeholder);
+      if (filled) top = filled;
+    }
+  }
 
   let winner: ResolvedSlot | null = null;
   let loser: ResolvedSlot | null = null;
@@ -164,12 +197,27 @@ function resolveMatch(
         ((x.home_code === top.team_code && x.away_code === bottom.team_code) ||
           (x.home_code === bottom.team_code && x.away_code === top.team_code)),
     );
-    if (em && em.home_score !== null && em.away_score !== null && em.home_score !== em.away_score) {
+    if (em) {
       const topIsHome = em.home_code === top.team_code;
-      const topScore = topIsHome ? em.home_score : em.away_score;
-      const bottomScore = topIsHome ? em.away_score : em.home_score;
-      winner = topScore > bottomScore ? top : bottom;
-      loser = topScore > bottomScore ? bottom : top;
+      // Prefer ESPN's advanced_side flag when set — it's the authoritative
+      // "who progresses" answer for penalty-decided knockouts where the
+      // scoreline stays tied.
+      if (em.advanced_side) {
+        const topAdvanced =
+          (topIsHome && em.advanced_side === "home") ||
+          (!topIsHome && em.advanced_side === "away");
+        winner = topAdvanced ? top : bottom;
+        loser = topAdvanced ? bottom : top;
+      } else if (
+        em.home_score !== null &&
+        em.away_score !== null &&
+        em.home_score !== em.away_score
+      ) {
+        const topScore = topIsHome ? em.home_score : em.away_score;
+        const bottomScore = topIsHome ? em.away_score : em.home_score;
+        winner = topScore > bottomScore ? top : bottom;
+        loser = topScore > bottomScore ? bottom : top;
+      }
     }
   }
 

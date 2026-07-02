@@ -477,12 +477,27 @@ function BracketView({ standings, matches }: { standings: Standing[]; matches: E
           state: m.state,
           home_code: m.home_code,
           away_code: m.away_code,
+          home_team: m.home_team,
+          away_team: m.away_team,
           home_score: m.home_score,
           away_score: m.away_score,
+          is_knockout: !!m.is_knockout,
+          advanced_side: m.advanced_side ?? null,
         })),
       ),
     [standings, matches],
   );
+
+  // Index resolved bracket matches by their id so we can find scores from
+  // ESPN's actual fixture data (matched by codes).
+  const espnByPair = useMemo(() => {
+    const map = new Map<string, EspnMatch>();
+    for (const em of matches) {
+      if (!em.home_code || !em.away_code) continue;
+      map.set(pairKey(em.home_code, em.away_code), em);
+    }
+    return map;
+  }, [matches]);
 
   const byRound = useMemo(() => {
     const map = new Map<Round, ResolvedMatch[]>();
@@ -494,49 +509,187 @@ function BracketView({ standings, matches }: { standings: Standing[]; matches: E
     return map;
   }, [resolved]);
 
+  // Fixed column height keeps R32 (16 matches) legible on wide screens; the
+  // outer container is horizontally scrollable on mobile so nothing is cut.
+  const columnHeight = 1120;
+  // Columns are ordered R32 → R16 → QF → SF → F. The 3rd-place playoff is
+  // rendered separately below since it doesn't participate in the vertical
+  // pyramid.
+  const mainRounds = BRACKET_COLUMNS.filter((c) => c.round !== "3P");
+
   return (
     <div className="-mx-4 overflow-x-auto px-4 pb-2">
-      <div className="flex min-w-max gap-3">
-        {BRACKET_COLUMNS.map((col) => (
-          <div key={col.round} className="w-44 shrink-0">
-            <h3 className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-ink-soft">
-              {col.title}
-            </h3>
-            <div className="space-y-2">
-              {(byRound.get(col.round) ?? []).map((m) => (
-                <BracketMatchCard key={m.id} m={m} />
-              ))}
+      <div className="flex min-w-max items-stretch gap-0" style={{ height: columnHeight }}>
+        {mainRounds.map((col, colIdx) => {
+          const roundMatches = byRound.get(col.round) ?? [];
+          const isLast = colIdx === mainRounds.length - 1;
+          return (
+            <div key={col.round} className="flex shrink-0 flex-col" style={{ width: 188 }}>
+              <h3 className="h-6 px-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                {col.title}
+              </h3>
+              <div className="relative flex flex-1 flex-col justify-around py-1">
+                {roundMatches.map((m, i) => (
+                  <BracketSlot
+                    key={m.id}
+                    m={m}
+                    espn={espnByPair.get(pairKey(m.top.team_code ?? "", m.bottom.team_code ?? ""))}
+                    connector={isLast ? "none" : i % 2 === 0 ? "down" : "up"}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {byRound.get("3P")?.map((m) => (
+        <div key={m.id} className="mt-6 w-full max-w-sm">
+          <h3 className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+            3rd Place
+          </h3>
+          <BracketMatchCard
+            m={m}
+            espn={espnByPair.get(pairKey(m.top.team_code ?? "", m.bottom.team_code ?? ""))}
+          />
+        </div>
+      ))}
     </div>
   );
 }
 
-function BracketMatchCard({ m }: { m: ResolvedMatch }) {
+function pairKey(a: string | null | undefined, b: string | null | undefined) {
+  if (!a || !b) return "__none__";
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function BracketSlot({
+  m,
+  espn,
+  connector,
+}: {
+  m: ResolvedMatch;
+  espn: EspnMatch | undefined;
+  connector: "up" | "down" | "none";
+}) {
+  return (
+    <div className="relative flex flex-1 items-center px-1">
+      <div className="w-full">
+        <BracketMatchCard m={m} espn={espn} />
+      </div>
+      {connector !== "none" && (
+        <>
+          {/* Horizontal tail extending right from the card */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-full top-1/2 h-px bg-border/70"
+            style={{ width: 12 }}
+          />
+          {/* Half of the vertical link between this card and its sibling */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute border-border/70"
+            style={{
+              left: "calc(100% + 12px)",
+              width: 0,
+              borderLeftWidth: 1,
+              borderLeftStyle: "solid",
+              top: connector === "down" ? "50%" : "0",
+              height: connector === "down" ? "50%" : "50%",
+            }}
+          />
+          {/* Rightward horizontal into the next round — only from the middle
+              of the pair. The bottom-of-pair slot draws this since its top
+              starts at the pair's midpoint. */}
+          {connector === "up" && (
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-full h-px bg-border/70"
+              style={{ top: "0", width: 24 }}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function BracketMatchCard({ m, espn }: { m: ResolvedMatch; espn: EspnMatch | undefined }) {
   const topWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.top.team_code;
   const bottomWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.bottom.team_code;
+  const settled = !!m.winner;
+  const live = espn?.state === "in";
+
+  // Figure out which side of the ESPN row is which bracket slot so scores
+  // line up with team labels even when home/away is swapped.
+  let topScore: number | null = null;
+  let bottomScore: number | null = null;
+  if (espn && m.top.team_code && m.bottom.team_code) {
+    if (espn.home_code === m.top.team_code) {
+      topScore = espn.home_score;
+      bottomScore = espn.away_score;
+    } else if (espn.home_code === m.bottom.team_code) {
+      topScore = espn.away_score;
+      bottomScore = espn.home_score;
+    }
+  }
+
   return (
-    <div className="rounded-xl border border-border bg-surface p-2 text-xs">
-      <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-soft">{m.label}</div>
-      <SlotRow s={m.top} won={topWon} dimmed={!!m.winner && !topWon} />
-      <div className="my-1 h-px bg-border/60" />
-      <SlotRow s={m.bottom} won={bottomWon} dimmed={!!m.winner && !bottomWon} />
+    <div
+      className={`rounded-xl border bg-surface text-[11px] shadow-sm transition ${
+        live
+          ? "border-accent/60 ring-1 ring-accent/40"
+          : settled
+            ? "border-border"
+            : "border-border/60"
+      }`}
+    >
+      <div className="flex items-center justify-between px-2 pt-1.5 pb-0.5 text-[9px] uppercase tracking-wider text-ink-soft">
+        <span>{m.label}</span>
+        {live ? (
+          <span className="font-semibold text-accent">{espn?.clock_display ?? "LIVE"}</span>
+        ) : settled ? (
+          <span>FT</span>
+        ) : null}
+      </div>
+      <SlotRow s={m.top} won={topWon} dimmed={settled && !topWon} score={topScore} />
+      <div className="mx-2 h-px bg-border/60" />
+      <SlotRow s={m.bottom} won={bottomWon} dimmed={settled && !bottomWon} score={bottomScore} />
     </div>
   );
 }
 
-function SlotRow({ s, won, dimmed }: { s: ResolvedSlot; won: boolean; dimmed: boolean }) {
+function SlotRow({
+  s,
+  won,
+  dimmed,
+  score,
+}: {
+  s: ResolvedSlot;
+  won: boolean;
+  dimmed: boolean;
+  score: number | null;
+}) {
   const concrete = !!s.team_name;
   return (
     <div
-      className={`flex items-center gap-2 ${
-        won ? "font-semibold text-ink" : concrete ? (dimmed ? "text-ink-soft" : "text-ink") : "italic text-ink-soft"
+      className={`flex items-center gap-1.5 px-2 py-1.5 ${
+        won
+          ? "font-bold text-ink"
+          : concrete
+            ? dimmed
+              ? "text-ink-soft"
+              : "text-ink"
+            : "italic text-ink-soft"
       }`}
     >
-      <span className="text-base leading-none">{s.team_code ? flagFromCode(s.team_code) : "🏳️"}</span>
-      <span className="truncate">{s.team_name ?? s.placeholder}</span>
+      <span className="text-sm leading-none">{s.team_code ? flagFromCode(s.team_code) : "🏳️"}</span>
+      <span className="min-w-0 flex-1 truncate">{s.team_name ?? s.placeholder}</span>
+      {score !== null && (
+        <span className={`shrink-0 tabular-nums ${won ? "text-ink" : "text-ink-soft"}`}>
+          {score}
+        </span>
+      )}
     </div>
   );
 }
