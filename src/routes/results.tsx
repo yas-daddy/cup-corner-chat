@@ -21,6 +21,8 @@ type EspnMatch = {
   status_detail: string | null;
   group_label: string | null;
   linked_match_id: string | null;
+  is_knockout?: boolean | null;
+  advanced_side?: string | null;
 };
 
 type Standing = {
