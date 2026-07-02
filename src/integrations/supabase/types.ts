@@ -897,6 +897,60 @@ export type Database = {
           },
         ]
       }
+      squad_players: {
+        Row: {
+          captain: boolean
+          club: string | null
+          club_country_code: string | null
+          created_at: string
+          display_name: string | null
+          dob: string | null
+          full_name: string
+          height_cm: number | null
+          id: string
+          image_url: string | null
+          jersey_number: number | null
+          last_synced_at: string
+          position: string | null
+          team_code: string
+          updated_at: string
+        }
+        Insert: {
+          captain?: boolean
+          club?: string | null
+          club_country_code?: string | null
+          created_at?: string
+          display_name?: string | null
+          dob?: string | null
+          full_name: string
+          height_cm?: number | null
+          id: string
+          image_url?: string | null
+          jersey_number?: number | null
+          last_synced_at?: string
+          position?: string | null
+          team_code: string
+          updated_at?: string
+        }
+        Update: {
+          captain?: boolean
+          club?: string | null
+          club_country_code?: string | null
+          created_at?: string
+          display_name?: string | null
+          dob?: string | null
+          full_name?: string
+          height_cm?: number | null
+          id?: string
+          image_url?: string | null
+          jersey_number?: number | null
+          last_synced_at?: string
+          position?: string | null
+          team_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       bank_balances: {
