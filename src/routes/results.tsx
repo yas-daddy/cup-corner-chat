@@ -5,7 +5,6 @@ import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import { resolveBracket, type ResolvedMatch, type ResolvedSlot, type Round } from "@/lib/bracket";
-import { PullToRefresh } from "@/components/PullToRefresh";
 
 type EspnMatch = {
   id: string;
@@ -118,7 +117,6 @@ function ResultsPage() {
   }, []);
 
   return (
-    <PullToRefresh onRefresh={loadAll}>
     <div className="px-4 pt-6 pb-24">
       <header className="mb-4">
         <h1 className="text-2xl font-extrabold">{t("results") ?? "Results"}</h1>
@@ -143,7 +141,6 @@ function ResultsPage() {
       {!loading && tab === "standings" && <StandingsView rows={standings} />}
       {!loading && tab === "bracket" && <BracketView standings={standings} matches={matches} />}
     </div>
-    </PullToRefresh>
   );
 }
 
