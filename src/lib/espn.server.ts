@@ -11,6 +11,7 @@ import { americanToDecimal } from "@/lib/odds";
 
 const SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
 const STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings";
+const SUMMARY = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary";
 
 const TIMEOUT_MS = 9000;
 
@@ -330,6 +331,69 @@ export async function fetchStandings(): Promise<EspnStandingRow[]> {
         gd,
         pts,
         rank: rank ?? null,
+      });
+    }
+  }
+  return out;
+}
+
+// --- Match lineups -------------------------------------------------------
+
+export type EspnLineupPlayer = {
+  team_code: string;
+  team_side: "home" | "away";
+  idx: number;
+  full_name: string;
+  jersey_number: number | null;
+  position: string | null;
+  is_starter: boolean;
+  captain: boolean;
+  formation: string | null;
+  espn_player_id: string | null;
+};
+
+// ESPN publishes the starting sheet + bench under summary?event={id} once
+// the lineups drop (~15-30 minutes before kickoff). Return normalized rows
+// per team; caller writes them to public.match_lineups.
+export async function fetchMatchSummary(eventId: string): Promise<EspnLineupPlayer[]> {
+  const url = `${SUMMARY}?event=${encodeURIComponent(eventId)}`;
+  const json = await fetchJson(url);
+  const root = asObj(json);
+  const rosters = asArr(root.rosters);
+  if (rosters.length === 0) return [];
+
+  const out: EspnLineupPlayer[] = [];
+  for (const r of rosters) {
+    const ro = asObj(r);
+    const teamObj = asObj(ro.team);
+    const teamName = asStr(teamObj.displayName) ?? asStr(teamObj.name) ?? "";
+    const teamCode = codeForTeam(teamName) ?? asStr(teamObj.abbreviation) ?? "";
+    if (!teamCode) continue;
+    const side: "home" | "away" = asStr(ro.homeAway) === "away" ? "away" : "home";
+    const formation = asStr(asObj(ro.formation).name);
+    const players = asArr(ro.roster);
+    let idx = 0;
+    for (const p of players) {
+      const po = asObj(p);
+      const playerObj = asObj(po.athlete ?? po.player);
+      const name = asStr(playerObj.displayName) ?? asStr(playerObj.fullName) ?? asStr(playerObj.shortName);
+      if (!name) continue;
+      const jerseyRaw = asStr(playerObj.jersey) ?? asStr(po.jersey);
+      const jersey = jerseyRaw ? parseInt(jerseyRaw.replace(/\D/g, ""), 10) : null;
+      const posAbbr = asStr(asObj(playerObj.position).abbreviation)
+        ?? asStr(asObj(po.position).abbreviation)
+        ?? asStr(asObj(playerObj.position).name);
+      out.push({
+        team_code: teamCode.toUpperCase(),
+        team_side: side,
+        idx: idx++,
+        full_name: name,
+        jersey_number: Number.isFinite(jersey) ? jersey : null,
+        position: posAbbr,
+        is_starter: po.starter === true,
+        captain: po.captain === true || playerObj.captain === true,
+        formation,
+        espn_player_id: asStr(playerObj.id),
       });
     }
   }

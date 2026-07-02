@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchScoreboard, fetchStandings } from "@/lib/espn.server";
+import { fetchScoreboard, fetchStandings, fetchMatchSummary } from "@/lib/espn.server";
 
 function unauthorized() {
   return new Response("Unauthorized", { status: 401 });
@@ -175,6 +175,88 @@ async function handler({ request }: { request: Request }) {
     console.error("sync-espn scoreboard failed", e);
     result.scoreboard_error = e instanceof Error ? e.message : String(e);
     result.ok = false;
+  }
+
+  // Lineups: for matches that have kicked off, are about to kick off, or
+  // just finished — and don't already have a lineup sheet stored. Once we
+  // capture the sheet we don't refetch (per feature scope: no mid-match
+  // updates).
+  try {
+    const nowMs = Date.now();
+    const { data: eligible } = await sb
+      .from("espn_matches")
+      .select("id, linked_match_id, kickoff_at, state, home_code, away_code")
+      .in("state", ["in", "pre", "post"])
+      .not("linked_match_id", "is", null);
+    const candidates =
+      ((eligible as Array<{
+        id: string;
+        linked_match_id: string;
+        kickoff_at: string;
+        state: string;
+        home_code: string | null;
+        away_code: string | null;
+      }> | null) ?? [])
+        .filter((m) => {
+          const kickMs = new Date(m.kickoff_at).getTime();
+          const dtMin = (kickMs - nowMs) / 60000;
+          if (m.state === "in") return true;
+          if (m.state === "pre") return dtMin <= 90; // starting soon
+          if (m.state === "post") return dtMin >= -24 * 60; // finished today-ish
+          return false;
+        })
+        .slice(0, 6); // cap per-tick fanout
+
+    // Skip matches we already have lineups for.
+    const candidateMatchIds = candidates.map((c) => c.linked_match_id);
+    const already = new Set<string>();
+    if (candidateMatchIds.length) {
+      const { data: existing } = await sb
+        .from("match_lineups")
+        .select("match_id")
+        .in("match_id", candidateMatchIds);
+      for (const r of (existing as Array<{ match_id: string }> | null) ?? []) {
+        already.add(r.match_id);
+      }
+    }
+    const toFetch = candidates.filter((c) => !already.has(c.linked_match_id));
+
+    let lineupsAdded = 0;
+    for (const c of toFetch) {
+      try {
+        const players = await fetchMatchSummary(c.id);
+        if (players.length === 0) continue;
+        // If ESPN's team_code doesn't match our stored home_code/away_code
+        // (e.g. USA vs US), remap using team_side.
+        const remapped = players.map((p) => ({
+          match_id: c.linked_match_id,
+          team_code:
+            p.team_side === "home"
+              ? c.home_code ?? p.team_code
+              : c.away_code ?? p.team_code,
+          idx: p.idx,
+          full_name: p.full_name,
+          jersey_number: p.jersey_number,
+          position: p.position,
+          is_starter: p.is_starter,
+          captain: p.captain,
+          formation: p.formation,
+          espn_player_id: p.espn_player_id,
+        }));
+        const { error: insErr } = await sb
+          .from("match_lineups")
+          .upsert(remapped, { onConflict: "match_id,team_code,idx" });
+        if (insErr) throw new Error(insErr.message);
+        lineupsAdded += remapped.length;
+      } catch (e) {
+        console.error(`sync-espn lineups failed for ${c.id}`, e);
+      }
+    }
+    result.lineups_added = lineupsAdded;
+    result.lineups_matches_processed = toFetch.length;
+  } catch (e) {
+    console.error("sync-espn lineups failed", e);
+    result.lineups_error = e instanceof Error ? e.message : String(e);
   }
 
   try {

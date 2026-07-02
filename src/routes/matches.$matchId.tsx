@@ -12,6 +12,7 @@ import { CommentThread } from "@/components/CommentThread";
 import { MatchDiscussionThread } from "@/components/MatchDiscussionThread";
 import { MatchEventsPanel } from "@/components/MatchEventsPanel";
 import { MatchSquadsPanel } from "@/components/MatchSquadsPanel";
+import { MatchLineupsPanel } from "@/components/MatchLineupsPanel";
 import { LiveIndicator } from "@/components/LiveIndicator";
 import { useEspnLive } from "@/lib/useEspnLive";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -281,6 +282,14 @@ function MatchDetailPage() {
           ))}
         </ul>
       )}
+
+      <MatchLineupsPanel
+        matchId={matchId}
+        homeCode={hc}
+        awayCode={ac}
+        homeTeam={match.home_team}
+        awayTeam={match.away_team}
+      />
 
       <MatchSquadsPanel
         homeCode={hc}
