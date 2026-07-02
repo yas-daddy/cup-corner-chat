@@ -22,7 +22,7 @@ type EspnMatch = {
   group_label: string | null;
   linked_match_id: string | null;
   is_knockout?: boolean | null;
-  advanced_side?: string | null;
+  advanced_side?: "home" | "away" | null;
 };
 
 type Standing = {
