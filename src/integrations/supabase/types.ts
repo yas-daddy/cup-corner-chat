@@ -499,6 +499,59 @@ export type Database = {
           },
         ]
       }
+      match_lineups: {
+        Row: {
+          captain: boolean
+          created_at: string
+          espn_player_id: string | null
+          formation: string | null
+          full_name: string
+          idx: number
+          is_starter: boolean
+          jersey_number: number | null
+          match_id: string
+          position: string | null
+          team_code: string
+          updated_at: string
+        }
+        Insert: {
+          captain?: boolean
+          created_at?: string
+          espn_player_id?: string | null
+          formation?: string | null
+          full_name: string
+          idx: number
+          is_starter?: boolean
+          jersey_number?: number | null
+          match_id: string
+          position?: string | null
+          team_code: string
+          updated_at?: string
+        }
+        Update: {
+          captain?: boolean
+          created_at?: string
+          espn_player_id?: string | null
+          formation?: string | null
+          full_name?: string
+          idx?: number
+          is_starter?: boolean
+          jersey_number?: number | null
+          match_id?: string
+          position?: string | null
+          team_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_lineups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           advanced_side: string | null
