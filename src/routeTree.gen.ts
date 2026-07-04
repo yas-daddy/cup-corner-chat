@@ -22,7 +22,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeamsTeamCodeRouteImport } from './routes/teams.$teamCode'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
 import { Route as MatchesMatchIdRouteImport } from './routes/matches.$matchId'
-import { Route as ApiPublicSyncSquadsRouteImport } from './routes/api/public/sync-squads'
 import { Route as ApiPublicSyncMatchesRouteImport } from './routes/api/public/sync-matches'
 import { Route as ApiPublicSyncEspnRouteImport } from './routes/api/public/sync-espn'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
@@ -98,11 +97,6 @@ const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
 const MatchesMatchIdRoute = MatchesMatchIdRouteImport.update({
   id: '/matches/$matchId',
   path: '/matches/$matchId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSyncSquadsRoute = ApiPublicSyncSquadsRouteImport.update({
-  id: '/api/public/sync-squads',
-  path: '/api/public/sync-squads',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSyncMatchesRoute = ApiPublicSyncMatchesRouteImport.update({
@@ -186,7 +180,6 @@ export interface FileRoutesByFullPath {
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
-  '/api/public/sync-squads': typeof ApiPublicSyncSquadsRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRoutesByTo {
@@ -213,7 +206,6 @@ export interface FileRoutesByTo {
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
-  '/api/public/sync-squads': typeof ApiPublicSyncSquadsRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRoutesById {
@@ -241,7 +233,6 @@ export interface FileRoutesById {
   '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/api/public/sync-espn': typeof ApiPublicSyncEspnRoute
   '/api/public/sync-matches': typeof ApiPublicSyncMatchesRoute
-  '/api/public/sync-squads': typeof ApiPublicSyncSquadsRoute
   '/api/public/hooks/emit-pending-predictions': typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 export interface FileRouteTypes {
@@ -270,7 +261,6 @@ export interface FileRouteTypes {
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
-    | '/api/public/sync-squads'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -297,7 +287,6 @@ export interface FileRouteTypes {
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
-    | '/api/public/sync-squads'
     | '/api/public/hooks/emit-pending-predictions'
   id:
     | '__root__'
@@ -324,7 +313,6 @@ export interface FileRouteTypes {
     | '/api/public/send-push'
     | '/api/public/sync-espn'
     | '/api/public/sync-matches'
-    | '/api/public/sync-squads'
     | '/api/public/hooks/emit-pending-predictions'
   fileRoutesById: FileRoutesById
 }
@@ -352,7 +340,6 @@ export interface RootRouteChildren {
   ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   ApiPublicSyncEspnRoute: typeof ApiPublicSyncEspnRoute
   ApiPublicSyncMatchesRoute: typeof ApiPublicSyncMatchesRoute
-  ApiPublicSyncSquadsRoute: typeof ApiPublicSyncSquadsRoute
   ApiPublicHooksEmitPendingPredictionsRoute: typeof ApiPublicHooksEmitPendingPredictionsRoute
 }
 
@@ -447,13 +434,6 @@ declare module '@tanstack/react-router' {
       path: '/matches/$matchId'
       fullPath: '/matches/$matchId'
       preLoaderRoute: typeof MatchesMatchIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/sync-squads': {
-      id: '/api/public/sync-squads'
-      path: '/api/public/sync-squads'
-      fullPath: '/api/public/sync-squads'
-      preLoaderRoute: typeof ApiPublicSyncSquadsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/sync-matches': {
@@ -560,10 +540,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   ApiPublicSyncEspnRoute: ApiPublicSyncEspnRoute,
   ApiPublicSyncMatchesRoute: ApiPublicSyncMatchesRoute,
-  ApiPublicSyncSquadsRoute: ApiPublicSyncSquadsRoute,
   ApiPublicHooksEmitPendingPredictionsRoute:
     ApiPublicHooksEmitPendingPredictionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
