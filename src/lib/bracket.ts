@@ -100,6 +100,36 @@ export const WC2026_BRACKET: BracketMatch[] = (() => {
   return out;
 })();
 
+// --- Display order ----------------------------------------------------------
+//
+// The R16/QF/SF arrays above pair matches by FIFA's cross-bracket structure,
+// which is NOT sequential (e.g. M89 = winner of M74 + M77, not M73 + M74).
+// Rendering the bracket as columns of cards only draws correct connector
+// lines if each on-screen adjacent pair (card 0+1, 2+3, ...) is actually the
+// pair that feeds the same next-round match. This walks the tree from the
+// Final backwards, expanding each match into its two feeder match ids, so
+// the resulting order is display-ready: index 2n and 2n+1 always feed the
+// same next-round slot.
+const BRACKET_CHILDREN: Record<string, [string, string]> = {
+  M104: ["M101", "M102"],
+  ...Object.fromEntries(SF.map(([id, a, b]) => [id, [a, b] as [string, string]])),
+  ...Object.fromEntries(QF.map(([id, a, b]) => [id, [a, b] as [string, string]])),
+  ...Object.fromEntries(R16.map(([id, a, b]) => [id, [a, b] as [string, string]])),
+};
+
+const ROUND_DEPTH_FROM_FINAL: Round[] = ["F", "SF", "QF", "R16", "R32"];
+
+export const BRACKET_DISPLAY_ORDER: Record<Round, string[]> = (() => {
+  const table = {} as Record<Round, string[]>;
+  let order = ["M104"];
+  for (const round of ROUND_DEPTH_FROM_FINAL) {
+    table[round] = order;
+    order = order.flatMap((id) => BRACKET_CHILDREN[id] ?? [id]);
+  }
+  table["3P"] = ["M103"];
+  return table;
+})();
+
 // --- Resolver -------------------------------------------------------------
 
 export type StandingLite = {

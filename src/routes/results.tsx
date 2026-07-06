@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
-import { resolveBracket, type ResolvedMatch, type ResolvedSlot, type Round } from "@/lib/bracket";
+import { resolveBracket, BRACKET_DISPLAY_ORDER, type ResolvedMatch, type ResolvedSlot, type Round } from "@/lib/bracket";
 
 type EspnMatch = {
   id: string;
@@ -499,21 +499,26 @@ function BracketView({ standings, matches }: { standings: Standing[]; matches: E
   }, [matches]);
 
   const byRound = useMemo(() => {
+    const byId = new Map(resolved.map((r) => [r.id, r]));
     const map = new Map<Round, ResolvedMatch[]>();
-    for (const r of resolved) {
-      const arr = map.get(r.round) ?? [];
-      arr.push(r);
-      map.set(r.round, arr);
+    for (const round of Object.keys(BRACKET_DISPLAY_ORDER) as Round[]) {
+      const ordered = BRACKET_DISPLAY_ORDER[round]
+        .map((id) => byId.get(id))
+        .filter((r): r is ResolvedMatch => !!r);
+      if (ordered.length) map.set(round, ordered);
     }
     return map;
   }, [resolved]);
 
-  // Fixed column height keeps R32 (16 matches) legible on wide screens; the
-  // outer container is horizontally scrollable on mobile so nothing is cut.
-  const columnHeight = 1120;
-  // Columns are ordered R32 → R16 → QF → SF → F. The 3rd-place playoff is
-  // rendered separately below since it doesn't participate in the vertical
-  // pyramid.
+  // Sizing rules: R32 (16 cards) drives the overall height. Each match card
+  // is around 84 px tall (label row + two team rows). Give every slot 108 px
+  // so cards don't kiss their neighbours and the connector line has visible
+  // clear space above and below. Bigger rounds inherit the same total height
+  // and just have fewer, taller slots.
+  const CARD_MIN_HEIGHT = 84;
+  const SLOT_HEIGHT = 108;
+  const HEADER_HEIGHT = 32;
+  const columnHeight = SLOT_HEIGHT * 16 + HEADER_HEIGHT;
   const mainRounds = BRACKET_COLUMNS.filter((c) => c.round !== "3P");
 
   return (
@@ -523,17 +528,18 @@ function BracketView({ standings, matches }: { standings: Standing[]; matches: E
           const roundMatches = byRound.get(col.round) ?? [];
           const isLast = colIdx === mainRounds.length - 1;
           return (
-            <div key={col.round} className="flex shrink-0 flex-col" style={{ width: 188 }}>
-              <h3 className="h-6 px-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+            <div key={col.round} className="flex shrink-0 flex-col" style={{ width: 200 }}>
+              <h3 className="h-8 px-1 pt-1 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
                 {col.title}
               </h3>
-              <div className="relative flex flex-1 flex-col justify-around py-1">
+              <div className="relative flex flex-1 flex-col justify-around">
                 {roundMatches.map((m, i) => (
                   <BracketSlot
                     key={m.id}
                     m={m}
                     espn={espnByPair.get(pairKey(m.top.team_code ?? "", m.bottom.team_code ?? ""))}
                     connector={isLast ? "none" : i % 2 === 0 ? "down" : "up"}
+                    cardMinHeight={CARD_MIN_HEIGHT}
                   />
                 ))}
               </div>
@@ -566,45 +572,57 @@ function BracketSlot({
   m,
   espn,
   connector,
+  cardMinHeight,
 }: {
   m: ResolvedMatch;
   espn: EspnMatch | undefined;
   connector: "up" | "down" | "none";
+  cardMinHeight: number;
 }) {
+  // Line geometry:
+  //   - Tail: from the right edge of the card, 14 px into the gap.
+  //   - Vertical: solid line from midpoint of "down" slot to midpoint of "up"
+  //     slot. Down draws its half (50% → 100%), up draws its half (0 → 50%).
+  //   - Feed line: only the "up" slot draws the horizontal continuation into
+  //     the next column, so the top card doesn't accidentally draw a stub
+  //     under the join.
+  const TAIL = 14;
+  const FEED = 22;
   return (
-    <div className="relative flex flex-1 items-center px-1">
+    <div
+      className="relative flex flex-1 items-center px-2 py-1.5"
+      style={{ minHeight: cardMinHeight }}
+    >
       <div className="w-full">
-        <BracketMatchCard m={m} espn={espn} />
+        <BracketMatchCard m={m} espn={espn} cardMinHeight={cardMinHeight} />
       </div>
       {connector !== "none" && (
         <>
-          {/* Horizontal tail extending right from the card */}
           <span
             aria-hidden
-            className="pointer-events-none absolute left-full top-1/2 h-px bg-border/70"
-            style={{ width: 12 }}
+            className="pointer-events-none absolute top-1/2 -translate-y-1/2 bg-border"
+            style={{ left: "calc(100% - 8px)", width: TAIL, height: 1 }}
           />
-          {/* Half of the vertical link between this card and its sibling */}
           <span
             aria-hidden
-            className="pointer-events-none absolute border-border/70"
+            className="pointer-events-none absolute bg-border"
             style={{
-              left: "calc(100% + 12px)",
-              width: 0,
-              borderLeftWidth: 1,
-              borderLeftStyle: "solid",
+              left: `calc(100% - 8px + ${TAIL}px)`,
+              width: 1,
               top: connector === "down" ? "50%" : "0",
-              height: connector === "down" ? "50%" : "50%",
+              height: "50%",
             }}
           />
-          {/* Rightward horizontal into the next round — only from the middle
-              of the pair. The bottom-of-pair slot draws this since its top
-              starts at the pair's midpoint. */}
           {connector === "up" && (
             <span
               aria-hidden
-              className="pointer-events-none absolute left-full h-px bg-border/70"
-              style={{ top: "0", width: 24 }}
+              className="pointer-events-none absolute bg-border"
+              style={{
+                left: `calc(100% - 8px + ${TAIL}px)`,
+                top: 0,
+                width: FEED,
+                height: 1,
+              }}
             />
           )}
         </>
@@ -613,7 +631,15 @@ function BracketSlot({
   );
 }
 
-function BracketMatchCard({ m, espn }: { m: ResolvedMatch; espn: EspnMatch | undefined }) {
+function BracketMatchCard({
+  m,
+  espn,
+  cardMinHeight,
+}: {
+  m: ResolvedMatch;
+  espn: EspnMatch | undefined;
+  cardMinHeight?: number;
+}) {
   const topWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.top.team_code;
   const bottomWon = !!m.winner && m.winner.team_code != null && m.winner.team_code === m.bottom.team_code;
   const settled = !!m.winner;
@@ -635,13 +661,14 @@ function BracketMatchCard({ m, espn }: { m: ResolvedMatch; espn: EspnMatch | und
 
   return (
     <div
-      className={`rounded-xl border bg-surface text-[11px] shadow-sm transition ${
+      className={`flex flex-col justify-center rounded-xl border bg-surface text-[11px] shadow-sm transition ${
         live
           ? "border-accent/60 ring-1 ring-accent/40"
           : settled
             ? "border-border"
             : "border-border/60"
       }`}
+      style={cardMinHeight ? { minHeight: cardMinHeight } : undefined}
     >
       <div className="flex items-center justify-between px-2 pt-1.5 pb-0.5 text-[9px] uppercase tracking-wider text-ink-soft">
         <span>{m.label}</span>
