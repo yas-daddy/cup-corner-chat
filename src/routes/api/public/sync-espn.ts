@@ -113,8 +113,10 @@ async function handler({ request }: { request: Request }) {
       let skippedUnchanged = 0;
       const toUpsert: Array<Record<string, unknown>> = [];
       for (const r of matches) {
+        const ck = codeKey(r.home_code, r.away_code, r.kickoff_at);
         const linked_match_id =
-          linkMap.get(linkKey(r.home_team, r.away_team, r.kickoff_at)) ?? null;
+          linkMap.get(nameKey(r.home_team, r.away_team, r.kickoff_at)) ??
+          (ck ? linkMapByCode.get(ck) ?? null : null);
         const candidate = { ...r, linked_match_id, last_synced_at: nowIso };
         const prior = existingMap.get(r.id);
         if (prior) {
