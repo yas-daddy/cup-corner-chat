@@ -42,15 +42,23 @@ async function handler({ request }: { request: Request }) {
     if (matches.length) {
       const nowIso = new Date().toISOString();
 
-      // Link each ESPN row to an existing matches.id by (home, away, date).
+      // Link each ESPN row to an existing matches.id by (home, away, date),
+      // with a (home_code, away_code, date) fallback for team-name mismatches
+      // like "Cape Verde" (ESPN) vs "Cape Verde Islands" (football-data).
       const { data: existingMatches } = await sb
         .from("matches")
-        .select("id, home_team, away_team, kickoff_at");
-      const linkKey = (h: string, a: string, k: string) =>
-        `${h.toLowerCase()}|${a.toLowerCase()}|${new Date(k).toISOString().slice(0, 10)}`;
+        .select("id, home_team, away_team, home_code, away_code, kickoff_at");
+      const dateKey = (k: string) => new Date(k).toISOString().slice(0, 10);
+      const nameKey = (h: string, a: string, k: string) =>
+        `${h.toLowerCase()}|${a.toLowerCase()}|${dateKey(k)}`;
+      const codeKey = (h: string | null, a: string | null, k: string) =>
+        h && a ? `${h.toUpperCase()}|${a.toUpperCase()}|${dateKey(k)}` : null;
       const linkMap = new Map<string, string>();
-      for (const m of (existingMatches as Array<{ id: string; home_team: string; away_team: string; kickoff_at: string }> | null) ?? []) {
-        linkMap.set(linkKey(m.home_team, m.away_team, m.kickoff_at), m.id);
+      const linkMapByCode = new Map<string, string>();
+      for (const m of (existingMatches as Array<{ id: string; home_team: string; away_team: string; home_code: string | null; away_code: string | null; kickoff_at: string }> | null) ?? []) {
+        linkMap.set(nameKey(m.home_team, m.away_team, m.kickoff_at), m.id);
+        const ck = codeKey(m.home_code, m.away_code, m.kickoff_at);
+        if (ck) linkMapByCode.set(ck, m.id);
       }
 
       // Pull current espn_matches rows to diff against. Only matches whose
@@ -105,8 +113,10 @@ async function handler({ request }: { request: Request }) {
       let skippedUnchanged = 0;
       const toUpsert: Array<Record<string, unknown>> = [];
       for (const r of matches) {
+        const ck = codeKey(r.home_code, r.away_code, r.kickoff_at);
         const linked_match_id =
-          linkMap.get(linkKey(r.home_team, r.away_team, r.kickoff_at)) ?? null;
+          linkMap.get(nameKey(r.home_team, r.away_team, r.kickoff_at)) ??
+          (ck ? linkMapByCode.get(ck) ?? null : null);
         const candidate = { ...r, linked_match_id, last_synced_at: nowIso };
         const prior = existingMap.get(r.id);
         if (prior) {
