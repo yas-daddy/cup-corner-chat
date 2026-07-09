@@ -547,7 +547,8 @@ function Toggle({
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${checked ? "bg-primary" : "bg-border"}`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-[22px]" : "translate-x-0.5"}`}
+          className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200"
+          style={{ left: checked ? 22 : 2 }}
         />
       </button>
     </div>
