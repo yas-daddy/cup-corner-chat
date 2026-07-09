@@ -64,6 +64,9 @@ export type VarStanding = {
   points: number;
 };
 
+export type VarNeighbor = { name: string; avatar: string | null; predictions: number };
+export type VarQuizNeighbor = { name: string; avatar: string | null; accuracy: number };
+
 export type VarReport = {
   player: { id: string; name: string; avatar: string | null };
   board: {
@@ -80,7 +83,15 @@ export type VarReport = {
   soulmate: VarSoulmate | null;
   topTeam: VarTeam | null;
   field: { avgPredictions: number; avgPoints: number };
-  quiz: { answered: number; correct: number; points: number };
+  predNeighbors: { above: VarNeighbor | null; below: VarNeighbor | null };
+  quiz: {
+    answered: number;
+    correct: number;
+    points: number;
+    accuracy: number; // your %
+    fieldAccuracy: number; // league average %
+    neighbors: { above: VarQuizNeighbor | null; below: VarQuizNeighbor | null };
+  };
   bet: {
     staked: number;
     stakedRank: number; // 1-based among bettors
@@ -133,7 +144,7 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
       .eq("player_id", playerId)
       .eq("status", "FINISHED")
       .order("points", { ascending: false }),
-    sb.from("quiz_leaderboard").select("*").eq("player_id", playerId).maybeSingle(),
+    sb.from("quiz_leaderboard").select("*"),
     sb.from("bank_leaderboard").select("*"),
     sb.from("bets").select("player_id,stake,status"),
     sb.from("predictions").select("player_id,match_id,pred_home,pred_away"),
@@ -330,11 +341,53 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     avgPoints: rows.length ? Math.round(rows.reduce((s, r) => s + num(r.total_points), 0) / rows.length) : 0,
   };
 
-  // --- Quiz ----------------------------------------------------------------
+  // --- Prediction-volume neighbours (players just above / below you) ---------
+  const byPreds = rows
+    .slice()
+    .sort(
+      (a, b) =>
+        num(b.predictions_made) - num(a.predictions_made) ||
+        String(a.player_id).localeCompare(String(b.player_id)),
+    );
+  const pIdx = byPreds.findIndex((r) => r.player_id === playerId);
+  const toNeighbor = (r: any): VarNeighbor => ({
+    name: r.display_name,
+    avatar: r.avatar ?? null,
+    predictions: num(r.predictions_made),
+  });
+  const predNeighbors = {
+    above: pIdx > 0 ? toNeighbor(byPreds[pIdx - 1]) : null,
+    below: pIdx >= 0 && pIdx < byPreds.length - 1 ? toNeighbor(byPreds[pIdx + 1]) : null,
+  };
+
+  // --- Quiz (+ accuracy neighbours) ----------------------------------------
+  const quizRows = (quizRow as any[]) ?? [];
+  const myQuiz = quizRows.find((q) => q.player_id === playerId);
+  const acc = (q: any) => (num(q.answered) > 0 ? Math.round((num(q.correct) / num(q.answered)) * 100) : 0);
+  // Rank only players who actually answered — a 0/0 isn't a real accuracy.
+  const quizRanked = quizRows
+    .filter((q) => num(q.answered) > 0)
+    .map((q) => ({ ...q, acc: acc(q) }))
+    .sort(
+      (a, b) =>
+        b.acc - a.acc ||
+        num(b.correct) - num(a.correct) ||
+        String(a.player_id).localeCompare(String(b.player_id)),
+    );
+  const qIdx = quizRanked.findIndex((q) => q.player_id === playerId);
+  const toQN = (q: any): VarQuizNeighbor => ({ name: q.display_name, avatar: q.avatar ?? null, accuracy: q.acc });
   const quiz = {
-    answered: num((quizRow as any)?.answered),
-    correct: num((quizRow as any)?.correct),
-    points: num((quizRow as any)?.total_points),
+    answered: num(myQuiz?.answered),
+    correct: num(myQuiz?.correct),
+    points: num(myQuiz?.total_points),
+    accuracy: myQuiz ? acc(myQuiz) : 0,
+    fieldAccuracy: quizRanked.length
+      ? Math.round(quizRanked.reduce((s, q) => s + q.acc, 0) / quizRanked.length)
+      : 0,
+    neighbors: {
+      above: qIdx > 0 ? toQN(quizRanked[qIdx - 1]) : null,
+      below: qIdx >= 0 && qIdx < quizRanked.length - 1 ? toQN(quizRanked[qIdx + 1]) : null,
+    },
   };
 
   // --- Betting (decile by total staked, P&L from starting bank) ------------
@@ -369,6 +422,7 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     soulmate,
     topTeam,
     field,
+    predNeighbors,
     quiz,
     bet: {
       staked: myStaked,

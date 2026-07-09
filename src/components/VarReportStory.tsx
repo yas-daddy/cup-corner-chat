@@ -129,7 +129,7 @@ function buildSlides(
   r: VarReport,
   actions: { onNext: () => void; onClose: () => void; onReplay: () => void },
 ): Slide[] {
-  const { board, quiz, bet, genius, soulmate, topTeam, field } = r;
+  const { board, quiz, bet, genius, soulmate, topTeam, field, predNeighbors } = r;
   const firstName = r.player.name.split(/\s+/)[0] || r.player.name;
   const slides: Slide[] = [];
 
@@ -161,7 +161,13 @@ function buildSlides(
         </NumOutline>
         <Sub>predictions made</Sub>
         <div className="mt-3 w-full">
-          <CompareBars you={board.predictionsMade} field={field.avgPredictions} fieldLabel="League avg" fill="#FFFFFF" />
+          <SocialLadder
+            you={board.predictionsMade}
+            youAvatar={r.player.avatar}
+            above={predNeighbors.above ? { name: predNeighbors.above.name, avatar: predNeighbors.above.avatar, val: predNeighbors.above.predictions } : null}
+            below={predNeighbors.below ? { name: predNeighbors.below.name, avatar: predNeighbors.below.avatar, val: predNeighbors.below.predictions } : null}
+            avg={field.avgPredictions}
+          />
         </div>
         <Line>{predsLine(board.predictionsMade)}</Line>
       </MidLeft>
@@ -270,11 +276,14 @@ function buildSlides(
             </div>
             <Sub>quiz answers nailed</Sub>
             <div className="mt-2 w-full max-w-xs">
-              <BarWithLabel
-                pct={Math.round((quiz.correct / quiz.answered) * 100)}
-                label="Accuracy"
-                valueText={`${Math.round((quiz.correct / quiz.answered) * 100)}%`}
-                fill="#E9D5FF"
+              <SocialLadder
+                you={quiz.accuracy}
+                youAvatar={r.player.avatar}
+                above={quiz.neighbors.above ? { name: quiz.neighbors.above.name, avatar: quiz.neighbors.above.avatar, val: quiz.neighbors.above.accuracy } : null}
+                below={quiz.neighbors.below ? { name: quiz.neighbors.below.name, avatar: quiz.neighbors.below.avatar, val: quiz.neighbors.below.accuracy } : null}
+                avg={quiz.fieldAccuracy}
+                max={100}
+                fmt={(n) => `${n}%`}
               />
             </div>
             <Line>{quizLine(quiz.correct, quiz.answered)}</Line>
@@ -879,24 +888,65 @@ function BarWithLabel({ pct, label, valueText, fill }: { pct: number; label: str
   );
 }
 
-function CompareBars({ you, field, youLabel = "You", fieldLabel = "Field", fill }: { you: number; field: number; youLabel?: string; fieldLabel?: string; fill: string }) {
-  const max = Math.max(you, field, 1);
-  const yw = useGrow((you / max) * 100);
-  const fw = useGrow((field / max) * 100);
+// A little social ladder: the player just above you, you, the player just
+// below, and the league average — as scaled bars. Used for prediction volume
+// and quiz accuracy (fmt="%").
+type LadderVal = { name: string; avatar: string | null; val: number };
+type LadderEntry = LadderVal & { key: string; me?: boolean; muted?: boolean };
+function SocialLadder({
+  you,
+  youAvatar,
+  above,
+  below,
+  avg,
+  max,
+  fmt,
+}: {
+  you: number;
+  youAvatar: string | null;
+  above: LadderVal | null;
+  below: LadderVal | null;
+  avg: number;
+  max?: number;
+  fmt?: (n: number) => string;
+}) {
+  const rows: LadderEntry[] = [];
+  if (above) rows.push({ key: "above", name: above.name, avatar: above.avatar, val: above.val });
+  rows.push({ key: "you", name: "You", avatar: youAvatar, val: you, me: true });
+  if (below) rows.push({ key: "below", name: below.name, avatar: below.avatar, val: below.val });
+  rows.push({ key: "avg", name: "League avg", avatar: null, val: avg, muted: true });
+  const m = max ?? Math.max(...rows.map((r) => r.val), 1);
   return (
-    <div className="w-full space-y-2">
-      {[
-        { label: youLabel, val: you, w: yw, bg: fill, strong: true },
-        { label: fieldLabel, val: field, w: fw, bg: "rgba(255,255,255,0.4)", strong: false },
-      ].map((row) => (
-        <div key={row.label} className="flex items-center gap-2">
-          <span className={`w-16 shrink-0 text-[11px] font-semibold uppercase tracking-wide ${row.strong ? "text-white" : "text-white/60"}`}>{row.label}</span>
-          <div className="h-5 flex-1 overflow-hidden rounded-full bg-white/15">
-            <div className="h-full rounded-full" style={{ width: `${row.w}%`, background: row.bg, transition: "width 1s cubic-bezier(.22,1,.36,1)" }} />
-          </div>
-          <span className="w-8 shrink-0 text-right text-sm font-black tabular-nums">{row.val}</span>
-        </div>
+    <div className="w-full space-y-1.5">
+      {rows.map((row) => (
+        <LadderRow key={row.key} row={row} max={m} fmt={fmt} />
       ))}
+    </div>
+  );
+}
+function LadderRow({ row, max, fmt }: { row: LadderEntry; max: number; fmt?: (n: number) => string }) {
+  const w = useGrow((row.val / max) * 100);
+  return (
+    <div className={`flex items-center gap-2 rounded-lg px-1.5 py-1 ${row.me ? "bg-white/15" : ""}`}>
+      {row.muted ? (
+        <span className="grid h-5 w-5 shrink-0 place-items-center text-xs text-white/50">🌍</span>
+      ) : (
+        <Avatar avatar={row.avatar} name={row.name} size={20} className="text-[10px]" />
+      )}
+      <span className={`w-20 shrink-0 truncate text-[11px] ${row.me ? "font-black" : "font-semibold"} ${row.muted ? "text-white/60" : ""}`}>
+        {row.name}
+      </span>
+      <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/15">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${w}%`,
+            background: row.me ? "#FDE68A" : row.muted ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.7)",
+            transition: "width 1s cubic-bezier(.22,1,.36,1)",
+          }}
+        />
+      </div>
+      <span className="w-10 shrink-0 text-right text-sm font-black tabular-nums">{fmt ? fmt(row.val) : row.val}</span>
     </div>
   );
 }
