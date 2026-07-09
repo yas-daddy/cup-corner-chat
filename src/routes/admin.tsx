@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock } from "lucide-react";
+import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock, Clapperboard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
-import type { Player } from "@/lib/identity";
+import { getStoredPlayerId, type Player } from "@/lib/identity";
+import { buildVarReport, type VarReport } from "@/lib/varReport";
+import { VarReportStory } from "@/components/VarReportStory";
 
 type PlayerStats = Player & {
   last_open_at: string | null;
@@ -38,6 +40,8 @@ function AdminPage() {
   const [championSavedAt, setChampionSavedAt] = useState<number>(0);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+  const [varReport, setVarReport] = useState<VarReport | null>(null);
+  const [varLoading, setVarLoading] = useState(false);
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [pushPlayerIds, setPushPlayerIds] = useState<Set<string>>(new Set());
   const [pushSubCount, setPushSubCount] = useState(0);
@@ -158,6 +162,22 @@ function AdminPage() {
     }
   }
 
+  async function openVarPreview() {
+    const target = playerId || getStoredPlayerId();
+    if (!target) {
+      setSyncMsg("Pick a player (or sign in) to preview their VAR Report.");
+      return;
+    }
+    setVarLoading(true);
+    try {
+      const report = await buildVarReport(target);
+      if (report) setVarReport(report);
+      else setSyncMsg("Could not build a VAR Report for that player.");
+    } finally {
+      setVarLoading(false);
+    }
+  }
+
   function setDraft(matchId: string, patch: Partial<Draft>) {
     setDrafts((prev) => {
       const cur = prev[matchId] ?? { home: 0, away: 0, dirty: false };
@@ -254,6 +274,21 @@ function AdminPage() {
           {syncing ? "Syncing…" : "Trigger API sync"}
         </button>
         {syncMsg && <p className="mt-2 text-xs text-ink-soft">{syncMsg}</p>}
+      </section>
+
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
+        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-ink-soft">VAR Report preview</div>
+        <p className="mb-2 text-xs text-ink-soft">
+          Bypasses the end-of-tournament lock. Previews {selectedPlayer ? selectedPlayer.display_name : "you"} (or pick a player below).
+        </p>
+        <button
+          onClick={openVarPreview}
+          disabled={varLoading}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--gold)] py-3 font-semibold text-neutral-900 disabled:opacity-50"
+        >
+          <Clapperboard className="h-4 w-4" />
+          {varLoading ? "Building…" : "Preview VAR Report"}
+        </button>
       </section>
 
       <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
@@ -429,6 +464,8 @@ function AdminPage() {
           ))}
         </section>
       )}
+
+      {varReport && <VarReportStory report={varReport} onClose={() => setVarReport(null)} />}
     </div>
   );
 }

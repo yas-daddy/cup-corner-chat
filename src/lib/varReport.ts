@@ -25,12 +25,35 @@ const num = (v: unknown): number => {
 export type VarBest = {
   homeTeam: string;
   awayTeam: string;
+  homeCode: string | null;
+  awayCode: string | null;
   predHome: number;
   predAway: number;
   homeScore: number | null;
   awayScore: number | null;
   points: number;
   isExact: boolean;
+};
+
+// The "moment of genius": a contrarian correct call (few/no others saw it),
+// else an exact score on the highest-scoring match, else the best-points pick.
+export type VarGenius = VarBest & {
+  kind: "contrarian" | "highscore" | "best";
+  othersAgreed: number; // # of OTHER players who called the same result (contrarian only)
+  totalGoals: number;
+};
+
+export type VarSoulmate = {
+  name: string;
+  avatar: string | null;
+  agree: number; // # of matches you predicted the same outcome
+  shared: number; // # of matches you both predicted
+};
+
+export type VarTeam = {
+  code: string | null;
+  name: string;
+  points: number;
 };
 
 export type VarStanding = {
@@ -53,6 +76,10 @@ export type VarReport = {
   };
   standings: VarStanding[];
   best: VarBest | null;
+  genius: VarGenius | null;
+  soulmate: VarSoulmate | null;
+  topTeam: VarTeam | null;
+  field: { avgPredictions: number; avgPoints: number };
   quiz: { answered: number; correct: number; points: number };
   bet: {
     staked: number;
@@ -95,6 +122,8 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     { data: quizRow },
     { data: bank },
     { data: bets },
+    { data: allPreds },
+    { data: finishedMatches },
   ] = await Promise.all([
     sb.from("players").select("id,display_name,avatar").eq("id", playerId).maybeSingle(),
     sb.from("leaderboard").select("*"),
@@ -107,6 +136,11 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     sb.from("quiz_leaderboard").select("*").eq("player_id", playerId).maybeSingle(),
     sb.from("bank_leaderboard").select("*"),
     sb.from("bets").select("player_id,stake,status"),
+    sb.from("predictions").select("player_id,match_id,pred_home,pred_away"),
+    sb
+      .from("matches")
+      .select("id,home_team,away_team,home_code,away_code,home_score,away_score,status")
+      .eq("status", "FINISHED"),
   ]);
 
   if (!player) return null;
@@ -133,26 +167,168 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     points: num(r.total_points),
   }));
 
-  // --- Best prediction -----------------------------------------------------
+  // --- Match lookup (finished only) ----------------------------------------
+  type MInfo = {
+    homeTeam: string;
+    awayTeam: string;
+    homeCode: string | null;
+    awayCode: string | null;
+    homeScore: number | null;
+    awayScore: number | null;
+    totalGoals: number;
+    outcome: "H" | "D" | "A" | null; // actual result direction
+  };
+  const matchInfo = new Map<string, MInfo>();
+  const codeName = new Map<string, string>(); // team code -> display name
+  for (const m of (finishedMatches as any[]) ?? []) {
+    const hs = m.home_score == null ? null : num(m.home_score);
+    const as = m.away_score == null ? null : num(m.away_score);
+    const outcome = hs == null || as == null ? null : hs > as ? "H" : hs < as ? "A" : "D";
+    matchInfo.set(m.id, {
+      homeTeam: m.home_team,
+      awayTeam: m.away_team,
+      homeCode: m.home_code ?? null,
+      awayCode: m.away_code ?? null,
+      homeScore: hs,
+      awayScore: as,
+      totalGoals: (hs ?? 0) + (as ?? 0),
+      outcome,
+    });
+    if (m.home_code) codeName.set(m.home_code, m.home_team);
+    if (m.away_code) codeName.set(m.away_code, m.away_team);
+  }
+
+  const predOutcome = (h: number, a: number): "H" | "D" | "A" => (h > a ? "H" : h < a ? "A" : "D");
+  const myFinished = ((myPreds as any[]) ?? []).map((r) => ({
+    matchId: r.match_id,
+    predHome: num(r.pred_home),
+    predAway: num(r.pred_away),
+    homeScore: r.home_score == null ? null : num(r.home_score),
+    awayScore: r.away_score == null ? null : num(r.away_score),
+    points: num(r.points),
+    isExact: !!r.is_exact,
+    isCorrect: !!r.is_correct_result,
+  }));
+
+  const toBest = (
+    matchId: string,
+    predHome: number,
+    predAway: number,
+    points: number,
+    isExact: boolean,
+  ): VarBest | null => {
+    const mi = matchInfo.get(matchId);
+    if (!mi) return null;
+    return {
+      homeTeam: mi.homeTeam,
+      awayTeam: mi.awayTeam,
+      homeCode: mi.homeCode,
+      awayCode: mi.awayCode,
+      predHome,
+      predAway,
+      homeScore: mi.homeScore,
+      awayScore: mi.awayScore,
+      points,
+      isExact,
+    };
+  };
+
+  // --- Best prediction (highest points) — used by the summary bento ---------
   let best: VarBest | null = null;
-  const bestRow = ((myPreds as any[]) ?? []).find((r) => num(r.points) > 0) ?? null;
-  if (bestRow) {
-    const { data: m } = await sb
-      .from("matches")
-      .select("home_team,away_team")
-      .eq("id", bestRow.match_id)
-      .maybeSingle();
-    best = {
-      homeTeam: (m as any)?.home_team ?? "Home",
-      awayTeam: (m as any)?.away_team ?? "Away",
-      predHome: num(bestRow.pred_home),
-      predAway: num(bestRow.pred_away),
-      homeScore: bestRow.home_score == null ? null : num(bestRow.home_score),
-      awayScore: bestRow.away_score == null ? null : num(bestRow.away_score),
-      points: num(bestRow.points),
-      isExact: !!bestRow.is_exact,
+  const bestRow = myFinished.find((r) => r.points > 0) ?? null;
+  if (bestRow) best = toBest(bestRow.matchId, bestRow.predHome, bestRow.predAway, bestRow.points, bestRow.isExact);
+
+  // --- Moment of genius -----------------------------------------------------
+  // 1) Contrarian correct: you called the result, few/no others did.
+  // 2) else exact score on the highest-scoring match (more goals = harder).
+  // 3) else your best-points pick.
+  let genius: VarGenius | null = null;
+  const othersByMatch = new Map<string, { H: number; D: number; A: number }>();
+  for (const p of (allPreds as any[]) ?? []) {
+    if (p.player_id === playerId) continue;
+    if (!matchInfo.has(p.match_id)) continue;
+    const o = predOutcome(num(p.pred_home), num(p.pred_away));
+    const rec = othersByMatch.get(p.match_id) ?? { H: 0, D: 0, A: 0 };
+    rec[o]++;
+    othersByMatch.set(p.match_id, rec);
+  }
+  const contrarians = myFinished
+    .filter((r) => r.isCorrect)
+    .map((r) => {
+      const mi = matchInfo.get(r.matchId)!;
+      const othersAgreed = mi.outcome ? (othersByMatch.get(r.matchId)?.[mi.outcome] ?? 0) : 999;
+      return { ...r, othersAgreed, totalGoals: mi?.totalGoals ?? 0 };
+    })
+    .sort((a, b) => a.othersAgreed - b.othersAgreed || b.totalGoals - a.totalGoals || b.points - a.points);
+  if (contrarians.length && matchInfo.has(contrarians[0].matchId)) {
+    const c = contrarians[0];
+    const b = toBest(c.matchId, c.predHome, c.predAway, c.points, c.isExact);
+    if (b) genius = { ...b, kind: "contrarian", othersAgreed: c.othersAgreed, totalGoals: c.totalGoals };
+  }
+  if (!genius) {
+    const exacts = myFinished
+      .filter((r) => r.isExact)
+      .map((r) => ({ ...r, totalGoals: matchInfo.get(r.matchId)?.totalGoals ?? 0 }))
+      .sort((a, b) => b.totalGoals - a.totalGoals || b.points - a.points);
+    const pick = exacts[0] ?? (bestRow ? { ...bestRow, totalGoals: matchInfo.get(bestRow.matchId)?.totalGoals ?? 0 } : null);
+    if (pick) {
+      const b = toBest(pick.matchId, pick.predHome, pick.predAway, pick.points, pick.isExact);
+      if (b) genius = { ...b, kind: pick.isExact ? "highscore" : "best", othersAgreed: 0, totalGoals: pick.totalGoals };
+    }
+  }
+
+  // --- Team that gave you the most points -----------------------------------
+  const teamPts = new Map<string, number>();
+  for (const r of myFinished) {
+    if (r.points <= 0) continue;
+    const mi = matchInfo.get(r.matchId);
+    if (!mi) continue;
+    if (mi.homeCode) teamPts.set(mi.homeCode, (teamPts.get(mi.homeCode) ?? 0) + r.points);
+    if (mi.awayCode) teamPts.set(mi.awayCode, (teamPts.get(mi.awayCode) ?? 0) + r.points);
+  }
+  let topTeam: VarTeam | null = null;
+  const topTeamEntry = [...teamPts.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (topTeamEntry) {
+    topTeam = { code: topTeamEntry[0], name: codeName.get(topTeamEntry[0]) ?? topTeamEntry[0], points: topTeamEntry[1] };
+  }
+
+  // --- Prediction soulmate (most-agreed-with player) ------------------------
+  const myOutcomes = new Map<string, "H" | "D" | "A">();
+  for (const p of (allPreds as any[]) ?? []) {
+    if (p.player_id === playerId) myOutcomes.set(p.match_id, predOutcome(num(p.pred_home), num(p.pred_away)));
+  }
+  const agreeBy = new Map<string, { agree: number; shared: number }>();
+  for (const p of (allPreds as any[]) ?? []) {
+    if (p.player_id === playerId) continue;
+    const mine = myOutcomes.get(p.match_id);
+    if (!mine) continue;
+    const rec = agreeBy.get(p.player_id) ?? { agree: 0, shared: 0 };
+    rec.shared++;
+    if (predOutcome(num(p.pred_home), num(p.pred_away)) === mine) rec.agree++;
+    agreeBy.set(p.player_id, rec);
+  }
+  let soulmate: VarSoulmate | null = null;
+  const nameById = new Map<string, { name: string; avatar: string | null }>(
+    rows.map((r) => [r.player_id, { name: r.display_name, avatar: r.avatar ?? null }]),
+  );
+  const bestMate = [...agreeBy.entries()]
+    .filter(([, v]) => v.shared >= 3)
+    .sort((a, b) => b[1].agree - a[1].agree || b[1].agree / b[1].shared - a[1].agree / a[1].shared)[0];
+  if (bestMate) {
+    const info = nameById.get(bestMate[0]);
+    soulmate = {
+      name: info?.name ?? "Someone",
+      avatar: info?.avatar ?? null,
+      agree: bestMate[1].agree,
+      shared: bestMate[1].shared,
     };
   }
+
+  // --- Field averages (for "vs the field" visuals) --------------------------
+  const field = {
+    avgPredictions: rows.length ? Math.round(rows.reduce((s, r) => s + num(r.predictions_made), 0) / rows.length) : 0,
+    avgPoints: rows.length ? Math.round(rows.reduce((s, r) => s + num(r.total_points), 0) / rows.length) : 0,
+  };
 
   // --- Quiz ----------------------------------------------------------------
   const quiz = {
@@ -189,6 +365,10 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     board: boardData,
     standings,
     best,
+    genius,
+    soulmate,
+    topTeam,
+    field,
     quiz,
     bet: {
       staked: myStaked,
