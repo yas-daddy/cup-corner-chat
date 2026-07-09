@@ -33,6 +33,14 @@ export type VarBest = {
   isExact: boolean;
 };
 
+export type VarStanding = {
+  rank: number;
+  playerId: string;
+  name: string;
+  avatar: string | null;
+  points: number;
+};
+
 export type VarReport = {
   player: { id: string; name: string; avatar: string | null };
   board: {
@@ -43,6 +51,7 @@ export type VarReport = {
     correctResults: number;
     exactScores: number;
   };
+  standings: VarStanding[];
   best: VarBest | null;
   quiz: { answered: number; correct: number; points: number };
   bet: {
@@ -55,7 +64,14 @@ export type VarReport = {
   };
 };
 
-// The report is unlocked once the last-scheduled match (the Final) is FINISHED.
+// WC2026 Final is 19 Jul 2026. The report must only appear AFTER the Final —
+// never during earlier rounds. We can't rely on "the last match is finished"
+// alone: mid-tournament the schedule is incomplete (later rounds aren't added
+// until earlier ones resolve), so the chronologically-last KNOWN match is
+// often just the latest scheduled round. Gate on BOTH: the last match is
+// FINISHED and its kickoff is on/after the Final's date floor.
+const FINAL_KICKOFF_FLOOR = "2026-07-19T00:00:00Z";
+
 export async function isVarReportUnlocked(): Promise<boolean> {
   const { data } = await sb
     .from("matches")
@@ -63,7 +79,12 @@ export async function isVarReportUnlocked(): Promise<boolean> {
     .order("kickoff_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return (data as { status?: string } | null)?.status === "FINISHED";
+  const row = data as { status?: string; kickoff_at?: string } | null;
+  if (!row?.kickoff_at) return false;
+  return (
+    row.status === "FINISHED" &&
+    new Date(row.kickoff_at).getTime() >= new Date(FINAL_KICKOFF_FLOOR).getTime()
+  );
 }
 
 export async function buildVarReport(playerId: string): Promise<VarReport | null> {
@@ -104,6 +125,13 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
     correctResults: me ? num(me.correct_results) : 0,
     exactScores: me ? num(me.exact_scores) : 0,
   };
+  const standings: VarStanding[] = rows.map((r, i) => ({
+    rank: i + 1,
+    playerId: r.player_id,
+    name: r.display_name,
+    avatar: r.avatar ?? null,
+    points: num(r.total_points),
+  }));
 
   // --- Best prediction -----------------------------------------------------
   let best: VarBest | null = null;
@@ -159,6 +187,7 @@ export async function buildVarReport(playerId: string): Promise<VarReport | null
       avatar: (player as any).avatar ?? null,
     },
     board: boardData,
+    standings,
     best,
     quiz,
     bet: {

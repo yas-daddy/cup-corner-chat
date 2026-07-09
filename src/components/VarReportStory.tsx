@@ -1,66 +1,75 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, Share2, Download, RotateCcw } from "lucide-react";
 import { Avatar } from "@/components/AvatarPicker";
 import { VAR_STARTING_BANK, type VarReport } from "@/lib/varReport";
 
 // Spotify-Wrapped-style full-screen stories player for the end-of-tournament
-// VAR Report. Vivid gradients + white text on purpose — this is its own bold
-// world, independent of the app's light/dark theme. All commentary is English
-// (the jokes don't survive translation); structural chrome uses no i18n here.
+// VAR Report. Vivid gradients + white text on purpose — its own bold world,
+// independent of the app's light/dark theme. Commentary is English-only.
 
-const SLIDE_MS = 5600;
+const SLIDE_MS = 7000;
 const money = (n: number) => `$${n.toLocaleString()}`;
 
-type Slide = { key: string; gradient: string; confetti?: boolean; node: React.ReactNode };
+type Slide = {
+  key: string;
+  gradient: string;
+  confetti?: boolean;
+  ms?: number;
+  node: React.ReactNode;
+};
 
 export function VarReportStory({ report, onClose }: { report: VarReport; onClose: () => void }) {
-  const slides = useMemo(() => buildSlides(report), [report]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const downAt = useRef(0);
 
-  const advance = useCallback(
-    () => setIndex((i) => Math.min(slides.length - 1, i + 1)),
-    [slides.length],
-  );
+  const advance = useCallback(() => setIndex((i) => i + 1), []);
+  const restart = useCallback(() => setIndex(0), []);
 
-  // Auto-advance + progress bar driven by rAF so pause is trivial.
+  const slides = useMemo(
+    () => buildSlides(report, { onNext: advance, onClose, onReplay: restart }),
+    [report, advance, onClose, restart],
+  );
+  const clampedIndex = Math.min(index, slides.length - 1);
+  const current = slides[clampedIndex];
+
+  // Auto-advance + progress bar via rAF so pause is trivial.
   useEffect(() => {
     setProgress(0);
     if (paused) return;
+    const dur = current.ms ?? SLIDE_MS;
     let raf = 0;
     let start: number | null = null;
     const tick = (ts: number) => {
       if (start === null) start = ts;
-      const p = Math.min(1, (ts - start) / SLIDE_MS);
+      const p = Math.min(1, (ts - start) / dur);
       setProgress(p);
       if (p >= 1) {
-        if (index < slides.length - 1) advance();
-        return; // last slide: bar fills then holds
+        if (clampedIndex < slides.length - 1) advance();
+        return; // last slide holds
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [index, paused, slides.length, advance]);
+  }, [clampedIndex, paused, slides.length, advance, current.ms]);
 
-  // Esc to close; lock body scroll while open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      else if (e.key === "ArrowRight") advance();
+      else if (e.key === "ArrowRight") setIndex((i) => Math.min(slides.length - 1, i + 1));
       else if (e.key === "ArrowLeft") setIndex((i) => Math.max(0, i - 1));
     };
     window.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      document.body.style.overflow = prev;
     };
-  }, [advance, onClose]);
+  }, [onClose, slides.length]);
 
   function onPointerDown() {
     downAt.current = Date.now();
@@ -71,11 +80,9 @@ export function VarReportStory({ report, onClose }: { report: VarReport; onClose
     if (Date.now() - downAt.current < 250) {
       const w = window.innerWidth;
       if (e.clientX < w * 0.32) setIndex((i) => Math.max(0, i - 1));
-      else advance();
+      else setIndex((i) => Math.min(slides.length - 1, i + 1));
     }
   }
-
-  const current = slides[index];
 
   if (typeof document === "undefined") return null;
 
@@ -86,18 +93,12 @@ export function VarReportStory({ report, onClose }: { report: VarReport; onClose
     >
       <style>{VAR_CSS}</style>
 
-      {/* Tap layer (behind chrome, in front of non-interactive content) */}
-      <div
-        className="absolute inset-0 z-10"
-        onPointerDown={onPointerDown}
-        onPointerUp={onPointerUp}
-      />
+      <div className="absolute inset-0 z-10" onPointerDown={onPointerDown} onPointerUp={onPointerUp} />
 
       {current.confetti && <Confetti />}
 
-      {/* Slide content — remounts on index change so animations replay */}
       <div
-        key={index}
+        key={clampedIndex}
         className="var-in pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
       >
         {current.node}
@@ -109,7 +110,7 @@ export function VarReportStory({ report, onClose }: { report: VarReport; onClose
           <div key={s.key} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/30">
             <div
               className="h-full rounded-full bg-white"
-              style={{ width: i < index ? "100%" : i === index ? `${progress * 100}%` : "0%" }}
+              style={{ width: i < clampedIndex ? "100%" : i === clampedIndex ? `${progress * 100}%` : "0%" }}
             />
           </div>
         ))}
@@ -138,10 +139,12 @@ export function VarReportStory({ report, onClose }: { report: VarReport; onClose
 
 // --- Slide construction -----------------------------------------------------
 
-function buildSlides(r: VarReport): Slide[] {
+function buildSlides(
+  r: VarReport,
+  actions: { onNext: () => void; onClose: () => void; onReplay: () => void },
+): Slide[] {
   const { board, best, quiz, bet } = r;
   const firstName = r.player.name.split(/\s+/)[0] || r.player.name;
-
   const slides: Slide[] = [];
 
   // 0 — Cover
@@ -150,52 +153,53 @@ function buildSlides(r: VarReport): Slide[] {
     gradient: "linear-gradient(160deg,#7C3AED 0%,#DB2777 55%,#F97316 100%)",
     node: (
       <Layout>
-        <div className="text-6xl">🎬</div>
-        <Kicker>The final whistle has blown</Kicker>
-        <Big>Your&nbsp;2026 World&nbsp;Cup VAR&nbsp;Report</Big>
-        <Line>
-          Alright {firstName}, let's review the footage. No offside checks, no
-          overturns — just the receipts. Tap through. →
-        </Line>
+        <div className="text-7xl">🎬</div>
+        <Kicker>The final whistle has blown 📺</Kicker>
+        <Big>
+          Your 2026 <br />
+          World&nbsp;Cup, <br />
+          wrapped
+        </Big>
+        <Line>Roll the tape, {firstName}. No overturns — just receipts. 🎥</Line>
       </Layout>
     ),
   });
 
-  // 1 — Predictions volume
+  // 1 — Predictions volume (outlined number)
   slides.push({
     key: "preds",
     gradient: "linear-gradient(160deg,#4338CA 0%,#2563EB 60%,#06B6D4 100%)",
     node: (
       <Layout>
-        <Kicker>You stepped up to the spot</Kicker>
-        <Stat>
+        <Kicker>You stepped up 🎯</Kicker>
+        <NumOutline className="text-[7rem]">
           <CountUp value={board.predictionsMade} />
-        </Stat>
+        </NumOutline>
         <Sub>predictions made</Sub>
         <Line>{predsLine(board.predictionsMade)}</Line>
       </Layout>
     ),
   });
 
-  // 2 — Accuracy
+  // 2 — Accuracy (two differently-coloured numbers)
   slides.push({
     key: "accuracy",
     gradient: "linear-gradient(160deg,#0F766E 0%,#059669 55%,#84CC16 100%)",
     node: (
       <Layout>
-        <Kicker>Reading the game</Kicker>
+        <Kicker>Reading the game 🧠</Kicker>
         <div className="flex items-end justify-center gap-8">
           <div className="flex flex-col items-center">
-            <Stat small>
+            <NumGradient from="#FFFFFF" to="#BBF7D0" className="text-6xl">
               <CountUp value={board.correctResults} />
-            </Stat>
-            <Sub>right results</Sub>
+            </NumGradient>
+            <Sub>right calls ✅</Sub>
           </div>
           <div className="flex flex-col items-center">
-            <Stat small>
+            <div className="rounded-2xl bg-[color:#FDE68A] px-4 py-1 text-5xl font-black tabular-nums text-emerald-900 shadow-lg">
               <CountUp value={board.exactScores} />
-            </Stat>
-            <Sub>exact scorelines</Sub>
+            </div>
+            <Sub>exact 💯</Sub>
           </div>
         </div>
         <Line>{accuracyLine(board.correctResults, board.exactScores)}</Line>
@@ -209,95 +213,91 @@ function buildSlides(r: VarReport): Slide[] {
     gradient: "linear-gradient(160deg,#B91C1C 0%,#EA580C 55%,#F59E0B 100%)",
     node: (
       <Layout>
-        <Kicker>Your moment of genius</Kicker>
+        <Kicker>Your masterpiece 🖼️</Kicker>
         {best ? (
           <>
             <div className="rounded-3xl bg-white/12 px-6 py-5 backdrop-blur-sm">
               <p className="text-sm font-medium text-white/80">
                 {best.homeTeam} v {best.awayTeam}
               </p>
-              <p className="mt-2 text-4xl font-black tabular-nums">
+              <p className="mt-2 text-5xl font-black tabular-nums">
                 {best.predHome}–{best.predAway}
               </p>
               <p className="mt-1 text-xs text-white/70">
                 {best.homeScore != null && best.awayScore != null
                   ? `actual ${best.homeScore}–${best.awayScore}`
                   : "your call"}
+                {best.isExact ? " · nailed it 🎯" : ""}
               </p>
             </div>
-            <div className="text-2xl font-black">
+            <div className="rounded-full bg-white/90 px-5 py-1.5 text-2xl font-black text-orange-700">
               +<CountUp value={best.points} /> pts
             </div>
             <Line>{bestLine(best.points, best.isExact)}</Line>
           </>
         ) : (
-          <Line>
-            No prediction ever troubled the scorers. This slide is a moment of
-            silence for the picks you never made. 🕯️
-          </Line>
+          <Line>No pick ever troubled the scorers. A moment of silence. 🕯️</Line>
         )}
       </Layout>
     ),
   });
 
-  // 4 — Quiz
+  // 4 — Quiz (chip number)
   slides.push({
     key: "quiz",
     gradient: "linear-gradient(160deg,#A21CAF 0%,#7C3AED 55%,#4F46E5 100%)",
     node: (
       <Layout>
-        <Kicker>Trivia corner</Kicker>
+        <Kicker>Trivia time 🧠</Kicker>
         {quiz.answered > 0 ? (
           <>
-            <Stat>
-              <CountUp value={quiz.correct} />
-              <span className="text-white/60">/{quiz.answered}</span>
-            </Stat>
-            <Sub>quiz questions nailed</Sub>
+            <div className="flex items-baseline gap-2">
+              <NumGradient from="#FFFFFF" to="#E9D5FF" className="text-8xl">
+                <CountUp value={quiz.correct} />
+              </NumGradient>
+              <span className="text-4xl font-bold text-white/50">/{quiz.answered}</span>
+            </div>
+            <Sub>quiz answers nailed 🎓</Sub>
             <Line>{quizLine(quiz.correct, quiz.answered)}</Line>
           </>
         ) : (
           <>
-            <div className="text-6xl">🦗</div>
-            <Line>
-              You answered <b>zero</b> quiz questions. The Daily Quiz waited by
-              the window every day. It's fine. It's not crying. You're crying.
-            </Line>
+            <div className="text-7xl">🦗</div>
+            <Sub>zero questions answered</Sub>
+            <Line>The Daily Quiz waited by the window. It's not crying. You are. 😢</Line>
           </>
         )}
       </Layout>
     ),
   });
 
-  // 5 — Betting activity (total staked + decile)
+  // 5 — Betting activity (gradient money)
   slides.push({
     key: "staked",
     gradient: "linear-gradient(160deg,#065F46 0%,#0D9488 55%,#22C55E 100%)",
     node: (
       <Layout>
-        <Kicker>Action at the window</Kicker>
+        <Kicker>At the window 🎰</Kicker>
         {bet.staked > 0 ? (
           <>
-            <Stat>
+            <NumGradient from="#FFFFFF" to="#FDE68A" className="text-[6.5rem]">
               <CountUp value={bet.staked} format={money} />
-            </Stat>
-            <Sub>total staked across the tournament</Sub>
+            </NumGradient>
+            <Sub>staked all tournament 💸</Sub>
             <Line>{stakedLine(bet.decile)}</Line>
           </>
         ) : (
           <>
-            <div className="text-6xl">🧘</div>
-            <Line>
-              You staked <b>$0</b>. A monk in a casino. Ice in your veins, cash
-              in your pocket. We salute the discipline — and the boredom.
-            </Line>
+            <div className="text-7xl">🧘</div>
+            <Sub>$0 staked</Sub>
+            <Line>A monk in a casino. Ice in the veins, cash in the pocket. 🧊</Line>
           </>
         )}
       </Layout>
     ),
   });
 
-  // 6 — P&L (gradient reacts to result)
+  // 6 — P&L (dynamic gradient + delta pill)
   const up = bet.profit > 0;
   const flat = bet.profit === 0;
   slides.push({
@@ -309,19 +309,17 @@ function buildSlides(r: VarReport): Slide[] {
         : "linear-gradient(160deg,#7F1D1D 0%,#DC2626 55%,#F59E0B 100%)",
     node: (
       <Layout>
-        <Kicker>The bottom line</Kicker>
-        <p className="text-sm text-white/70">
-          from {money(VAR_STARTING_BANK)} you finished with
-        </p>
-        <Stat>
+        <Kicker>The bottom line 💰</Kicker>
+        <p className="text-sm text-white/70">from {money(VAR_STARTING_BANK)} you ended on</p>
+        <NumGradient from="#FFFFFF" to={up ? "#DCFCE7" : flat ? "#E2E8F0" : "#FED7AA"} className="text-[6.5rem]">
           <CountUp value={bet.balance} format={money} />
-        </Stat>
+        </NumGradient>
         <div
-          className={`rounded-full px-4 py-1 text-lg font-black ${
-            flat ? "bg-white/15" : up ? "bg-white/20" : "bg-black/25"
+          className={`rounded-full px-5 py-1.5 text-xl font-black shadow ${
+            flat ? "bg-white/15 text-white" : up ? "bg-white text-green-700" : "bg-black/30 text-white"
           }`}
         >
-          {up ? "▲ +" : bet.profit < 0 ? "▼ −" : "±"}
+          {up ? "📈 +" : bet.profit < 0 ? "📉 −" : "⚖️ "}
           {money(Math.abs(bet.profit)).slice(1)}
         </div>
         <Line>{pnlLine(bet.profit, bet.balance)}</Line>
@@ -329,91 +327,391 @@ function buildSlides(r: VarReport): Slide[] {
     ),
   });
 
-  // 7 — Finale: board placement (confetti for the champion)
+  // 7 — Finale: rank reveal + leaderboard slide-up
   const champ = board.rank === 1 && board.total > 0;
   const podium = board.rank <= 3 && board.total > 3;
   slides.push({
     key: "finale",
     confetti: champ || podium,
+    ms: 11000,
     gradient: champ
       ? "linear-gradient(160deg,#B45309 0%,#F59E0B 45%,#FDE68A 100%)"
       : "linear-gradient(160deg,#312E81 0%,#6D28D9 55%,#DB2777 100%)",
-    node: (
-      <Layout>
-        <Kicker>Where you finished</Kicker>
-        <div className="text-5xl">{rankEmoji(board.rank, board.total)}</div>
-        <div className="flex items-baseline justify-center gap-1">
-          <span className="text-2xl font-bold">#</span>
-          <Stat>
-            <CountUp value={board.rank} />
-          </Stat>
-          <span className="text-2xl font-semibold text-white/70">of {board.total}</span>
-        </div>
-        <Sub>{board.points} points on the board</Sub>
-        <Line>{finaleLine(board.rank, board.total)}</Line>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="pointer-events-auto mt-2 rounded-full bg-white/90 px-5 py-2 text-sm font-bold text-neutral-900 shadow"
-        >
-          That's a wrap 🎞️
-        </button>
-      </Layout>
-    ),
+    node: <FinaleSlide report={r} onNext={actions.onNext} />,
+  });
+
+  // 8 — Summary bento + share
+  slides.push({
+    key: "summary",
+    gradient: "linear-gradient(160deg,#1E1B4B 0%,#4C1D95 55%,#831843 100%)",
+    node: <SummarySlide report={r} onClose={actions.onClose} onReplay={actions.onReplay} />,
   });
 
   return slides;
 }
 
-// --- Tier commentary --------------------------------------------------------
+// --- Finale (rank + leaderboard slide-up) -----------------------------------
+
+function FinaleSlide({ report, onNext }: { report: VarReport; onNext: () => void }) {
+  const { board } = report;
+  const standings = report.standings ?? [];
+  const [showBoard, setShowBoard] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowBoard(true), 1900);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-start gap-3 px-8 pt-28 text-center text-white">
+      <Kicker>Where you finished 🏁</Kicker>
+      <div className="text-6xl">{rankEmoji(board.rank, board.total)}</div>
+      <div className="flex items-baseline justify-center gap-1">
+        <span className="text-3xl font-bold text-white/70">#</span>
+        <NumGradient from="#FFFFFF" to="#FDE68A" className="text-[6.5rem]">
+          <CountUp value={board.rank} />
+        </NumGradient>
+        <span className="text-2xl font-semibold text-white/70">of {board.total}</span>
+      </div>
+      <div className="rounded-full bg-white/15 px-4 py-1 text-sm font-bold">
+        {board.points} pts on the board 🎯
+      </div>
+      <Line>{finaleLine(board.rank, board.total)}</Line>
+
+      {/* Leaderboard slide-up */}
+      <div
+        className="pointer-events-auto absolute inset-x-0 bottom-0 z-10 rounded-t-3xl bg-black/35 backdrop-blur-md transition-transform duration-500 ease-out"
+        style={{ transform: showBoard ? "translateY(0)" : "translateY(100%)", height: "56%" }}
+      >
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-white/40" />
+        <p className="px-5 pt-2 pb-1 text-xs font-bold uppercase tracking-widest text-white/70">
+          🏆 Final table
+        </p>
+        <div className="max-h-[calc(100%-88px)] overflow-y-auto px-3 pb-3">
+          {standings.map((s) => {
+            const mine = s.playerId === report.player.id;
+            return (
+              <div
+                key={s.playerId}
+                className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2 ${
+                  mine ? "bg-white/90 text-neutral-900" : "bg-white/5 text-white"
+                }`}
+              >
+                <span className={`w-6 text-center text-sm font-black tabular-nums ${mine ? "" : "text-white/60"}`}>
+                  {medal(s.rank)}
+                </span>
+                <Avatar avatar={s.avatar} name={s.name} size={26} className="text-sm" />
+                <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold">{s.name}</span>
+                <span className="text-sm font-black tabular-nums">{s.points}</span>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={onNext}
+          className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/30 py-3 text-sm font-bold text-white active:bg-black/40"
+        >
+          See your summary →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// --- Summary bento + share --------------------------------------------------
+
+function SummarySlide({
+  report,
+  onClose,
+  onReplay,
+}: {
+  report: VarReport;
+  onClose: () => void;
+  onReplay: () => void;
+}) {
+  const [sharing, setSharing] = useState(false);
+  const tiles = summaryTiles(report);
+  const hero = tiles[0];
+  const rest = tiles.slice(1);
+
+  async function onShare() {
+    setSharing(true);
+    try {
+      await shareVarReport(report);
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  return (
+    <div className="pointer-events-auto flex h-full w-full max-w-md flex-col justify-center gap-3 px-5 pt-24 pb-6 text-white">
+      <div className="text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">🎁 Your tournament, wrapped</p>
+        <h2 className="mt-1 text-2xl font-black">{report.player.name}'s VAR Report</h2>
+      </div>
+
+      {/* Hero tile (rank) */}
+      <BentoTile tile={hero} big />
+
+      {/* 2-col grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {rest.map((t) => (
+          <BentoTile key={t.label} tile={t} />
+        ))}
+      </div>
+
+      <div className="mt-1 flex gap-2">
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={sharing}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white px-3 py-3 text-sm font-black text-neutral-900 active:opacity-90 disabled:opacity-60"
+        >
+          {typeof navigator !== "undefined" && "share" in navigator ? (
+            <Share2 className="h-4 w-4" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          {sharing ? "Preparing…" : "Share my Wrapped"}
+        </button>
+        <button
+          type="button"
+          onClick={onReplay}
+          aria-label="Replay"
+          className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-xl bg-white/15 text-white active:bg-white/25"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="text-center text-xs font-medium text-white/60 active:text-white/80"
+      >
+        Close
+      </button>
+    </div>
+  );
+}
+
+function BentoTile({ tile, big }: { tile: Tile; big?: boolean }) {
+  return (
+    <div
+      className={`rounded-2xl border p-3 ${big ? "flex items-center gap-4" : ""}`}
+      style={{ background: tile.bg, borderColor: tile.ring }}
+    >
+      <div className={big ? "text-4xl" : "text-2xl"}>{tile.emoji}</div>
+      <div className={big ? "flex-1" : ""}>
+        <div className={`font-black tabular-nums leading-tight ${big ? "text-3xl" : "text-xl"}`}>{tile.value}</div>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-white/70">{tile.label}</div>
+      </div>
+    </div>
+  );
+}
+
+type Tile = { emoji: string; label: string; value: string; bg: string; ring: string; hex: string };
+
+const ACCENT = {
+  gold: { hex: "#F59E0B" },
+  violet: { hex: "#8B5CF6" },
+  blue: { hex: "#3B82F6" },
+  green: { hex: "#22C55E" },
+  fuchsia: { hex: "#D946EF" },
+  teal: { hex: "#14B8A6" },
+  red: { hex: "#EF4444" },
+  orange: { hex: "#F97316" },
+} as const;
+
+function tint(hex: string): { bg: string; ring: string; hex: string } {
+  return { bg: `${hex}2E`, ring: `${hex}80`, hex };
+}
+
+function summaryTiles(r: VarReport): Tile[] {
+  const { board, best, quiz, bet } = r;
+  const up = bet.profit >= 0;
+  return [
+    { emoji: rankEmoji(board.rank, board.total), label: "Where you finished", value: `#${board.rank} of ${board.total}`, ...tint(ACCENT.gold.hex) },
+    { emoji: "🎯", label: "Points", value: `${board.points}`, ...tint(ACCENT.violet.hex) },
+    { emoji: "📝", label: "Predictions", value: `${board.predictionsMade}`, ...tint(ACCENT.blue.hex) },
+    { emoji: "💯", label: "Exact scores", value: `${board.exactScores}`, ...tint(ACCENT.green.hex) },
+    { emoji: "🧠", label: "Quiz", value: quiz.answered > 0 ? `${quiz.correct}/${quiz.answered}` : "—", ...tint(ACCENT.fuchsia.hex) },
+    { emoji: "💸", label: "Staked", value: money(bet.staked), ...tint(ACCENT.teal.hex) },
+    { emoji: up ? "📈" : "📉", label: "Profit", value: `${up ? "+" : "−"}${money(Math.abs(bet.profit)).slice(1)}`, ...tint(up ? ACCENT.green.hex : ACCENT.red.hex) },
+    { emoji: "⚽", label: "Best pick", value: best ? `+${best.points}` : "—", ...tint(ACCENT.orange.hex) },
+  ];
+}
+
+// Canvas share card — mirrors the bento. No deps, no image tainting (avatars
+// are emoji text). Web Share API with a file, falling back to download.
+async function shareVarReport(r: VarReport) {
+  const W = 1080;
+  const H = 1350;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#1E1B4B");
+  bg.addColorStop(0.55, "#4C1D95");
+  bg.addColorStop(1, "#831843");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.font = "600 30px system-ui, sans-serif";
+  ctx.fillText("🎬  WORLD CUP VAR REPORT", W / 2, 96);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "800 58px system-ui, sans-serif";
+  ctx.fillText(r.player.name, W / 2, 165);
+
+  const tiles = summaryTiles(r);
+  const pad = 60;
+  const gap = 26;
+  let y = 220;
+
+  // Hero tile full width
+  drawTile(ctx, pad, y, W - pad * 2, 150, tiles[0], true);
+  y += 150 + gap;
+
+  // 2-col grid
+  const colW = (W - pad * 2 - gap) / 2;
+  const rowH = 150;
+  const rest = tiles.slice(1);
+  for (let i = 0; i < rest.length; i++) {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const x = pad + col * (colW + gap);
+    drawTile(ctx, x, y + row * (rowH + gap), colW, rowH, rest[i], false);
+  }
+
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.font = "600 28px system-ui, sans-serif";
+  ctx.fillText("cup-corner-chat · World Cup 2026 ⚽", W / 2, H - 46);
+
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+  if (!blob) return;
+  const file = new File([blob], "wc26-var-report.png", { type: "image/png" });
+
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.canShare && nav.canShare({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: "My World Cup VAR Report" } as ShareData);
+      return;
+    } catch {
+      /* user cancelled or share failed — fall through to download */
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function drawTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  tile: Tile,
+  big: boolean,
+) {
+  roundRect(ctx, x, y, w, h, 28);
+  ctx.fillStyle = tile.hex + "33";
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = tile.hex + "99";
+  ctx.stroke();
+
+  ctx.textAlign = "left";
+  if (big) {
+    ctx.font = "64px system-ui, sans-serif";
+    ctx.fillText(tile.emoji, x + 36, y + h / 2 + 22);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 60px system-ui, sans-serif";
+    ctx.fillText(tile.value, x + 130, y + h / 2 - 2);
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.font = "700 26px system-ui, sans-serif";
+    ctx.fillText(tile.label.toUpperCase(), x + 130, y + h / 2 + 40);
+  } else {
+    ctx.font = "44px system-ui, sans-serif";
+    ctx.fillText(tile.emoji, x + 28, y + 62);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "800 46px system-ui, sans-serif";
+    ctx.fillText(tile.value, x + 28, y + 116);
+    ctx.fillStyle = "rgba(255,255,255,0.72)";
+    ctx.font = "700 22px system-ui, sans-serif";
+    ctx.fillText(tile.label.toUpperCase(), x + 28, y + h - 20);
+  }
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, r);
+    return;
+  }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// --- Tier commentary (short + punchy) ---------------------------------------
 
 function predsLine(n: number): string {
-  if (n === 0) return "Zero. A phantom. You haunted the leaderboard without ever touching it.";
-  if (n <= 8) return `Just ${n}. You dipped a toe in, felt the cold, and left. A tourist.`;
-  if (n <= 24) return `${n} calls. Dependable. You showed up like it was a part-time job — and it kind of was.`;
-  if (n <= 48) return `${n} predictions. A true regular. The fixtures list feared you.`;
-  return `${n}?! You predicted matches that hadn't been scheduled yet. Seek help. Or a scouting contract.`;
+  if (n === 0) return "Zero predictions. A ghost in the machine. 👻";
+  if (n <= 8) return `${n} picks. You browsed, you left. A tourist. 🧳`;
+  if (n <= 24) return `${n} picks. Reliable as a Sunday alarm. ⏰`;
+  if (n <= 48) return `${n} predictions. The fixtures feared you. 😤`;
+  return `${n}?! Predicting games that don't exist. Touch grass. 🌱`;
 }
 
 function accuracyLine(correct: number, exact: number): string {
-  if (correct === 0) return "Not a single right result. Bold, contrarian, wrong. But mostly wrong.";
-  if (exact === 0) return `${correct} right results, but not one exact score. So close, and yet so gloriously vague.`;
-  if (exact <= 2) return `${exact} exact scoreline${exact === 1 ? "" : "s"} predicted to the goal. A small, slightly blurry crystal ball.`;
-  if (exact <= 5) return `${exact} exact scorelines. Are you sure you're not tampering with the results? Blink twice.`;
-  return `${exact} EXACT scores. Interpol has been notified. This is not normal human behaviour.`;
+  if (correct === 0) return "Zero right. Boldly, consistently wrong. 🙃";
+  if (exact === 0) return `${correct} right, zero exact. So close, so vague. 🌫️`;
+  if (exact <= 2) return `${exact} exact scoreline${exact === 1 ? "" : "s"}. Tidy work. 🔮`;
+  if (exact <= 5) return `${exact} exact scores? Suspicious. Blink twice. 👀`;
+  return `${exact} exact?! Someone call Interpol. 🚨`;
 }
 
 function bestLine(points: number, isExact: boolean): string {
-  if (isExact) return "Called to the goal. Framed this one and hung it in the hallway. Pure clairvoyance.";
-  if (points >= 10) return "Not perfect, but chef's kiss. You saw the shape of the game before it happened.";
-  if (points >= 5) return "A tidy little earner. You'll take it, and so will we.";
-  return "This was your BEST one. We're being extremely generous calling it a warm-up.";
+  if (isExact) return "Nailed to the goal. Frame it. 🖼️";
+  if (points >= 10) return "Chef's kiss. You saw it coming. 👨‍🍳";
+  if (points >= 5) return "A tidy little earner. 💼";
+  return "Your BEST one. We're being kind. 🥲";
 }
 
 function quizLine(correct: number, answered: number): string {
   const pct = answered > 0 ? correct / answered : 0;
-  if (pct >= 0.85) return `${correct}/${answered}. A walking Wikipedia. Utterly insufferable at the pub. Never change.`;
-  if (pct >= 0.6) return `${correct}/${answered}. Solid. You know your Maradona from your Messi.`;
-  if (pct >= 0.35) return `${correct}/${answered}. Look — participation is its own reward. Allegedly.`;
-  return `${correct}/${answered}. The good news: it can only go up from here.`;
+  if (pct >= 0.85) return `${correct}/${answered}. Insufferable at the pub. 🍺`;
+  if (pct >= 0.6) return `${correct}/${answered}. You know your football. ⚽`;
+  if (pct >= 0.35) return `${correct}/${answered}. Participation counts. Allegedly. 🎗️`;
+  return `${correct}/${answered}. Only way is up. 📈`;
 }
 
 function stakedLine(decile: number | null): string {
-  if (decile === null) return "No action, no exposure. The house never learned your name.";
-  if (decile <= 1) return "Top 10% of degenerates. The house has reserved a parking spot with your name on it.";
-  if (decile <= 3) return `Top ${decile * 10}% for volume. Big-spender energy. The odds compiler felt that.`;
-  if (decile <= 6) return "A measured, mid-table gambler. Boring. Solvent. Alive. Respectable, honestly.";
-  return "You bet with the enthusiasm of a man patting his coat for loose change. Cautious to a fault.";
+  if (decile === null) return "The house never learned your name. 🕶️";
+  if (decile <= 1) return "Top 10% of degenerates. The house loves you. 🎰";
+  if (decile <= 3) return `Top ${decile * 10}%. Big-spender energy. 💸`;
+  if (decile <= 6) return "Measured. Boring. Solvent. 🧾";
+  return "You bet in loose change. 🪙";
 }
 
 function pnlLine(profit: number, balance: number): string {
-  if (profit >= 200) return "Up big. Quit your job. Actually — don't, this was almost certainly luck.";
-  if (profit > 0) return "Green is green. You beat the house and lived to tell the tale. Take the win and walk.";
-  if (profit === 0) return "Dead even. You started at 500 and ended at 500. A majestic round trip to absolutely nowhere.";
-  if (profit > -200) return "Down, but with dignity. The house always wins — you just helped it win a little faster.";
-  return `From 500 down to ${balance}. Somewhere, a bookmaker just put a deposit on a boat. It's named after you.`;
+  if (profit >= 200) return "Up big. Quit your— actually, don't. 🍀";
+  if (profit > 0) return "Beat the house and walked. Take it. 🟢";
+  if (profit === 0) return "Dead even. A round trip to nowhere. 🔁";
+  if (profit > -200) return "Down, but dignified. 🎩";
+  return `Down to ${money(balance)}. The bookie bought a boat. 🛥️`;
 }
 
 function rankEmoji(rank: number, total: number): string {
@@ -425,16 +723,23 @@ function rankEmoji(rank: number, total: number): string {
   return "⚽";
 }
 
-function finaleLine(rank: number, total: number): string {
-  if (total === 0) return "An empty table. You're technically undefeated. And un-victorious.";
-  if (rank === 1) return "CHAMPION. Top of the pile. Bow before the oracle. This slide is now your screensaver.";
-  if (rank <= 3) return "Podium. So close to glory you could taste the champagne. Next year it's yours.";
-  if (rank <= Math.ceil(total / 2)) return "Upper half. Quietly excellent, like a good defensive midfielder nobody talks about.";
-  if (rank === total) return "Dead last. The wooden spoon is yours. Wear it proudly, or at least wash it.";
-  return "Mid-table obscurity. Every great league needs its comfortable middle. That's you. Cozy.";
+function medal(rank: number): string {
+  if (rank === 1) return "🥇";
+  if (rank === 2) return "🥈";
+  if (rank === 3) return "🥉";
+  return String(rank);
 }
 
-// --- Presentational bits ----------------------------------------------------
+function finaleLine(rank: number, total: number): string {
+  if (total === 0) return "Undefeated and un-victorious. 🤷";
+  if (rank === 1) return "CHAMPION. Bow before the oracle. 👑";
+  if (rank <= 3) return "Podium. So close to glory. 🍾";
+  if (rank <= Math.ceil(total / 2)) return "Upper half. Quietly excellent. 🎩";
+  if (rank === total) return "Dead last. The spoon is yours. 🥄";
+  return "Mid-table comfort. 🛋️";
+}
+
+// --- Presentational primitives ----------------------------------------------
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -449,18 +754,46 @@ function Kicker({ children }: { children: React.ReactNode }) {
 function Big({ children }: { children: React.ReactNode }) {
   return <h2 className="text-4xl font-black leading-tight drop-shadow-sm">{children}</h2>;
 }
-function Stat({ children, small }: { children: React.ReactNode; small?: boolean }) {
-  return (
-    <div className={`${small ? "text-5xl" : "text-7xl"} font-black tabular-nums leading-none drop-shadow`}>
-      {children}
-    </div>
-  );
-}
 function Sub({ children }: { children: React.ReactNode }) {
   return <p className="text-base font-semibold text-white/85">{children}</p>;
 }
 function Line({ children }: { children: React.ReactNode }) {
   return <p className="max-w-xs text-sm leading-relaxed text-white/90">{children}</p>;
+}
+function NumGradient({
+  children,
+  from,
+  to,
+  className,
+}: {
+  children: React.ReactNode;
+  from: string;
+  to: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`font-black tabular-nums leading-none drop-shadow ${className ?? ""}`}
+      style={{
+        backgroundImage: `linear-gradient(180deg, ${from}, ${to})`,
+        WebkitBackgroundClip: "text",
+        backgroundClip: "text",
+        color: "transparent",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+function NumOutline({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`font-black tabular-nums leading-none ${className ?? ""}`}
+      style={{ WebkitTextStroke: "2.5px rgba(255,255,255,0.92)", color: "transparent" }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function CountUp({
