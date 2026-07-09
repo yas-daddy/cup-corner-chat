@@ -15,6 +15,7 @@ import { InstallPwaModal } from "@/components/InstallPwaModal";
 import { NewPicksPill } from "@/components/NewPicksPill";
 import { GodModePinModal } from "@/components/GodModePinModal";
 import { KnockoutRulesModal } from "@/components/KnockoutRulesModal";
+import { VarReportEntry } from "@/components/VarReportEntry";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
@@ -228,6 +229,8 @@ function HomePage() {
       </header>
 
       <QuizCard playerId={player.id} />
+
+      <VarReportEntry playerId={player.id} />
 
       {!firstVisible && (
         <NewPicksPill count={unpredictedUpcomingIds.length} onTap={scrollToFirstUnpredicted} />
