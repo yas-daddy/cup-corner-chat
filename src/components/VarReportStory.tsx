@@ -154,7 +154,7 @@ function buildSlides(
     key: "preds",
     gradient: "linear-gradient(160deg,#4338CA 0%,#2563EB 60%,#06B6D4 100%)",
     node: (
-      <BottomLeft>
+      <MidLeft>
         <Kicker>You stepped up ✍️</Kicker>
         <NumOutline className="text-[7rem] leading-[0.85]">
           <CountUp value={board.predictionsMade} />
@@ -164,7 +164,7 @@ function buildSlides(
           <CompareBars you={board.predictionsMade} field={field.avgPredictions} fieldLabel="League avg" fill="#FFFFFF" />
         </div>
         <Line>{predsLine(board.predictionsMade)}</Line>
-      </BottomLeft>
+      </MidLeft>
     ),
   });
 
@@ -238,7 +238,7 @@ function buildSlides(
         {soulmate ? (
           <>
             <Ring pct={Math.round((soulmate.agree / Math.max(1, soulmate.shared)) * 100)}>
-              <Avatar avatar={soulmate.avatar} name={soulmate.name} size={72} className="text-3xl" />
+              <Avatar avatar={soulmate.avatar} name={soulmate.name} size={56} className="text-2xl" />
             </Ring>
             <h2 className="text-3xl font-black">{soulmate.name}</h2>
             <Sub>
@@ -295,7 +295,7 @@ function buildSlides(
     key: "staked",
     gradient: "linear-gradient(160deg,#065F46 0%,#0D9488 55%,#22C55E 100%)",
     node: (
-      <BottomLeft>
+      <MidLeft>
         <Kicker>At the window 🎰</Kicker>
         {bet.staked > 0 ? (
           <>
@@ -318,7 +318,7 @@ function buildSlides(
             <Line>A monk in a casino. Ice in the veins, cash in the pocket.</Line>
           </>
         )}
-      </BottomLeft>
+      </MidLeft>
     ),
   });
 
@@ -817,11 +817,11 @@ function finaleLine(rank: number, total: number): string {
 function Center({ children }: { children: React.ReactNode }) {
   return <div className="flex h-full w-full max-w-md flex-col items-center justify-center gap-4 px-8 text-center text-white">{children}</div>;
 }
-function BottomLeft({ children }: { children: React.ReactNode }) {
-  return <div className="flex h-full w-full max-w-md flex-col items-start justify-end gap-2 px-8 pb-28 text-left text-white">{children}</div>;
+function MidLeft({ children }: { children: React.ReactNode }) {
+  return <div className="flex h-full w-full max-w-md flex-col items-start justify-center gap-3 px-8 text-left text-white">{children}</div>;
 }
 function TopStack({ children }: { children: React.ReactNode }) {
-  return <div className="flex h-full w-full max-w-md flex-col items-center justify-start gap-3 px-8 pt-32 text-center text-white">{children}</div>;
+  return <div className="flex h-full w-full max-w-md flex-col items-center justify-start gap-3 px-8 pt-44 text-center text-white">{children}</div>;
 }
 function Kicker({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/70">{children}</p>;
@@ -921,20 +921,20 @@ function Equalizer({ decile }: { decile: number }) {
 }
 
 function Ring({ pct, children }: { pct: number; children: React.ReactNode }) {
-  const R = 58;
+  const R = 66;
   const C = 2 * Math.PI * R;
   const off = C * (1 - useGrow(Math.max(0, Math.min(100, pct))) / 100);
   return (
     <div className="relative grid place-items-center">
-      <svg width="150" height="150" className="-rotate-90">
-        <circle cx="75" cy="75" r={R} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="12" />
+      <svg width="168" height="168" className="-rotate-90">
+        <circle cx="84" cy="84" r={R} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="11" />
         <circle
-          cx="75"
-          cy="75"
+          cx="84"
+          cy="84"
           r={R}
           fill="none"
           stroke="#ffffff"
-          strokeWidth="12"
+          strokeWidth="11"
           strokeLinecap="round"
           strokeDasharray={C}
           strokeDashoffset={off}
@@ -943,7 +943,7 @@ function Ring({ pct, children }: { pct: number; children: React.ReactNode }) {
       </svg>
       <div className="absolute grid place-items-center">
         {children}
-        <span className="mt-1 text-lg font-black">{Math.round(pct)}%</span>
+        <span className="mt-1.5 text-base font-black">{Math.round(pct)}%</span>
       </div>
     </div>
   );
