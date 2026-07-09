@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: boolean
+          updated_at: string
+          var_report_popup: boolean
+          var_report_visible: boolean
+        }
+        Insert: {
+          id?: boolean
+          updated_at?: string
+          var_report_popup?: boolean
+          var_report_visible?: boolean
+        }
+        Update: {
+          id?: boolean
+          updated_at?: string
+          var_report_popup?: boolean
+          var_report_visible?: boolean
+        }
+        Relationships: []
+      }
       bet_transactions: {
         Row: {
           amount: number
@@ -1143,6 +1164,21 @@ export type Database = {
       admin_delete_prediction: {
         Args: { _match_id: string; _player_id: string }
         Returns: undefined
+      }
+      admin_set_var_flags: {
+        Args: { _popup: boolean; _visible: boolean }
+        Returns: {
+          id: boolean
+          updated_at: string
+          var_report_popup: boolean
+          var_report_visible: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "app_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_upsert_champion: {
         Args: { _player_id: string; _team: string; _team_code: string }
