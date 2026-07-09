@@ -102,29 +102,6 @@ export type VarReport = {
   };
 };
 
-// WC2026 Final is 19 Jul 2026. The report must only appear AFTER the Final —
-// never during earlier rounds. We can't rely on "the last match is finished"
-// alone: mid-tournament the schedule is incomplete (later rounds aren't added
-// until earlier ones resolve), so the chronologically-last KNOWN match is
-// often just the latest scheduled round. Gate on BOTH: the last match is
-// FINISHED and its kickoff is on/after the Final's date floor.
-const FINAL_KICKOFF_FLOOR = "2026-07-19T00:00:00Z";
-
-export async function isVarReportUnlocked(): Promise<boolean> {
-  const { data } = await sb
-    .from("matches")
-    .select("status,kickoff_at")
-    .order("kickoff_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const row = data as { status?: string; kickoff_at?: string } | null;
-  if (!row?.kickoff_at) return false;
-  return (
-    row.status === "FINISHED" &&
-    new Date(row.kickoff_at).getTime() >= new Date(FINAL_KICKOFF_FLOOR).getTime()
-  );
-}
-
 export async function buildVarReport(playerId: string): Promise<VarReport | null> {
   const [
     { data: player },

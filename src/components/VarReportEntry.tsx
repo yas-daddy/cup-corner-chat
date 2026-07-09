@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Clapperboard, ChevronRight, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { buildVarReport, isVarReportUnlocked, type VarReport } from "@/lib/varReport";
+import { buildVarReport, type VarReport } from "@/lib/varReport";
+import { useVarFlags } from "@/lib/appFlags";
 import { VarReportStory } from "@/components/VarReportStory";
 
-// VAR Report entry on the Picks home page:
-//   • The card is always available — players can watch their "so far" report
-//     any time during the tournament.
-//   • The one-time "your report is ready" popup only auto-fires once the Final
-//     has finished (the agreed unlock moment).
+// VAR Report entry on the Picks home page. Availability is controlled globally
+// from god mode via two flags (public.app_settings):
+//   • visible → show the VAR Report card in the feed
+//   • popup   → auto-show the one-time "your report is ready" popup
 // The report itself is built lazily (only when opened) to avoid running the
 // full cross-player aggregation on every home load.
 
@@ -17,28 +17,23 @@ const PROMPT_SEEN_KEY = "wc26.var_prompt_seen";
 
 export function VarReportEntry({ playerId }: { playerId: string }) {
   const { t, dir } = useI18n();
+  const flags = useVarFlags();
   const [report, setReport] = useState<VarReport | null>(null);
   const [building, setBuilding] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
 
-  // Auto-popup only after the Final. The card below is always shown.
+  // Auto-popup when the god-mode popup flag is on (once per device).
   useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!(await isVarReportUnlocked())) return;
-      let seen = false;
-      try {
-        seen = localStorage.getItem(PROMPT_SEEN_KEY) === "1";
-      } catch {
-        /* ignore */
-      }
-      if (active && !seen) setPromptOpen(true);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [playerId]);
+    if (!flags?.popup) return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem(PROMPT_SEEN_KEY) === "1";
+    } catch {
+      /* ignore */
+    }
+    if (!seen) setPromptOpen(true);
+  }, [flags?.popup]);
 
   function markPromptSeen() {
     try {
@@ -66,35 +61,37 @@ export function VarReportEntry({ playerId }: { playerId: string }) {
 
   return (
     <>
-      {/* Always-available card */}
-      <button
-        type="button"
-        onClick={openStory}
-        disabled={building}
-        className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-[color:var(--gold)]/40 bg-gradient-to-r from-[color:var(--gold)]/15 to-primary/10 p-3 text-left active:opacity-90 disabled:opacity-70"
-        dir={dir}
-      >
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--gold)]/20 text-[color:var(--gold)]">
-          <Clapperboard className="h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-extrabold">{t("var_card_title") ?? "World Cup VAR Report"}</p>
-          <p className="truncate text-xs text-ink-soft">{t("var_card_sub") ?? "Your tournament, wrapped"}</p>
-        </div>
-        <span className="flex shrink-0 items-center gap-1 rounded-full bg-[color:var(--gold)] px-3 py-1.5 text-xs font-bold text-neutral-900">
-          {building ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <>
-              {t("var_card_cta") ?? "Watch"}
-              <ChevronRight className="h-3.5 w-3.5" />
-            </>
-          )}
-        </span>
-      </button>
+      {/* Card — shown when god-mode visibility flag is on */}
+      {flags?.visible && (
+        <button
+          type="button"
+          onClick={openStory}
+          disabled={building}
+          className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-[color:var(--gold)]/40 bg-gradient-to-r from-[color:var(--gold)]/15 to-primary/10 p-3 text-left active:opacity-90 disabled:opacity-70"
+          dir={dir}
+        >
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[color:var(--gold)]/20 text-[color:var(--gold)]">
+            <Clapperboard className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-extrabold">{t("var_card_title") ?? "World Cup VAR Report"}</p>
+            <p className="truncate text-xs text-ink-soft">{t("var_card_sub") ?? "Your tournament, wrapped"}</p>
+          </div>
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[color:var(--gold)] px-3 py-1.5 text-xs font-bold text-neutral-900">
+            {building ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <>
+                {t("var_card_cta") ?? "Watch"}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </>
+            )}
+          </span>
+        </button>
+      )}
 
-      {/* One-time "ready" popup (only after the Final) */}
-      {promptOpen && typeof document !== "undefined" && createPortal(
+      {/* One-time "ready" popup (god-mode popup flag) */}
+      {promptOpen && flags?.popup && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-0 pb-[env(safe-area-inset-bottom)] sm:items-center sm:p-4">
           <div className="w-full max-w-md overflow-hidden rounded-t-3xl bg-surface shadow-xl sm:rounded-3xl" dir={dir}>
             <div className="relative bg-gradient-to-br from-[#7C3AED] via-[#DB2777] to-[#F97316] px-6 py-8 text-center text-white">

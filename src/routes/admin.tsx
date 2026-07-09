@@ -7,6 +7,7 @@ import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
 import { getStoredPlayerId, type Player } from "@/lib/identity";
 import { buildVarReport, type VarReport } from "@/lib/varReport";
+import { fetchVarFlags, setVarFlags as saveVarFlags, type VarFlags } from "@/lib/appFlags";
 import { VarReportStory } from "@/components/VarReportStory";
 
 type PlayerStats = Player & {
@@ -42,6 +43,8 @@ function AdminPage() {
   const [syncMsg, setSyncMsg] = useState<string>("");
   const [varReport, setVarReport] = useState<VarReport | null>(null);
   const [varLoading, setVarLoading] = useState(false);
+  const [varFlags, setVarFlagsState] = useState<VarFlags | null>(null);
+  const [varFlagsSaving, setVarFlagsSaving] = useState(false);
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [pushPlayerIds, setPushPlayerIds] = useState<Set<string>>(new Set());
   const [pushSubCount, setPushSubCount] = useState(0);
@@ -162,6 +165,32 @@ function AdminPage() {
     }
   }
 
+  useEffect(() => {
+    let active = true;
+    fetchVarFlags().then((f) => {
+      if (active) setVarFlagsState(f);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function toggleVarFlag(key: keyof VarFlags, value: boolean) {
+    const base = varFlags ?? { visible: true, popup: false };
+    const next = { ...base, [key]: value };
+    setVarFlagsState(next); // optimistic
+    setVarFlagsSaving(true);
+    try {
+      const { error } = await saveVarFlags(next);
+      if (error) {
+        setVarFlagsState(base); // revert on failure
+        setSyncMsg(`VAR flags: ${error}`);
+      }
+    } finally {
+      setVarFlagsSaving(false);
+    }
+  }
+
   async function openVarPreview() {
     const target = playerId || getStoredPlayerId();
     if (!target) {
@@ -277,9 +306,28 @@ function AdminPage() {
       </section>
 
       <section className="mb-5 rounded-2xl border border-border bg-surface p-4">
-        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-ink-soft">VAR Report preview</div>
+        <div className="mb-1 text-xs font-bold uppercase tracking-wider text-ink-soft">VAR Report</div>
+        <p className="mb-3 text-xs text-ink-soft">Availability applies to everyone, instantly.</p>
+
+        <div className="mb-3 space-y-2">
+          <Toggle
+            label="Show in feed"
+            hint="The VAR Report card on the Picks page"
+            checked={varFlags?.visible ?? false}
+            disabled={varFlags === null || varFlagsSaving}
+            onChange={(v) => toggleVarFlag("visible", v)}
+          />
+          <Toggle
+            label="Auto popup"
+            hint={`"Your report is ready" one-time popup`}
+            checked={varFlags?.popup ?? false}
+            disabled={varFlags === null || varFlagsSaving}
+            onChange={(v) => toggleVarFlag("popup", v)}
+          />
+        </div>
+
         <p className="mb-2 text-xs text-ink-soft">
-          Bypasses the end-of-tournament lock. Previews {selectedPlayer ? selectedPlayer.display_name : "you"} (or pick a player below).
+          Preview bypasses these flags — {selectedPlayer ? selectedPlayer.display_name : "you"} (or pick a player below).
         </p>
         <button
           onClick={openVarPreview}
@@ -466,6 +514,42 @@ function AdminPage() {
       )}
 
       {varReport && <VarReportStory report={varReport} onClose={() => setVarReport(null)} />}
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-bg px-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">{label}</p>
+        {hint && <p className="truncate text-xs text-ink-soft">{hint}</p>}
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${checked ? "bg-primary" : "bg-border"}`}
+      >
+        <span
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-[22px]" : "translate-x-0.5"}`}
+        />
+      </button>
     </div>
   );
 }
