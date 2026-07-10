@@ -4,6 +4,7 @@ import { Clapperboard, ChevronRight, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { buildVarReport, type VarReport } from "@/lib/varReport";
 import { useVarFlags } from "@/lib/appFlags";
+import { logVarView } from "@/lib/varAnalytics";
 import { VarReportStory } from "@/components/VarReportStory";
 
 // VAR Report entry on the Picks home page. Availability is controlled globally
@@ -56,7 +57,10 @@ export function VarReportEntry({ playerId }: { playerId: string }) {
         setBuilding(false);
       }
     }
-    if (r) setStoryOpen(true);
+    if (r) {
+      setStoryOpen(true);
+      void logVarView(playerId); // best-effort watch analytics
+    }
   }
 
   return (

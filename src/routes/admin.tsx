@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock, Clapperboard } from "lucide-react";
+import { ChevronLeft, RefreshCw, Trash2, Save, ShieldAlert, Smartphone, Bell, Clock, Clapperboard, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { flagFromCode } from "@/lib/flags";
 import { resolveTeamCode } from "@/lib/teams";
@@ -8,6 +8,7 @@ import type { Match, Prediction } from "@/lib/types";
 import { getStoredPlayerId, type Player } from "@/lib/identity";
 import { buildVarReport, type VarReport } from "@/lib/varReport";
 import { fetchVarFlags, setVarFlags as saveVarFlags, type VarFlags } from "@/lib/appFlags";
+import { fetchVarStats, type VarStats } from "@/lib/varAnalytics";
 import { VarReportStory } from "@/components/VarReportStory";
 
 type PlayerStats = Player & {
@@ -45,6 +46,7 @@ function AdminPage() {
   const [varLoading, setVarLoading] = useState(false);
   const [varFlags, setVarFlagsState] = useState<VarFlags | null>(null);
   const [varFlagsSaving, setVarFlagsSaving] = useState(false);
+  const [varStats, setVarStats] = useState<VarStats | null>(null);
   const [stats, setStats] = useState<PlayerStats[]>([]);
   const [pushPlayerIds, setPushPlayerIds] = useState<Set<string>>(new Set());
   const [pushSubCount, setPushSubCount] = useState(0);
@@ -169,6 +171,9 @@ function AdminPage() {
     let active = true;
     fetchVarFlags().then((f) => {
       if (active) setVarFlagsState(f);
+    });
+    fetchVarStats().then((s) => {
+      if (active) setVarStats(s);
     });
     return () => {
       active = false;
@@ -357,6 +362,18 @@ function AdminPage() {
             icon={<Clock className="h-4 w-4" />}
             label="Active 24h"
             value={`${stats.filter((s) => s.last_open_at && Date.now() - new Date(s.last_open_at).getTime() < 86_400_000).length}`}
+          />
+          <StatTile
+            icon={<Clapperboard className="h-4 w-4" />}
+            label="VAR opened"
+            value={`${varStats?.uniqueOpeners ?? 0}/${stats.length}`}
+            sub="people"
+          />
+          <StatTile
+            icon={<Eye className="h-4 w-4" />}
+            label="VAR watches"
+            value={`${varStats?.totalViews ?? 0}`}
+            sub="total"
           />
         </div>
         <div className="divide-y divide-border">
