@@ -7,7 +7,7 @@ import { resolveTeamCode } from "@/lib/teams";
 import type { Match, Prediction } from "@/lib/types";
 import { getStoredPlayerId, type Player } from "@/lib/identity";
 import { buildVarReport, type VarReport } from "@/lib/varReport";
-import { fetchVarFlags, setVarFlags as saveVarFlags, type VarFlags } from "@/lib/appFlags";
+import { fetchVarFlags, setVarFlags as saveVarFlags, setFinaleTakeover as saveFinale, type VarFlags } from "@/lib/appFlags";
 import { fetchVarStats, type VarStats } from "@/lib/varAnalytics";
 import { VarReportStory } from "@/components/VarReportStory";
 
@@ -181,12 +181,13 @@ function AdminPage() {
   }, []);
 
   async function toggleVarFlag(key: keyof VarFlags, value: boolean) {
-    const base = varFlags ?? { visible: true, popup: false };
+    const base = varFlags ?? { visible: true, popup: false, finale: false };
     const next = { ...base, [key]: value };
     setVarFlagsState(next); // optimistic
     setVarFlagsSaving(true);
     try {
-      const { error } = await saveVarFlags(next);
+      const { error } =
+        key === "finale" ? await saveFinale(value) : await saveVarFlags(next);
       if (error) {
         setVarFlagsState(base); // revert on failure
         setSyncMsg(`VAR flags: ${error}`);
@@ -328,6 +329,13 @@ function AdminPage() {
             checked={varFlags?.popup ?? false}
             disabled={varFlags === null || varFlagsSaving}
             onChange={(v) => toggleVarFlag("popup", v)}
+          />
+          <Toggle
+            label="Finale takeover"
+            hint={`Replace Picks with "That's all Folks!" + VAR prompt`}
+            checked={varFlags?.finale ?? false}
+            disabled={varFlags === null || varFlagsSaving}
+            onChange={(v) => toggleVarFlag("finale", v)}
           />
         </div>
 

@@ -16,6 +16,8 @@ import { NewPicksPill } from "@/components/NewPicksPill";
 import { GodModePinModal } from "@/components/GodModePinModal";
 import { KnockoutRulesModal } from "@/components/KnockoutRulesModal";
 import { VarReportEntry } from "@/components/VarReportEntry";
+import { FinaleTakeover } from "@/components/FinaleTakeover";
+import { useVarFlags } from "@/lib/appFlags";
 import { isStandalone } from "@/lib/push";
 
 import { useI18n } from "@/lib/i18n";
@@ -37,6 +39,7 @@ function HomePage() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const { player, loading, setPlayer } = useCurrentPlayer();
+  const varFlags = useVarFlags();
   const [matches, setMatches] = useState<Match[] | null>(null);
   const [preds, setPreds] = useState<Record<string, Prediction>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
@@ -194,6 +197,11 @@ function HomePage() {
 
   if (!player) {
     return <SignInScreen onSignedIn={(p) => setPlayer(p)} />;
+  }
+
+  // God-mode finale switch: the closing credits replace the Picks tab.
+  if (varFlags?.finale) {
+    return <FinaleTakeover playerId={player.id} />;
   }
 
   return (
