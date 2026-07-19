@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          finale_takeover: boolean
           id: boolean
           updated_at: string
           var_report_popup: boolean
           var_report_visible: boolean
         }
         Insert: {
+          finale_takeover?: boolean
           id?: boolean
           updated_at?: string
           var_report_popup?: boolean
           var_report_visible?: boolean
         }
         Update: {
+          finale_takeover?: boolean
           id?: boolean
           updated_at?: string
           var_report_popup?: boolean
@@ -1165,9 +1168,26 @@ export type Database = {
         Args: { _match_id: string; _player_id: string }
         Returns: undefined
       }
+      admin_set_finale_takeover: {
+        Args: { _on: boolean }
+        Returns: {
+          finale_takeover: boolean
+          id: boolean
+          updated_at: string
+          var_report_popup: boolean
+          var_report_visible: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "app_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_var_flags: {
         Args: { _popup: boolean; _visible: boolean }
         Returns: {
+          finale_takeover: boolean
           id: boolean
           updated_at: string
           var_report_popup: boolean
