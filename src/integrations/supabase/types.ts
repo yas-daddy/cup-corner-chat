@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          champion_team_code: string | null
           finale_takeover: boolean
           id: boolean
           updated_at: string
@@ -23,6 +24,7 @@ export type Database = {
           var_report_visible: boolean
         }
         Insert: {
+          champion_team_code?: string | null
           finale_takeover?: boolean
           id?: boolean
           updated_at?: string
@@ -30,6 +32,7 @@ export type Database = {
           var_report_visible?: boolean
         }
         Update: {
+          champion_team_code?: string | null
           finale_takeover?: boolean
           id?: boolean
           updated_at?: string
@@ -1168,9 +1171,27 @@ export type Database = {
         Args: { _match_id: string; _player_id: string }
         Returns: undefined
       }
+      admin_set_champion_result: {
+        Args: { _team_code: string }
+        Returns: {
+          champion_team_code: string | null
+          finale_takeover: boolean
+          id: boolean
+          updated_at: string
+          var_report_popup: boolean
+          var_report_visible: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "app_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_set_finale_takeover: {
         Args: { _on: boolean }
         Returns: {
+          champion_team_code: string | null
           finale_takeover: boolean
           id: boolean
           updated_at: string
@@ -1187,6 +1208,7 @@ export type Database = {
       admin_set_var_flags: {
         Args: { _popup: boolean; _visible: boolean }
         Returns: {
+          champion_team_code: string | null
           finale_takeover: boolean
           id: boolean
           updated_at: string
